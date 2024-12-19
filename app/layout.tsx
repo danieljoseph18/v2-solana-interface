@@ -7,6 +7,8 @@ import { Poppins } from "next/font/google";
 import type { Metadata } from "next";
 import FooterBanner from "@/components/nav/FooterBanner";
 import { Providers } from "@/components/providers/Providers";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "PRINT3R | Onchain Leverage for DAOS.FUN",
@@ -44,6 +46,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             theme="dark"
           />
         </div>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
