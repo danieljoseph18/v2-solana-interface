@@ -31,8 +31,11 @@ const TradeShare: React.FC<TradeShareProps> = (props) => {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const UPLOAD_SHARE = process.env.NEXT_PUBLIC_BASE_URL + "/api/s";
-  const UPLOAD_URL = process.env.NEXT_PUBLIC_BASE_URL + "/api/upload-image";
+  const UPLOAD_SHARE =
+    (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000") + "/api/s";
+  const UPLOAD_URL =
+    (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000") +
+    "/api/upload-image";
 
   const getTwitterIntentURL = (
     text: string,

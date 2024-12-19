@@ -10,7 +10,7 @@ function FooterBanner() {
   const pathsWithTour = ["/trade", "/airdrop", "/earn"];
 
   // operational, reduced-service, undergoing-maintenance
-  const status = process.env.NEXT_PUBLIC_APP_STATUS;
+  const status = process.env.NEXT_PUBLIC_APP_STATUS || "operational";
 
   return (
     <div className="bg-black border-t-2 border-t-cardborder px-2 md:px-8 pt-4 md:pb-4 pb-28  font-medium text-sm md:fixed bottom-0 left-0 right-0 z-50">
