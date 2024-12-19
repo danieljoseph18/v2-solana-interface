@@ -2,20 +2,132 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+html,
+body {
+  background-color: #07080a !important;
+  color: white;
+  height: 100%;
+  /* overflow-y: hidden; */
+  /* height: 100%; */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.tradingview-widget-container .tv-lightweight-charts {
+  --tv-color-pane-background: #000;
+  --tv-color-font-color: #f05722;
+}
+
+.tradingview-widget-copyright {
+  display: none;
+}
+
+.chart-container .chart-markup-table .pane-legend-title-text {
+  display: none !important;
+}
+
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+.swiper-container-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.print3r-swiper {
+  margin-bottom: 15px; /* Adjust this value as needed to create space for the pagination */
+}
+.web-app-swiper-container .swiper {
+  height: 250px;
+  transform: translateX(50px) !important;
+}
+.web-app-swiper-container .swiper-wrapper {
+  transform: translateX(140px) !important;
+  transform: translateY(100px) !important;
+}
+/* General pagination styles */
+.swiper-container-wrapper [class*="custom-pagination-"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px; /* Adjust as needed */
+}
+
+/* General bullet styles */
+.swiper-container-wrapper
+  [class*="custom-pagination-"]
+  .swiper-pagination-bullet {
+  background: #f0562279; /* Adjust color */
+  width: 12px; /* Adjust size */
+  height: 12px; /* Adjust size */
+  margin: 0 5px; /* Adjust spacing */
+}
+
+/* General active bullet styles */
+.swiper-container-wrapper
+  [class*="custom-pagination-"]
+  .swiper-pagination-bullet-active {
+  background: #f05722; /* Adjust active color */
+}
+
+/* styles.css or inside a style tag */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtle-float-1 {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes subtle-float-2 {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.subtle-float-1 {
+  animation: subtle-float-1 3s ease-in-out infinite;
+}
+
+.subtle-float-2 {
+  animation: subtle-float-2 4s ease-in-out infinite;
+}
+
+.modal-gradient-shadow {
+  box-shadow: 0 0 20px 0 rgba(34, 224, 250, 0.5), 0 0 40px 0 rgba(130, 16, 170, 0.3);
+}
+
+/* Optional: Add animation for a pulsing effect */
+@keyframes pulse-shadow {
+  0%, 100% {
+    box-shadow: 0 0 20px 0 rgba(34, 224, 250, 0.5), 0 0 40px 0 rgba(130, 16, 170, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px 0 rgba(34, 224, 250, 0.7), 0 0 60px 0 rgba(130, 16, 170, 0.5);
+  }
+}
+
+.modal-gradient-shadow {
+  animation: pulse-shadow 3s infinite;
 }

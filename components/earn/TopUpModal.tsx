@@ -2,7 +2,7 @@ import { useState } from "react";
 import PoolToggles from "./PoolToggles";
 import ModalClose from "../common/ModalClose";
 import NumberInput from "../common/NumberInput";
-import AssetSelect from "../common/AssetSelect";
+import AssetSelect from "../common/AssetDropdown";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import { CollateralType, TabType } from "@/types/earn";
 import { COLLATERAL_OPTIONS } from "@/lib/constants";
@@ -75,7 +75,7 @@ const TopUpModal = ({
       </div>
 
       {/* Topup / Withdrawal method dropdown */}
-      <p className="text-gray-four text-base font-bold">
+      <p className="text-gray-text text-base font-bold">
         {activeTab === "deposit" ? "Topup Method" : "Withdrawal Method"}
       </p>
       <div className="bg-button-grad p-0.5 rounded-7">

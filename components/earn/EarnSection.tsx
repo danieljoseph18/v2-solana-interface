@@ -23,11 +23,11 @@ const StatItem = ({
     <div className="flex items-center gap-4 px-4 py-2">
       <img src={iconSrc} alt={altText} />
       <div className="flex flex-col gap-2">
-        <p className="text-xs text-gray-one">{label}</p>
+        <p className="text-xs text-gray-text">{label}</p>
         <p className="text-white text-base font-bold">
           {value}
           {subValue && (
-            <span className="text-xs text-gray-one font-medium">
+            <span className="text-xs text-gray-text font-medium">
               {subValue}
             </span>
           )}

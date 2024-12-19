@@ -2,7 +2,7 @@ import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import React, { useState, useEffect, useRef } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
-type AssetSelectProps = {
+type AssetDropdownProps = {
   options: string[];
   selectedOption: string;
   onOptionSelect: (option: string) => void;
@@ -15,7 +15,7 @@ type AssetSelectProps = {
   getOptionLabel?: (option: string) => string;
 };
 
-const AssetSelect: React.FC<AssetSelectProps> = ({
+const AssetDropdown: React.FC<AssetDropdownProps> = ({
   options,
   selectedOption,
   onOptionSelect,
@@ -79,13 +79,13 @@ const AssetSelect: React.FC<AssetSelectProps> = ({
         <ul
           className={`absolute z-50 ${
             positionAbove ? "bottom-full mb-1" : "top-full mt-1"
-          } right-0 w-[200px] bg-black-one shadow-lg rounded-3 text-sm border-[#282F39] border-2 font-semibold`}
+          } right-0 w-[200px] bg-card-grad shadow-lg rounded-3 text-sm border-cardborder border-2 font-semibold`}
         >
           {options.map((option: string) => (
             <li
               key={option}
               onClick={() => handleOptionClick(option)}
-              className="px-4 py-2 w-full rounded-md flex flex-row items-center gap-2 cursor-pointer hover:bg-button-grad border-transparent border-2 hover:border-sol-purple"
+              className="px-4 py-2 w-full rounded-md flex flex-row items-center gap-2 cursor-pointer hover:bg-button-grad border-transparent border-2 hover:border-printer-orange"
             >
               {showImages && (
                 <img
@@ -105,4 +105,4 @@ const AssetSelect: React.FC<AssetSelectProps> = ({
   );
 };
 
-export default AssetSelect;
+export default AssetDropdown;

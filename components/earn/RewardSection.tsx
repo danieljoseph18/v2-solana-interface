@@ -29,7 +29,7 @@ const RewardSection = ({
     <div className="w-full p-6 flex gap-4">
       <div className="w-full bg-button-grad p-0.5 rounded-7">
         <div className="flex flex-col gap-2 w-full h-full bg-card-grad rounded-7">
-          <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center justify-between px-4 py-3">
             <p className="text-white text-base font-bold">Rewards</p>
             <ToggleSwitch
               value={isAutoCompound}
@@ -42,12 +42,12 @@ const RewardSection = ({
           {/* Responsive Rewards Content */}
           <div className="flex flex-col md:flex-row md:items-center justify-between px-4 py-2 pb-4">
             <div className="flex flex-col flex-grow gap-2 pt-2 pb-4">
-              <p className="text-xs text-gray-one">
+              <p className="text-xs text-gray-text">
                 {type === "stake" ? "Earned to date:" : "Accrued to date:"}
               </p>
               <p className="text-white text-base font-bold">
                 {earnedToDate.amount} USDC{" "}
-                <span className="text-gray-one text-xs font-medium">
+                <span className="text-gray-text text-xs font-medium">
                   ${earnedToDate.usdValue}
                 </span>
               </p>
@@ -60,10 +60,10 @@ const RewardSection = ({
 
             <div className="flex flex-row flex-grow items-center gap-2 py-4">
               <div className="flex flex-col flex-grow gap-2">
-                <p className="text-xs text-gray-one">Available to claim:</p>
+                <p className="text-xs text-gray-text">Available to claim:</p>
                 <p className="text-white text-base font-bold">
                   {availableToClaim.amount} USDC{" "}
-                  <span className="text-gray-one text-xs font-medium">
+                  <span className="text-gray-text text-xs font-medium">
                     ${availableToClaim.usdValue}
                   </span>
                 </p>
@@ -71,7 +71,7 @@ const RewardSection = ({
               <div className="flex-grow">
                 <Button
                   onPress={onClaimRewards}
-                  className="w-full md:w-auto h-full"
+                  className="w-full h-full bg-green-grad hover:bg-green-grad-hover py-3 rounded-3 border-2 border-printer-green"
                 >
                   Claim Rewards
                 </Button>

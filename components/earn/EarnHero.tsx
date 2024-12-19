@@ -22,7 +22,7 @@ const EarnHero = ({
       <div className="flex w-full justify-between p-4 bg-card-grad border border-cardborder rounded-7">
         <div className="flex flex-col gap-4 w-full md:w-1/3">
           <p className="font-bold text-xl text-white">{mainTitle}</p>
-          <p className="text-13 text-gray-one">{subTitle}</p>
+          <p className="text-13 text-gray-text">{subTitle}</p>
         </div>
         <Image
           src={PrinterLogo}
@@ -37,7 +37,7 @@ const EarnHero = ({
       <div className="flex flex-col md:flex-row w-full justify-between p-4 gap-2 bg-card-grad border border-cardborder rounded-7">
         <div className="flex flex-col gap-4 w-full md:w-2/3">
           <p className="font-bold text-base text-white">{secondTitle}</p>
-          <p className="text-gray-one text-xs">{secondSubTitle}</p>
+          <p className="text-gray-text text-xs">{secondSubTitle}</p>
         </div>
 
         <Button href={docLink} className="w-full md:w-auto h-full">

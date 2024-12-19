@@ -16,7 +16,7 @@ const PoolToggles = ({
               ? "border-2 border-printer-green bg-green-grad hover:bg-green-grad-hover"
               : "border-2 border-printer-red bg-red-grad hover:bg-red-grad-hover"
           }`
-        : "bg-transparent text-gray-one"
+        : "bg-transparent text-gray-text"
     } px-4 py-3 w-full text-center rounded-full font-bold text-xs hover:opacity-80`;
   };
 
@@ -27,6 +27,7 @@ const PoolToggles = ({
         const styles = getTabStyles(isActive, tab === "deposit");
         return (
           <Button
+            key={`${tab}-toggle`}
             className={styles}
             onPress={() => setActiveTab(tab as TabType)}
           >

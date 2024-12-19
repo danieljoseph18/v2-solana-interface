@@ -40,7 +40,7 @@ const EntryButtons = ({
       }
     >
       <div
-        className={`text-gray-four font-bold text-sm mb-2 ${
+        className={`text-gray-text font-bold text-sm mb-2 ${
           mobileVariant ? "text-center" : ""
         }`}
       >

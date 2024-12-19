@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import EntryStats from "./EntryStats";
 import EntryButton from "./EntryButton";
 import ToggleSwitch from "@/components/common/ToggleSwitch";
@@ -471,7 +471,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
             isLong={isLong}
             isLimit={activeType === "Limit"}
             isTrigger={activeType === "Trigger"}
-            ticker={asset?.customId || "BTC:1"}
+            ticker={asset?.customId || "SOL:1"}
             leverage={leverage}
             collateralToken={collateralType as `0x${string}`}
             collateralDelta={parseFloat(collateral)}

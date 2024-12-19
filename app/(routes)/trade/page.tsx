@@ -316,10 +316,10 @@ const TradePage = () => {
     >
       <SSEListener onUpdate={() => fetchPositionData(true)} timeout={5000} />
       <div
-        className={`flex flex-col gap-4 relative lg:gap-0 lg:mt-0 lg:px-0 lg:flex-row w-full md:max-h-[90vh] bottom-0 left-0 right-0 bg-[#07080A] max-w-[2000px]  mx-auto 3xl:border-b border-cardborder 3xl:border-x`}
+        className={`flex flex-col gap-4 relative lg:gap-0 lg:mt-0 lg:px-0 lg:flex-row w-full md:max-h-[90vh] bottom-0 left-0 right-0 bg-[#07080A] 3xl:border-b border-cardborder 3xl:border-x`}
       >
         <div
-          className={` flex flex-col  lg:gap-0  lg:w-[70%] lg:sticky lg:max-h-[90vh] lg:left-0 lg:top-0 lg:h-fit no-scrollbar lg:pb-20  lg:border-r-2 border-r-cardborder  `}
+          className={` flex flex-col lg:gap-0 lg:w-[70%] lg:overflow-y-auto lg:sticky lg:max-h-[90vh] lg:left-0 lg:top-0 lg:h-fit no-scrollbar lg:pb-20  lg:border-r-2 border-r-cardborder  `}
         >
           <AssetBanner markPrice={markPrice} refreshVolume={refreshVolume} />
           <Script
@@ -373,7 +373,7 @@ const TradePage = () => {
           />
         </div>
         <div
-          className={`flex flex-col justify-start lg:w-[30%] lg:sticky lg:max-h-[90vh] lg:right-0 lg:top-0 no-scrollbar pb-20 lg:pb-20`}
+          className={`flex flex-col justify-start lg:w-[30%] lg:sticky lg:overflow-y-auto lg:max-h-[90vh] lg:right-0 lg:top-0 no-scrollbar pb-20 lg:pb-20`}
         >
           {!isTablet && (
             <div className="flex flex-col w-full h-auto">

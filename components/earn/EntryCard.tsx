@@ -2,7 +2,7 @@ import { BsCreditCardFill } from "react-icons/bs";
 import PoolToggles from "./PoolToggles";
 import { CollateralType, TabType } from "@/types/earn";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
-import AssetSelect from "../common/AssetSelect";
+import AssetDropdown from "../common/AssetDropdown";
 import { COLLATERAL_OPTIONS } from "@/lib/constants";
 import NumberInput from "../common/NumberInput";
 import ModalClose from "../common/ModalClose";
@@ -44,7 +44,7 @@ const EntryCard = ({
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex w-full items-center justify-between">
-            <p className="text-gray-one text-sm">
+            <p className="text-gray-text text-sm">
               {isDeposit ? "Deposit" : "Withdraw"}
             </p>
             {isDeposit && !isModalForm && (
@@ -74,7 +74,7 @@ const EntryCard = ({
                 {collateralType}
               </p>
             </div>
-            <AssetSelect
+            <AssetDropdown
               options={COLLATERAL_OPTIONS}
               selectedOption={collateralType}
               onOptionSelect={(option) =>
@@ -88,7 +88,7 @@ const EntryCard = ({
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex w-full items-center justify-between">
-            <p className="text-gray-one text-sm">Amount</p>
+            <p className="text-gray-text text-sm">Amount</p>
             <div className="flex items-center gap-2">
               <img
                 src="/img/earn/solana-wallet.svg"

@@ -9,7 +9,7 @@ import FooterBanner from "@/components/nav/FooterBanner";
 import { Providers } from "@/components/providers/Providers";
 
 export const metadata: Metadata = {
-  title: "PRINT3R | Bringing Leverage to DAOS.FUN",
+  title: "PRINT3R | Onchain Leverage for DAOS.FUN",
   description:
     "Trade any Daos.Fun asset with up to 50x leverage directly from your wallet on Solana Network. Experience dynamic pricing, gamified trading, and unmatched liquidity incentives with PRINT3R.",
 };

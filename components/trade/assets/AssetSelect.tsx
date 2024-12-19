@@ -3,7 +3,10 @@ import Image from "next/image";
 import AssetSelectPopup from "./AssetSelectPopup";
 import { useAsset } from "./AssetContext";
 import { BsChevronDown } from "react-icons/bs";
-import { getImageForToken } from "@/lib/utils/getTokenImage";
+import {
+  getImageForToken,
+  getImageUrlFromTokenSymbol,
+} from "@/lib/utils/getTokenImage";
 
 const AssetSelect = () => {
   const [showPopup, setShowPopup] = useState(false);
@@ -17,13 +20,13 @@ const AssetSelect = () => {
     if (!asset) {
       // Set default asset if none is selected
       setAsset({
-        customId: "BTC:1",
-        symbol: "BTC",
-        fullName: "Bitcoin",
-        leverage: 1000,
+        customId: "SOL:1",
+        symbol: "SOL",
+        fullName: "Solana",
+        leverage: 50,
         price: 0,
         change: 0,
-        image: "/img/trade/BTC-Logo.png",
+        image: getImageUrlFromTokenSymbol("SOL"),
         categories: ["Hot"],
         priceDecimals: 2,
         apy: 0.01,
@@ -35,7 +38,7 @@ const AssetSelect = () => {
         totalShortDeposits: 0,
         liquidity: 0,
         networks: {},
-        coingeckoId: "bitcoin",
+        coingeckoId: "solana",
       });
     }
   }, [asset, setAsset]);
