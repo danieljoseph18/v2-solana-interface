@@ -154,7 +154,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                 >
                   <Button
                     className="ml-2 text-white px-2 cursor-pointer bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => order}
+                    onPress={() => order}
                     disabled={!cancellableOrders[order.orderKey]}
                   >
                     Cancel

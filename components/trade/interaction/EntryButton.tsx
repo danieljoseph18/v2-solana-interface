@@ -222,7 +222,7 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     };
 
     fetchPositionFeeInCollateral();
-  }, [positionFee, collateralPrices, isLong, updateState]);
+  }, [positionFee, collateralPrices, isLong]);
 
   useEffect(() => {
     setCountdown(5);

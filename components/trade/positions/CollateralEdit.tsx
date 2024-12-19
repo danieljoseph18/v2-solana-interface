@@ -334,7 +334,7 @@ const CollateralEdit = ({
       </div>
       <div className="py-4 pb-24 md:pb-0">
         <Button
-          onClick={() => {}}
+          onPress={() => {}}
           disabled={
             (!isDeposit && !isValidWithdrawal) ||
             !isValidLeverage ||

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 
 type Props = {
   tokenSymbol: string;
@@ -31,7 +31,7 @@ const TokenLogo = ({
         }`}
         width={128}
         height={128}
-        src={getImageUrlfromTokenSymbol(tokenSymbol)}
+        src={getImageUrlFromTokenSymbol(tokenSymbol)}
         alt={`${tokenSymbol} Token`}
       />
       {tokenName && (

@@ -56,7 +56,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       </div>
       <div className="flex justify-center mt-4">
         <Button
-          onClick={() => order}
+          onPress={() => order}
           className="bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 font-bold text-white px-4 py-2"
         >
           Cancel Order

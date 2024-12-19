@@ -3,7 +3,7 @@ import { getPriceDecimals } from "@/lib/web3/formatters";
 import { FaShareSquare } from "react-icons/fa";
 import ModalV2 from "@/components/common/ModalV2";
 import TradeShare from "./TradeShare";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 
 interface ClosedPositionsTableProps {
   closedPositions: ClosedPosition[];
@@ -164,7 +164,7 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
             }
             entryPrice={selectedPosition.entryPrice}
             currentPrice={selectedPosition.exitPrice}
-            assetLogo={getImageUrlfromTokenSymbol(
+            assetLogo={getImageUrlFromTokenSymbol(
               selectedPosition.symbol.split(":")[0]
             )}
             isLong={selectedPosition.isLong}

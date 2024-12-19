@@ -44,7 +44,8 @@ const config: Config = {
         },
       },
       borderRadius: {
-        3: "0.188rem",
+        "3": "3px",
+        "7": "7px",
       },
       backgroundImage: {
         "home-purple-trail":
@@ -75,6 +76,7 @@ const config: Config = {
         slider: "linear-gradient(270.04deg, #30E0A1 0%, #118159 99.97%)",
         "green-grad-hover": "linear-gradient(180deg, #27A379 0%, #30E0A1 100%)",
         "red-grad": "linear-gradient(180deg, #FA2256 0%, #AA1035 100%)",
+        "red-grad-hover": "linear-gradient(180deg, #AA1035 0%, #FA2256 100%)",
         "secondary-banner": "url('/img/common/airdrop-bg.png')",
         "dropdown-grad": "linear-gradient(180deg, #2E3146 0%, #20222F 100%)",
         "futuristic-overlay": "url('/img/earn/futuristic-hero-overlay.png')",

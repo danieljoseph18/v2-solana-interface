@@ -220,14 +220,14 @@ Trade anything, anywhere #onchain 👇`;
 
       <div className="mt-6 space-x-4">
         <Button
-          onClick={handleUpload}
+          onPress={handleUpload}
           disabled={!canvasReady || isLoading}
           className="text-white px-2 cursor-pointer bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 font-bold"
         >
           Generate Image
         </Button>
         <Button
-          onClick={shareToTwitter}
+          onPress={shareToTwitter}
           disabled={!shareUrl || isLoading}
           className={`text-white px-2 ${
             !shareUrl || isLoading

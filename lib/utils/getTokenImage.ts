@@ -17,7 +17,7 @@ export const getImageForToken = (asset: Asset): string => {
   }
 };
 
-export const getImageUrlfromTokenSymbol = (tokenSymbol: string): string => {
+export const getImageUrlFromTokenSymbol = (tokenSymbol: string): string => {
   const cmcIdArray = cmcIds.get(tokenSymbol);
 
   if (cmcIdArray && cmcIdArray.length > 0) {

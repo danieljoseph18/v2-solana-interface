@@ -8,6 +8,7 @@ import NavLogo from "@/app/assets/nav/nav-logo.png";
 import { BsChevronDown } from "react-icons/bs";
 import useWindowSize from "@/hooks/useWindowSize";
 import ConnectWallet from "./ConnectWallet";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 
 const NavBar: React.FC = () => {
   const { width } = useWindowSize();
@@ -35,8 +36,8 @@ const NavBar: React.FC = () => {
           >
             <div className="flex flex-row items-center gap-2">
               <Image
-                src={"/img/solana-logo.svg"}
-                className="w-5 h-5"
+                src={getImageUrlFromTokenSymbol("SOL")}
+                className="w-5 h-5 rounded-full"
                 alt="Chain Logo"
                 width={128}
                 height={128}

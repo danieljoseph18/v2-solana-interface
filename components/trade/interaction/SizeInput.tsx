@@ -12,7 +12,7 @@ import { useAsset } from "../assets/AssetContext";
 import CustomSelect from "./CustomSelect";
 import {
   getImageForToken,
-  getImageUrlfromTokenSymbol,
+  getImageUrlFromTokenSymbol,
 } from "@/lib/utils/getTokenImage";
 import InputField from "@/components/common/InputField";
 
@@ -246,7 +246,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
             {isLong ? (
               <>
                 <Image
-                  src={getImageUrlfromTokenSymbol(collateralType)}
+                  src={getImageUrlFromTokenSymbol(collateralType)}
                   alt={collateralType}
                   width={24}
                   height={24}
@@ -262,7 +262,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
             ) : (
               <div className="flex items-center gap-2 bg-transparent rounded text-printer-gray font-bold">
                 <Image
-                  src={getImageUrlfromTokenSymbol("USDC")}
+                  src={getImageUrlFromTokenSymbol("USDC")}
                   alt="USDC"
                   width={24}
                   height={24}

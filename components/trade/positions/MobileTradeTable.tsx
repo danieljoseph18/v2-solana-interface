@@ -5,7 +5,7 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import Image from "next/image";
 import { getClosedPositionProfitLoss, getProfitLoss } from "./helpers";
 import TokenLogo from "@/components/common/TokenLogo";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import { useAsset } from "../assets/AssetContext";
 import DecreasePosition from "./DecreasePosition";
 import ModalV2 from "@/components/common/ModalV2";
@@ -89,7 +89,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
       const urls: { [symbol: string]: string } = {};
       for (const trade of tradesData.openPositions) {
         const symbol = trade.symbol.split(":")[0];
-        const iconUrl = getImageUrlfromTokenSymbol(symbol);
+        const iconUrl = getImageUrlFromTokenSymbol(symbol);
         urls[symbol] = iconUrl;
       }
       setIconUrls(urls);

@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import NumberInput from "@/components/common/NumberInput";
 import CustomSelect from "./CustomSelect";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 
 interface CollateralInputProps {
   value: string;
@@ -55,7 +55,7 @@ const CollateralInput: React.FC<CollateralInputProps> = ({
           </button>
           <div className="flex flex-row items-center gap-2 ml-2">
             <Image
-              src={getImageUrlfromTokenSymbol(collateralType)}
+              src={getImageUrlFromTokenSymbol(collateralType)}
               alt={`${collateralType} Token`}
               width={24}
               height={24}

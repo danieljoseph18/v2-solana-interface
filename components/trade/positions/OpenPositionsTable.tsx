@@ -9,7 +9,7 @@ import InfoTooltip from "@/components/common/InfoTooltip";
 import { IoIosWarning } from "react-icons/io";
 import TradeShare from "./TradeShare";
 import { FaShareSquare } from "react-icons/fa";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 
 interface OpenPositionsTableProps {
   positions: Position[];
@@ -129,7 +129,7 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
         pnlPercentage={parseFloat(profitLoss.pnlPercentage)}
         entryPrice={position.entryPrice}
         currentPrice={markPrice}
-        assetLogo={getImageUrlfromTokenSymbol(position.symbol.split(":")[0])}
+        assetLogo={getImageUrlFromTokenSymbol(position.symbol.split(":")[0])}
         isLong={position.isLong}
         leverage={leverage}
         onClose={() => setIsModalOpen(false)}
@@ -422,8 +422,7 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
                       </div>
                       <Button
                         className="ml-2 text-white px-2 cursor-pointer bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 font-bold"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onPress={() => {
                           handleDecreaseClick(position);
                         }}
                       >

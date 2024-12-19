@@ -7,7 +7,7 @@ import PercentageButtons from "../interaction/PercentageButtons";
 import InfoRow from "./stats/InfoRow";
 import FeesInfo from "./stats/FeesInfo";
 import ToggleSwitch from "@/components/common/ToggleSwitch";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import Image from "next/image";
 import { getProfitLoss } from "./helpers";
 import { helperToast } from "@/lib/helperToast";
@@ -456,8 +456,8 @@ const DecreasePosition = ({
               <Image
                 src={
                   unwrap
-                    ? getImageUrlfromTokenSymbol("ETH")
-                    : getImageUrlfromTokenSymbol("WETH")
+                    ? getImageUrlFromTokenSymbol("ETH")
+                    : getImageUrlFromTokenSymbol("WETH")
                 }
                 alt="token logo"
                 width={24}
@@ -578,7 +578,7 @@ const DecreasePosition = ({
         </div>
         <div className="py-4">
           <Button
-            onClick={() => {}}
+            onPress={() => {}}
             disabled={isButtonDisabled}
             className={`w-full flex items-center justify-center text-center text-base bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 text-white py-6 font-bold ${
               isButtonDisabled ? "cursor-not-allowed" : ""

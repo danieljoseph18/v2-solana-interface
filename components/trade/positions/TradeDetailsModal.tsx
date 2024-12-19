@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaShareSquare } from "react-icons/fa";
 import { getLiqPrice } from "./helpers";
 import TokenLogo from "@/components/common/TokenLogo";
-import { getImageUrlfromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import { Button } from "@nextui-org/react";
 import ModalClose from "@/components/common/ModalClose";
 import { formatSmallNumber, getPriceDecimals } from "@/lib/web3/formatters";
@@ -33,7 +33,7 @@ const TradeDetailsModal = ({
   const [priceDecimals, setPriceDecimals] = useState(7);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  const iconUrl = getImageUrlfromTokenSymbol(position.symbol);
+  const iconUrl = getImageUrlFromTokenSymbol(position.symbol);
 
   useEffect(() => {
     const fetchPriceDecimals = async () => {
@@ -122,7 +122,7 @@ const TradeDetailsModal = ({
           Withdraw
         </button>
         <Button
-          onClick={() => handleCloseClick(position)}
+          onPress={() => handleCloseClick(position)}
           className="cursor-pointer bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3  font-bold hover:scale-105 text-white px-4 py-2"
         >
           Close
@@ -134,7 +134,7 @@ const TradeDetailsModal = ({
           pnlPercentage={parseFloat(profitLoss.pnlPercentage)}
           entryPrice={position.entryPrice}
           currentPrice={markPrice}
-          assetLogo={getImageUrlfromTokenSymbol(position.symbol.split(":")[0])}
+          assetLogo={getImageUrlFromTokenSymbol(position.symbol.split(":")[0])}
           isLong={position.isLong}
           leverage={parseFloat(getLeverage())}
           onClose={() => setIsShareModalOpen(false)}
