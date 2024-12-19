@@ -129,7 +129,7 @@ const TopUpModal = ({
       <div className="flex items-center gap-4">
         <Checkbox color="default" />
         <p>
-          I have read and agree to the BIDMORE{" "}
+          I have read and agree to the PRINT3R{" "}
           <Link href="" className="text-sol-blue">
             Terms & Conditions
           </Link>
