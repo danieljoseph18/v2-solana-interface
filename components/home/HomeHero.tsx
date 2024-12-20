@@ -112,7 +112,7 @@ const HomeHero = () => {
       <div className="flex items-center justify-center w-full">
         <Button
           className="bg-p3-button hover:bg-p3-button-hover border-2 border-p3-border !rounded-3 text-base text-white font-semibold font-poppins px-3 py-2 min-w-[200px]"
-          onClick={() => setIsModalOpen(true)}
+          onPress={() => setIsModalOpen(true)}
         >
           Trade Now
         </Button>

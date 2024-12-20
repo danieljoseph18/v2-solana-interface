@@ -39,7 +39,7 @@ function FooterBanner() {
             </div>
           ) : null}
           <p className="text-base-gray">
-            Version number - Open Beta v2.3.6 Testnet
+            Version number - Private Beta v0.0.1 Testnet
           </p>
           {pathsWithTour.includes(pathname) ? (
             <div

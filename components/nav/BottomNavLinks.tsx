@@ -30,7 +30,7 @@ const BottomNavLinks = () => {
   return (
     <div className="flex flex-row w-full justify-around items-center">
       <BottomNavLink
-        path="https://v2-homepage.vercel.app/" // Homepage
+        path="/" // Homepage
         label="Home"
         svgContent={HomeIcon}
       />

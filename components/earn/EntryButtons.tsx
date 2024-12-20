@@ -51,7 +51,7 @@ const EntryButtons = ({
           className={`flex flex-row items-center justify-center gap-2 w-[50%] px-4 py-3 rounded font-bold text-base bg-green-grad text-white border border-cardborder  ${getButtonClass(
             "up"
           )}`}
-          onClick={() => {
+          onPress={() => {
             setIsPositive(true);
             onClick && onClick();
           }}

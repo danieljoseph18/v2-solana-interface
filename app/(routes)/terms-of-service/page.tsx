@@ -717,7 +717,7 @@ const TermsAndConditions = () => {
       {showBackToTop && (
         <Button
           className="fixed bottom-4 right-4 rounded-full p-2"
-          onClick={scrollToTop}
+          onPress={scrollToTop}
           aria-label="Back to top"
         >
           <BsChevronUp className="h-4 w-4" />

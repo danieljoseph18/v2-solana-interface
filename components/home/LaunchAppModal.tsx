@@ -29,7 +29,7 @@ const LaunchAppModal = ({
     if (isChecked) {
       localStorage.setItem("dontShowLaunchAppModal", "true");
     }
-    router.push(`https://v2-app-kappa.vercel.app${selectedPath}`);
+    router.push(selectedPath);
     setIsOpen(false);
   };
 
@@ -54,7 +54,7 @@ const LaunchAppModal = ({
             The website is a community deployed and maintained instance of the
             open source{" "}
             <Link
-              href="https://v2-app-kappa.vercel.app/"
+              href="/trade"
               className="underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -102,7 +102,7 @@ const LaunchAppModal = ({
         </div>
         <Button
           className="bg-p3-button hover:bg-p3-button-hover border-2 border-p3-border !rounded-3 text-base text-white font-semibold font-poppins px-3 py-2 w-full"
-          onClick={handleAgree}
+          onPress={handleAgree}
         >
           Trade Now
         </Button>

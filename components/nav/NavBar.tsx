@@ -16,7 +16,7 @@ const NavBar: React.FC = () => {
     <nav className="flex flex-col px-2 py-4 gap-2 md:px-8 md:py-2 shadow-2xl h-fit  border-b border-cardborder bg-card-grad text-white w-screen">
       <div className="flex flex-row w-full justify-between items-center mr-4">
         <div className="flex items-center">
-          <Link className="" href="https://v2-homepage.vercel.app/">
+          <Link className="" href="/">
             <Image
               src={NavLogo}
               className="w-32 sm:w-36 md:w-44 h-auto"
