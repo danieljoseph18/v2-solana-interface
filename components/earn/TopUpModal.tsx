@@ -2,7 +2,7 @@ import { useState } from "react";
 import PoolToggles from "./PoolToggles";
 import ModalClose from "../common/ModalClose";
 import NumberInput from "../common/NumberInput";
-import AssetSelect from "../common/AssetDropdown";
+import AssetDropdown from "../common/AssetDropdown";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import { CollateralType, TabType } from "@/types/earn";
 import { COLLATERAL_OPTIONS } from "@/lib/constants";
@@ -90,7 +90,7 @@ const TopUpModal = ({
             />
             <p className="text-white text-base font-light">{collateralType}</p>
           </div>
-          <AssetSelect
+          <AssetDropdown
             options={COLLATERAL_OPTIONS}
             selectedOption={collateralType}
             onOptionSelect={(option) =>
@@ -130,7 +130,7 @@ const TopUpModal = ({
         <Checkbox color="default" />
         <p>
           I have read and agree to the PRINT3R{" "}
-          <Link href="" className="text-sol-blue">
+          <Link href="" className="text-printer-orange">
             Terms & Conditions
           </Link>
         </p>

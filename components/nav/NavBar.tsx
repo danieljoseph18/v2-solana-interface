@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import NavLinksV2 from "./NavLinksV2";
 import Image from "next/image";
 import NavLogo from "@/app/assets/nav/nav-logo.png";
-import { BsChevronDown } from "react-icons/bs";
 import useWindowSize from "@/hooks/useWindowSize";
 import ConnectWallet from "./ConnectWallet";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
@@ -47,7 +46,6 @@ const NavBar: React.FC = () => {
                 <p className="text-sm text-white font-semibold">SOLANA</p>
               )}
             </div>
-            <BsChevronDown className={`text-printer-orange`} />
           </button>
 
           <ConnectWallet styles="flex items-center bg-p3-button hover:bg-p3-button-hover border-2 border-p3 text-white py-1 px-4 !rounded-3 h-10 trade-first-step" />

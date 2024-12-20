@@ -49,7 +49,7 @@ const EntryCard = ({
             </p>
             {isDeposit && !isModalForm && (
               <button
-                className="flex items-center gap-1 text-sol-blue text-sm font-bold hover:opacity-80 cursor-pointer"
+                className="flex items-center gap-1 text-printer-orange text-sm font-bold hover:opacity-80 cursor-pointer"
                 onClick={handleCardClick}
               >
                 <BsCreditCardFill />

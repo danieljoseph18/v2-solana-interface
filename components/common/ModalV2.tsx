@@ -58,7 +58,7 @@ const ModalV2 = ({
       }
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen, isVisible, width, fullScreenOnMobile, toggleVisibility]);
+  }, [isOpen, isVisible, width, fullScreenOnMobile]);
 
   const handleOpenChange = (open: boolean) => {
     setIsModalOpen(open);

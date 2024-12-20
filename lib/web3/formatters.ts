@@ -112,3 +112,84 @@ export const formatLiquidity = (liquidity: number): string => {
 export const formatSmallNumber = (num: number): string => {
   return num.toFixed(20).replace(/\.?0+$/, "");
 };
+
+export const nFormatter = (
+  number: number | null | undefined | string,
+  decimals: number = 2,
+  symbol: string | null = null,
+  thousands: boolean = false
+) => {
+  if (number === undefined || number === null) {
+    return "...";
+  }
+
+  if (thousands) {
+    const lookup = [
+      { value: 1, symbol: "" },
+      { value: 1e3, symbol: "k" },
+      { value: 1e6, symbol: "M" },
+      { value: 1e9, symbol: "B" },
+      { value: 1e12, symbol: "T" },
+      //   { value: 1e15, symbol: "P" },
+      //   { value: 1e18, symbol: "E" },
+    ];
+    const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+    const item = lookup
+      .slice()
+      .reverse()
+      .find(function (item) {
+        return Math.abs(Number(number)) >= item.value;
+      });
+
+    if (!item) {
+      // Handle the case where the input value is 0
+      return Number("0").toFixed(decimals);
+    }
+    const formattedValue = item
+      ? (Math.abs(Number(number)) / item.value)
+          .toFixed(decimals)
+          .replace(rx, "$1")
+      : "0";
+
+    return Number(number) < 0
+      ? `-${formattedValue}${item?.symbol}`
+      : `${formattedValue}${item?.symbol}`;
+  }
+
+  let n = new Intl.NumberFormat("en-UK", {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+  }).format(Math.abs(Number(number)));
+
+  if (symbol) {
+    if (Number(number) >= 0) {
+      n = symbol.concat(n);
+    } else {
+      n = "-".concat(symbol.concat(n));
+    }
+  } else if (Number(number) < 0) {
+    n = "-".concat(n);
+  }
+  return n;
+};
+
+export const getDirection = (
+  number: number | null | undefined | string
+): "up" | "none" | "down" => {
+  let result: "up" | "none" | "down" = "none";
+  if (number === undefined || number === null) {
+    return result;
+  }
+  if (isNaN(Number(number))) {
+    return result;
+  }
+  if (Number(number) > 0) {
+    result = "up";
+  } else if (Number(number) < 0) {
+    result = "down";
+  } else {
+    result = "none";
+  }
+
+  return result;
+};
