@@ -9,7 +9,12 @@ import FooterBanner from "@/components/nav/FooterBanner";
 import { Providers } from "@/components/providers/Providers";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import AccountOverlay from "@/components/wallet/AccountOverlay";
+import dynamic from "next/dynamic";
+
+const ClientAccountOverlay = dynamic(
+  () => import("@/components/wallet/AccountOverlay"),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: "PRINT3R | Onchain Leverage for DAOS.FUN",
@@ -32,7 +37,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             <NavBar />
             {children}
             <BottomNav />
-            {/* <AccountOverlay /> */}
+            <ClientAccountOverlay />
             <FooterBanner />
           </Providers>
           <ToastContainer
