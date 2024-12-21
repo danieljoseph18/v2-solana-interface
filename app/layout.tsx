@@ -32,7 +32,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             <NavBar />
             {children}
             <BottomNav />
-            <AccountOverlay />
+            {/* <AccountOverlay /> */}
             <FooterBanner />
           </Providers>
           <ToastContainer

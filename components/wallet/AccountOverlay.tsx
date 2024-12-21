@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAccountOverlay } from "@/contexts/AccountContext";
 import InitialView from "./InitialView";
 import LoginView from "./LoginView";
@@ -19,7 +19,7 @@ const AccountOverlay = () => {
   const [showHistoryView, setShowHistoryView] = useState(false);
   const [showSettingsView, setShowSettingsView] = useState(false);
   const [showDashboardView, setShowDashboardView] = useState(false);
-  const [prices, setPrices] = useState<{ [key: string]: number }>({});
+  const [prices] = useState<{ [key: string]: number }>({});
   const [shouldRefresh, setShouldRefresh] = useState(false);
 
   const handleLoginClick = () => {
