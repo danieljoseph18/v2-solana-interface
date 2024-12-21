@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccountOverlay } from "@/contexts/AccountContext";
 import InitialView from "./InitialView";
 import LoginView from "./LoginView";
@@ -9,6 +9,7 @@ import Deposit from "./Deposit";
 import Withdraw from "./Withdraw";
 import History from "./History";
 import Settings from "./Settings";
+import { usePrivy } from "@privy-io/react-auth";
 
 const AccountOverlay = () => {
   const { isAccountOverlayOpen, closeAccountOverlay } = useAccountOverlay();
@@ -21,6 +22,12 @@ const AccountOverlay = () => {
   const [showDashboardView, setShowDashboardView] = useState(false);
   const [prices] = useState<{ [key: string]: number }>({});
   const [shouldRefresh, setShouldRefresh] = useState(false);
+
+  const { authenticated } = usePrivy();
+
+  useEffect(() => {
+    setShowDashboardView(true);
+  }, [authenticated]);
 
   const handleLoginClick = () => {
     setShowLoginView(true);
@@ -94,14 +101,7 @@ const AccountOverlay = () => {
       />
     );
   } else if (showLoginView) {
-    content = (
-      <LoginView
-        handleBackClick={handleBackClick}
-        handleLoginClick={() => {
-          setShowDashboardView(true);
-        }}
-      />
-    );
+    content = <LoginView handleBackClick={handleBackClick} />;
   } else {
     content = (
       <InitialView
