@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import ReactECharts from "echarts-for-react";
-// import { fetchTokensData } from "@/app/web3/wallets/getGrowthChartData";
+import ReactECharts from "echarts-for-react";
+import { getWalletGrowthChart } from "@/lib/web3/getWalletGrowthChart";
 
 type DataPoint = {
   timestamp: number;
@@ -28,13 +28,13 @@ const AccountGrowthChart = ({
         // Reset the data before fetching new data
         setData([]);
 
-        // const chartData = await fetchTokensData(
-        //   smartAccountAddress,
-        //   30, // 30 days
-        //   chainId
-        // );
+        const chartData = await getWalletGrowthChart(
+          smartAccountAddress,
+          30,
+          chainId
+        );
 
-        // setData(chartData);
+        setData(chartData);
       } catch (error) {
         console.error("Error fetching growth chart data:", error);
       }
@@ -131,11 +131,11 @@ const AccountGrowthChart = ({
 
   return (
     <div className="w-full">
-      {/* <ReactECharts
+      <ReactECharts
         option={getOption()}
         style={{ height: "84px", width: "100%" }}
         opts={{ renderer: "svg" }}
-      /> */}
+      />
     </div>
   );
 };

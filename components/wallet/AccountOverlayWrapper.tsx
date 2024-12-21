@@ -6,6 +6,6 @@ const AccountOverlay = dynamic(() => import("./AccountOverlay"), {
   ssr: false,
 });
 
-export default function ClientWrapper() {
+export default function AccountOverlayWrapper() {
   return <AccountOverlay />;
 }
