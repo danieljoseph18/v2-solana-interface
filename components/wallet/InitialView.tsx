@@ -35,7 +35,7 @@ const InitialView = ({
           className={`flex items-center justify-center text-center text-base bg-green-grad hover:bg-green-grad-hover border-2 border-printer-green rounded-[53px] text-white !py-4 md:py-6 font-medium ${
             !isLastSlide ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          onClick={onLoginClick}
+          onPress={onLoginClick}
           disabled={!isLastSlide}
         >
           Create PRINT3R Wallet

@@ -7,13 +7,13 @@ import Image from "next/image";
 import { FaArrowLeft } from "react-icons/fa";
 import { helperToast } from "@/lib/helperToast";
 
-const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
-  const [connectedWallet, setConnectedWallet] = useState<boolean>(false);
-
-  const connectWallet = async () => {
-    console.log("connectWallet");
-  };
-
+const LoginView = ({
+  handleBackClick,
+  handleLoginClick,
+}: {
+  handleBackClick: () => void;
+  handleLoginClick: () => void;
+}) => {
   return (
     <div className="min-h-screen bg-card-grad text-white p-4">
       <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
@@ -34,7 +34,7 @@ const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
         <Button
           size="lg"
           className="w-full bg-green-grad hover:bg-green-grad-hover text-white py-4! px-4 rounded-[53px] border-printer-green border-1"
-          onPress={connectWallet}
+          onPress={handleLoginClick}
         >
           Connect Wallet
         </Button>
@@ -46,7 +46,7 @@ const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
         <Button
           size="lg"
           className="w-full bg-white-card-grad text-black font-medium py-4! px-4 flex items-center justify-center gap-2 rounded-[53px] border-white border-1"
-          onPress={connectWallet}
+          onPress={handleLoginClick}
         >
           <Image src={GoogleIcon} alt="Google" className="w-6 h-6" />
           Sign in with Google
@@ -57,7 +57,7 @@ const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
           </span>
           <span
             className="text-sm text-printer-green font-bold cursor-pointer hover:text-green-bottom transition-colors"
-            onClick={connectWallet}
+            onClick={handleLoginClick}
           >
             Sign in
           </span>
