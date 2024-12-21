@@ -1,0 +1,36 @@
+.swiper :global(.swiper-pagination) {
+  position: absolute;
+  bottom: -25px !important; /* Increased distance from bottom */
+  left: 0;
+  width: 100%;
+  z-index: 10 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.swiper :global(.swiper-pagination-bullet) {
+  width: 8px !important; 
+  height: 8px !important;
+  background-color: #5D6170 !important;
+  opacity: 1;
+  transition: all 300ms ease;
+  margin: 0 4px !important;
+  display: inline-block !important; 
+}
+
+.swiper :global(.swiper-pagination-bullet-active) {
+  width: 9px !important;
+  height: 9px !important; 
+  background-color: #CDD0D1 !important;
+  border-radius: 20px !important;
+  opacity: 1 !important;
+}
+
+.swiper :global(.swiper-container) {
+  padding-bottom: 30px;
+}
+
+.swiper {
+  overflow: visible !important;
+}

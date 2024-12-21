@@ -116,39 +116,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
     setIsModalOpen(true);
   };
 
-  const updatePricesForAssets = useCallback(async (symbols: string[]) => {
-    const PRICE_SERVER_URL =
-      process.env.NEXT_PUBLIC_PRICE_SERVER_URL || "http://localhost:5002";
-
-    try {
-      const response = await fetch(
-        `${PRICE_SERVER_URL}/prices/get-prices?customIds=${symbols.join(",")}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch batch prices");
-      }
-
-      const priceResponses: {
-        customId: string;
-        price: number;
-        variance: number;
-      }[] = await response.json();
-
-      const updatedPrices: { [key: string]: number } = {};
-      priceResponses.forEach((item) => {
-        updatedPrices[item.customId] = item.price;
-      });
-
-      setPrices((prevPrices) => ({
-        ...prevPrices,
-        ...updatedPrices,
-      }));
-    } catch (error) {
-      console.error("Error fetching batch prices:", error);
-    }
-  }, []);
-
   useEffect(() => {
     const allPositions = [
       ...tradesData.openPositions,
@@ -160,25 +127,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
     ];
     setSymbols(uniqueSymbols);
   }, [tradesData]);
-
-  useEffect(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    if (symbols.length > 0) {
-      updatePricesForAssets(symbols);
-      intervalRef.current = setInterval(() => {
-        updatePricesForAssets(symbols);
-      }, 3000);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [symbols, updatePricesForAssets]);
 
   return (
     <div className="border-cardborder border-2 bg-card-grad h-64 border-r-0 overflow-y-auto custom-scrollbar">

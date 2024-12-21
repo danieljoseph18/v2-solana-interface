@@ -108,43 +108,6 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
     setSymbols(uniqueSymbols);
   }, [tradesData]);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      updatePricesForAssets(symbols);
-    }, 3000);
-
-    return () => clearInterval(intervalId);
-  }, [symbols]);
-
-  const updatePricesForAssets = async (symbols: string[]) => {
-    const PRICE_SERVER_URL =
-      process.env.NEXT_PUBLIC_PRICE_SERVER_URL || "http://localhost:5002";
-
-    let updatedPrices: { [key: string]: number } = {};
-
-    for (const symbol of symbols) {
-      try {
-        const response = await fetch(
-          `${PRICE_SERVER_URL}/prices/get-price?customId=${symbol}`
-        );
-
-        if (response.ok) {
-          const priceResponse = await response.json();
-          updatedPrices[symbol] = priceResponse.price;
-        } else {
-          console.error(`Failed to fetch data for ${symbol}`);
-        }
-      } catch (error) {
-        console.error(`Error fetching data for ${symbol}:`, error);
-      }
-    }
-
-    setPrices((prevPrices) => ({
-      ...prevPrices,
-      ...updatedPrices,
-    }));
-  };
-
   const handlePositionClick = (
     trade: Position | Order | ClosedPosition,
     profitLoss: {
