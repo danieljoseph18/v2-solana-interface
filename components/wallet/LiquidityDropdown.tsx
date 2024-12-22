@@ -11,9 +11,9 @@ const LiquidityDropdown = ({
   setSelectedToken,
 }: {
   headerElement: React.ReactNode;
-  selectedToken: string;
-  tokenOptions: string[];
-  setSelectedToken: (token: string) => void;
+  selectedToken: TokenType;
+  tokenOptions: TokenType[];
+  setSelectedToken: (token: TokenType) => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,7 +53,7 @@ const LiquidityDropdown = ({
       </div>
       {isOpen && (
         <ul className="absolute z-50 mt-1 w-full bg-dropdown-grad shadow-lg rounded-3 text-sm border-[#282F39] border-2 font-semibold">
-          {tokenOptions.map((option: string) => (
+          {tokenOptions.map((option: TokenType) => (
             <li
               key={option}
               onClick={() => {

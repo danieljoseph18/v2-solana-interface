@@ -6,6 +6,11 @@ import { FaArrowLeft } from "react-icons/fa";
 import NumberPad from "./NumberPad";
 import LiquidityDropdown from "./LiquidityDropdown";
 import NumberInput from "../common/NumberInput";
+import { helperToast } from "@/lib/helperToast";
+import { useWallet } from "@/hooks/useWallet";
+import { depositMargin } from "@/app/actions/margin";
+
+const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS!;
 
 const Deposit = ({
   handleDepositBackClick,
@@ -17,20 +22,66 @@ const Deposit = ({
   onSuccess: () => void;
 }) => {
   const [amountUsd, setAmountUsd] = useState<string>("100");
-  const [depositToken, setDepositToken] = useState("ETH");
-  const [depositTokenOptions] = useState(["ETH", "WETH", "USDC"]);
+  const [depositToken, setDepositToken] = useState<TokenType>("SOL");
+  const [depositTokenOptions] = useState<TokenType[]>(["SOL", "USDC"]);
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const handleDepositTokenSelect = (option: string) => {
+  const { address, isConnected, connect, sendTransaction } = useWallet();
+
+  const handleDepositTokenSelect = (option: TokenType) => {
     setDepositToken(option);
   };
 
   const handleAmountUsdChange = (value: string) => {
-    // Validate the input to ensure it's a valid number format
     const regex = /^\d*\.?\d*$/;
     if (regex.test(value)) {
       setAmountUsd(value === "" || value === "." ? "0" : value);
+    }
+  };
+
+  const handleDeposit = async () => {
+    if (!isConnected) {
+      try {
+        connect();
+      } catch (error) {
+        return; // Error toast is handled in the hook
+      }
+      return;
+    }
+
+    if (!address) {
+      helperToast.error("Please connect your wallet first");
+      return;
+    }
+
+    if (parseFloat(amountUsd) <= 0) {
+      helperToast.error("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Send transaction to admin wallet
+      const txHash = await sendTransaction({
+        to: ADMIN_WALLET,
+        value: amountUsd,
+        token: depositToken,
+      });
+
+      // Notify backend about the deposit
+      await depositMargin(address, amountUsd, depositToken, txHash);
+
+      helperToast.success("Deposit successful!");
+      onSuccess();
+    } catch (error) {
+      console.error("Deposit failed:", error);
+      helperToast.error(
+        error instanceof Error ? error.message : "Failed to process deposit"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -45,7 +96,6 @@ const Deposit = ({
           <p className="text-lg font-medium text-white">
             Deposit <span className="text-dashboard-gray">($USD)</span>
           </p>
-          {/* Empty div to push the right side to the right */}
           <div></div>
         </div>
         <div className="space-y-4">
@@ -76,7 +126,7 @@ const Deposit = ({
                     ? "bg-green-grad hover:bg-green-grad-hover border-printer-green border-2"
                     : "bg-input-grad hover:bg-input-grad-hover border-cardborder border-2"
                 } text-white rounded-[53px]`}
-                onClick={() => handleAmountUsdChange(value.toString())}
+                onPress={() => handleAmountUsdChange(value.toString())}
               >
                 ${value}
               </Button>
@@ -95,15 +145,19 @@ const Deposit = ({
             </label>
           </div>
           <Button
-            className={`w-full bg-green-grad  text-white py-4! px-4 rounded-[53px] border-printer-green border-1 ${
+            className={`w-full bg-green-grad text-white py-4! px-4 rounded-[53px] border-printer-green border-1 ${
               !termsAccepted
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-green-grad-hover cursor-pointer"
             }`}
-            onPress={() => {}}
+            onPress={handleDeposit}
             disabled={isLoading || !termsAccepted}
           >
-            {isLoading ? "Processing..." : "Confirm Deposit"}
+            {isLoading
+              ? "Processing..."
+              : !isConnected
+              ? "Connect Wallet"
+              : "Confirm Deposit"}
           </Button>
         </div>
       </div>

@@ -10,8 +10,11 @@ const SSEListener = ({
   timeout?: number;
 }) => {
   useEffect(() => {
-    const BACKEND_URL =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+    if (!BACKEND_URL) {
+      return;
+    }
 
     const eventSource = new EventSource(`${BACKEND_URL}/events/positions`);
 

@@ -1,48 +1,46 @@
 "use client";
 
-import * as React from "react";
+import React, { ReactNode, useMemo } from "react";
 import { NextUIProvider } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { BottomNavProvider } from "@/contexts/BottomNavContext";
 import { AccountProvider } from "@/contexts/AccountContext";
-import { PrivyProvider } from "@privy-io/react-auth";
-import P3Logo from "@/app/assets/nav/nav-logo.png";
-import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
+import { clusterApiUrl } from "@solana/web3.js";
+import "@solana/wallet-adapter-react-ui/styles.css";
+import { getRpcUrl } from "@/lib/web3/config";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { children: ReactNode }) {
   const router = useRouter();
 
-  const solanaConnectors = toSolanaWalletConnectors({
-    shouldAutoConnect: true,
-  });
+  // You can also provide your custom RPC endpoint
+  const endpoint = getRpcUrl() || clusterApiUrl("mainnet-beta");
+
+  // Initialize all the wallets you want to use
+  const wallets = useMemo(
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    []
+  );
 
   return (
-    <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
-      config={{
-        // Privy appearance
-        appearance: {
-          theme: "dark",
-          accentColor: "#8210AA",
-          logo: P3Logo.src,
-          walletChainType: "solana-only",
-        },
-        // Embedded wallets
-        embeddedWallets: {
-          createOnLogin: "users-without-wallets",
-        },
-        externalWallets: {
-          solana: {
-            connectors: solanaConnectors,
-          },
-        },
-      }}
-    >
-      <AccountProvider>
-        <BottomNavProvider>
-          <NextUIProvider navigate={router.push}>{children}</NextUIProvider>
-        </BottomNavProvider>
-      </AccountProvider>
-    </PrivyProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <AccountProvider>
+            <BottomNavProvider>
+              <NextUIProvider navigate={router.push}>{children}</NextUIProvider>
+            </BottomNavProvider>
+          </AccountProvider>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
 }

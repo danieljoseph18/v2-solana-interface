@@ -76,8 +76,7 @@ const Home = () => {
           }
           description={
             <p className="text-[19px] text-[#b7b8bf] font-poppins">
-              Stake ETH, WETH or USDC in any of our earning vaults to mint LP
-              tokens and start earning 80% of trading fees!
+              Stake SOL or USDC and start earning 50% of trading fees!
             </p>
           }
           imageSrc="/img/home/stake-to-earn.png"

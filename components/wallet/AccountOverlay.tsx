@@ -8,7 +8,7 @@ import DashboardView from "./DashboardView";
 import Deposit from "./Deposit";
 import Withdraw from "./Withdraw";
 import History from "./History";
-import { usePrivy } from "@privy-io/react-auth";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 const AccountOverlay = () => {
   const { isAccountOverlayOpen, closeAccountOverlay } = useAccountOverlay();
@@ -20,13 +20,13 @@ const AccountOverlay = () => {
   const [prices] = useState<{ [key: string]: number }>({});
   const [shouldRefresh, setShouldRefresh] = useState(false);
 
-  const { authenticated } = usePrivy();
+  const { connected } = useWallet();
 
   useEffect(() => {
-    if (authenticated) {
+    if (connected) {
       setShowDashboardView(true);
     }
-  }, [authenticated]);
+  }, [connected]);
 
   const handleLoginClick = () => {
     setShowLoginView(true);

@@ -81,7 +81,8 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const [chartReady, setChartReady] = useState(false);
   const [chartDataLoading, setChartDataLoading] = useState(true);
   const [noDataAvailable, setNoDataAvailable] = useState(false);
-  const [showGeckoTerminal, setShowGeckoTerminal] = useState(false);
+  // Show by default
+  const [showGeckoTerminal, setShowGeckoTerminal] = useState(true);
   const linesRef = useRef<IPositionLineAdapter[]>([]);
   const [chartError, setChartError] = useState<string | null>(null);
 
@@ -185,6 +186,11 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     const network = Object.keys(asset.networks)[0];
     const geckoNetwork = networkMapping[network] || network;
     const tokenAddress = asset.networks[network]?.tokenAddress;
+
+    if (!tokenAddress) {
+      // Topkek
+      return `https://www.geckoterminal.com/solana/pools/F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF?embed=1&info=0&swaps=0`;
+    }
 
     return `https://www.geckoterminal.com/${geckoNetwork}/pools/${tokenAddress}?embed=1&info=0&swaps=0`;
   }, [asset]);
@@ -301,50 +307,66 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [symbol, period, initializeChart]);
 
   return (
-    <div className="relative w-full h-full" ref={containerRef}>
-      {chartDataLoading && <Loader />}
-      {chartError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
-          <p>{chartError}</p>
-        </div>
-      )}
-      {showGeckoTerminal ? (
-        <div className="w-full h-full overflow-hidden">
-          <iframe
-            height="100%"
-            width="100%"
-            id="geckoterminal-embed"
-            title="GeckoTerminal Embed"
-            src={getGeckoTerminalUrl()}
-            allow="clipboard-write"
-            allowFullScreen
-          ></iframe>
-        </div>
-      ) : (
-        <>
-          <div
-            id="tv_chart_container"
-            className="TVChartContainer"
-            ref={chartContainerRef}
-            style={{
-              visibility:
-                !chartDataLoading && !chartError ? "visible" : "hidden",
-              position: "relative",
-            }}
-          />
-          {canShowGeckoTerminal && (
-            <button
-              className="absolute bottom-2 right-2 bg-input-grad border-cardborder border-2 text-white text-xs py-1 px-2 rounded-md flex items-center opacity-70 hover:opacity-100"
-              onClick={handleIlliquidChartClick}
-            >
-              Illiquid Chart
-              <FaQuestionCircle className="text-xs text-printer-orange ml-2" />
-            </button>
-          )}
-        </>
-      )}
+    <div className="relative w-full h-full">
+      <div className="w-full h-full overflow-hidden">
+        <iframe
+          height="100%"
+          width="100%"
+          id="geckoterminal-embed"
+          title="GeckoTerminal Embed"
+          src={`https://www.geckoterminal.com/solana/pools/F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF?embed=1&info=0&swaps=0`}
+          allow="clipboard-write"
+          allowFullScreen
+        ></iframe>
+      </div>
     </div>
   );
+
+  // return (
+  //   <div className="relative w-full h-full" ref={containerRef}>
+  //     {chartDataLoading && <Loader />}
+  //     {chartError && (
+  //       <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
+  //         <p>{chartError}</p>
+  //       </div>
+  //     )}
+  //     {showGeckoTerminal ? (
+  //       <div className="w-full h-full overflow-hidden">
+  //         <iframe
+  //           height="100%"
+  //           width="100%"
+  //           id="geckoterminal-embed"
+  //           title="GeckoTerminal Embed"
+  //           src={getGeckoTerminalUrl()}
+  //           allow="clipboard-write"
+  //           allowFullScreen
+  //         ></iframe>
+  //       </div>
+  //     ) : (
+  //       <>
+  //         <div
+  //           id="tv_chart_container"
+  //           className="TVChartContainer"
+  //           ref={chartContainerRef}
+  //           style={{
+  //             visibility:
+  //               !chartDataLoading && !chartError ? "visible" : "hidden",
+  //             position: "relative",
+  //           }}
+  //         />
+  //         {canShowGeckoTerminal && (
+  //           <button
+  //             className="absolute bottom-2 right-2 bg-input-grad border-cardborder border-2 text-white text-xs py-1 px-2 rounded-md flex items-center opacity-70 hover:opacity-100"
+  //             onClick={handleIlliquidChartClick}
+  //           >
+  //             Illiquid Chart
+  //             <FaQuestionCircle className="text-xs text-printer-orange ml-2" />
+  //           </button>
+  //         )}
+  //       </>
+  //     )}
+  //   </div>
+  // );
 };
 
 export default TradingViewChart;

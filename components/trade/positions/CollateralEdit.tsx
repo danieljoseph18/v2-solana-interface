@@ -95,7 +95,7 @@ const CollateralEdit = ({
 
   const [maxWithdrawable, setMaxWithdrawable] = useState(0);
 
-  const longCollateralOptions = ["ETH", "WETH"];
+  const longCollateralOptions = ["SOL", "USDC"];
 
   const slippageOptions = ["0.1", "0.3", "0.5", "1"];
 

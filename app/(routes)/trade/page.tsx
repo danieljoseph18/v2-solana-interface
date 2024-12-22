@@ -329,8 +329,19 @@ const TradePage = () => {
               setIsScriptReady(true);
             }}
           />
-          <div className="h-[550px] ">
-            {asset && isScriptReady && isMarkPriceReady ? (
+          <div className="relative w-full !h-[550px] !min-h-[550px]">
+            <div className="w-full h-full overflow-hidden">
+              <iframe
+                height="100%"
+                width="100%"
+                id="geckoterminal-embed"
+                title="GeckoTerminal Embed"
+                src={`https://www.geckoterminal.com/solana/pools/F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF?embed=1&info=0&swaps=0`}
+                allow="clipboard-write"
+                allowFullScreen
+              ></iframe>
+            </div>
+            {/* {asset && isScriptReady && isMarkPriceReady ? (
               // To Chart Positions, pass orders in to chartLines below
               <TradingViewChart
                 asset={asset}
@@ -346,7 +357,7 @@ const TradePage = () => {
               />
             ) : (
               <Loader />
-            )}
+            )} */}
           </div>
 
           <TabNavigation

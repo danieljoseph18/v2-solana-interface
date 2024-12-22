@@ -7,7 +7,7 @@ import { formatFloatWithCommas } from "@/lib/web3/formatters";
 import AccountGrowthChart from "./AccountGrowthChart";
 import { helperToast } from "@/lib/helperToast";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
-import { usePrivy } from "@privy-io/react-auth";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface TokenInfo {
   symbol: string;
@@ -15,6 +15,21 @@ interface TokenInfo {
   balance: string;
   price: number;
 }
+
+const tokens: TokenInfo[] = [
+  {
+    symbol: "SOL",
+    name: "Solana",
+    balance: "0",
+    price: 0,
+  },
+  {
+    symbol: "USDC",
+    name: "USD Coin",
+    balance: "0",
+    price: 0,
+  },
+];
 
 const DashboardView = ({
   setShowDepositView,
@@ -34,8 +49,7 @@ const DashboardView = ({
   setShouldRefresh: (value: boolean) => void;
 }) => {
   const [totalValue, setTotalValue] = useState(0);
-
-  const { logout } = usePrivy();
+  const { disconnect } = useWallet();
 
   const actions: {
     name: string;
@@ -69,29 +83,14 @@ const DashboardView = ({
     },
   ];
 
-  const tokens: TokenInfo[] = [
-    {
-      symbol: "ETH",
-      name: "Ethereum",
-      balance: "0",
-      price: 0,
-    },
-    {
-      symbol: "USDC",
-      name: "USD Coin",
-      balance: "0",
-      price: 0,
-    },
-    {
-      symbol: "WETH",
-      name: "Wrapped Ethereum",
-      balance: "0",
-      price: 0,
-    },
-  ];
-
   // Add a new state for the chart key
   const [chartKey, setChartKey] = useState(0);
+
+  const handleDisconnect = async () => {
+    await disconnect();
+    closeAccountOverlay();
+    helperToast.info("Wallet Disconnected");
+  };
 
   useEffect(() => {
     setTotalValue(
@@ -164,6 +163,7 @@ const DashboardView = ({
                 alt={`${token.symbol} Logo`}
                 width={37}
                 height={37}
+                className="rounded-full"
               />
               <div>
                 <p className="text-white font-medium">{token.name}</p>
@@ -189,10 +189,7 @@ const DashboardView = ({
         <div className="flex items-center justify-center py-6">
           <button
             className="text-printer-red hover:text-red-bottom cursor-pointer"
-            onClick={() => {
-              logout();
-              helperToast.info("Wallet Disconnected");
-            }}
+            onClick={handleDisconnect}
           >
             Logout
           </button>

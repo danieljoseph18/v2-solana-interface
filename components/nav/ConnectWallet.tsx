@@ -1,10 +1,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useAccountOverlay } from "@/contexts/AccountContext";
-import { usePrivy } from "@privy-io/react-auth";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 const ConnectWallet = ({ styles }: { styles: string }) => {
-  const { authenticated } = usePrivy();
+  const { connected } = useWallet();
   const { openAccountOverlay } = useAccountOverlay();
 
   const handleClick = () => {
@@ -22,7 +22,7 @@ const ConnectWallet = ({ styles }: { styles: string }) => {
           height={128}
         />
         <span className="hidden sm:inline-block">
-          {authenticated ? "My Wallet" : "Connect"}
+          {connected ? "My Wallet" : "Connect"}
         </span>
       </button>
     </div>
