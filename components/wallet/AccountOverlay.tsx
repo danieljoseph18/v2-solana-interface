@@ -8,17 +8,14 @@ import DashboardView from "./DashboardView";
 import Deposit from "./Deposit";
 import Withdraw from "./Withdraw";
 import History from "./History";
-import Settings from "./Settings";
 import { usePrivy } from "@privy-io/react-auth";
 
 const AccountOverlay = () => {
   const { isAccountOverlayOpen, closeAccountOverlay } = useAccountOverlay();
   const [showLoginView, setShowLoginView] = useState(false);
-  const [showSwapView, setShowSwapView] = useState(false);
   const [showDepositView, setShowDepositView] = useState(false);
   const [showWithdrawView, setShowWithdrawView] = useState(false);
   const [showHistoryView, setShowHistoryView] = useState(false);
-  const [showSettingsView, setShowSettingsView] = useState(false);
   const [showDashboardView, setShowDashboardView] = useState(false);
   const [prices] = useState<{ [key: string]: number }>({});
   const [shouldRefresh, setShouldRefresh] = useState(false);
@@ -26,7 +23,9 @@ const AccountOverlay = () => {
   const { authenticated } = usePrivy();
 
   useEffect(() => {
-    setShowDashboardView(true);
+    if (authenticated) {
+      setShowDashboardView(true);
+    }
   }, [authenticated]);
 
   const handleLoginClick = () => {
@@ -35,10 +34,6 @@ const AccountOverlay = () => {
 
   const handleBackClick = () => {
     setShowLoginView(false);
-  };
-
-  const handleSwapClick = () => {
-    setShowSwapView(!showSwapView);
   };
 
   const handleDepositClick = () => {
@@ -51,10 +46,6 @@ const AccountOverlay = () => {
 
   const handleHistoryClick = () => {
     setShowHistoryView(!showHistoryView);
-  };
-
-  const handleSettingsClick = () => {
-    setShowSettingsView(!showSettingsView);
   };
 
   const handleRefresh = () => {
@@ -84,16 +75,12 @@ const AccountOverlay = () => {
     content = (
       <History handleHistoryBackClick={handleHistoryClick} prices={prices} />
     );
-  } else if (showSettingsView) {
-    content = <Settings handleSettingsBackClick={handleSettingsClick} />;
   } else if (showDashboardView) {
     content = (
       <DashboardView
-        setShowSwapView={handleSwapClick}
         setShowDepositView={handleDepositClick}
         setShowWithdrawView={handleWithdrawClick}
         setShowHistoryView={handleHistoryClick}
-        setShowSettingsView={handleSettingsClick}
         closeAccountOverlay={closeAccountOverlay}
         prices={prices}
         shouldRefresh={shouldRefresh}

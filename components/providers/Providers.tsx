@@ -7,23 +7,34 @@ import { BottomNavProvider } from "@/contexts/BottomNavContext";
 import { AccountProvider } from "@/contexts/AccountContext";
 import { PrivyProvider } from "@privy-io/react-auth";
 import P3Logo from "@/app/assets/nav/nav-logo.png";
+import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+
+  const solanaConnectors = toSolanaWalletConnectors({
+    shouldAutoConnect: true,
+  });
 
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
       config={{
-        // Customize Privy's appearance in your app
+        // Privy appearance
         appearance: {
           theme: "dark",
           accentColor: "#8210AA",
           logo: P3Logo.src,
+          walletChainType: "solana-only",
         },
-        // Create embedded wallets for users who don't have a wallet
+        // Embedded wallets
         embeddedWallets: {
           createOnLogin: "users-without-wallets",
+        },
+        externalWallets: {
+          solana: {
+            connectors: solanaConnectors,
+          },
         },
       }}
     >

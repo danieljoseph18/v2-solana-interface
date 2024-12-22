@@ -1,12 +1,19 @@
 import { useState } from "react";
 import Image from "next/image";
+import { useAccountOverlay } from "@/contexts/AccountContext";
+import { usePrivy } from "@privy-io/react-auth";
 
 const ConnectWallet = ({ styles }: { styles: string }) => {
-  const [isConnected, setIsConnected] = useState(false);
+  const { authenticated } = usePrivy();
+  const { openAccountOverlay } = useAccountOverlay();
+
+  const handleClick = () => {
+    openAccountOverlay();
+  };
 
   return (
     <div>
-      <button className={styles} onClick={() => {}}>
+      <button className={styles} onClick={handleClick}>
         <Image
           src="/img/nav/wallet-icon.png"
           className="w-5 h-auto sm:mr-2"
@@ -15,7 +22,7 @@ const ConnectWallet = ({ styles }: { styles: string }) => {
           height={128}
         />
         <span className="hidden sm:inline-block">
-          {isConnected ? "My Wallet" : "Connect"}
+          {authenticated ? "My Wallet" : "Connect"}
         </span>
       </button>
     </div>

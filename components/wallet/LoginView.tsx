@@ -1,25 +1,35 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@nextui-org/react";
 import GoogleIcon from "@/app/assets/wallet/google-icon.png";
 import Image from "next/image";
 import { FaArrowLeft } from "react-icons/fa";
-import { helperToast } from "@/lib/helperToast";
 import { usePrivy } from "@privy-io/react-auth";
+import PrivyLogo from "@/app/assets/wallet/privy-logo.svg";
+import { helperToast } from "@/lib/helperToast";
 
 const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
   const [email, setEmail] = useState("");
 
-  const { login, authenticated } = usePrivy();
+  const { login, connectWallet } = usePrivy();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    login({ prefill: { type: "email", value: email } });
+  const handleEmailLogin = () => {
+    if (email.length > 0) {
+      login({ prefill: { type: "email", value: email } });
+    } else {
+      helperToast.error("Please enter a valid email address");
+    }
   };
 
   const handleWalletLogin = () => {
-    login();
+    console.log("handleWalletLogin");
+    try {
+      connectWallet();
+    } catch (error) {
+      console.error("Error connecting wallet", error);
+      helperToast.error("Error connecting wallet");
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -43,10 +53,28 @@ const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
         <p className="text-gray-text text-left w-full font-medium text-15 mb-4">
           Create a PRINT3R Wallet & start trading in just a few clicks!
         </p>
-        <form className="flex flex-col space-y-6 flex-grow">
+
+        {/* Connect Wallet */}
+        <Button
+          size="lg"
+          className="w-full bg-green-grad hover:bg-green-grad-hover text-white py-4! px-4 rounded-[53px] border-printer-green border-1"
+          onPress={handleWalletLogin}
+        >
+          Connect Wallet
+        </Button>
+
+        {/* Option Divider */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="w-full h-[1px] bg-white"></div>
+          <span className="text-sm text-dashboard-gray">OR</span>
+          <div className="w-full h-[1px] bg-white"></div>
+        </div>
+
+        {/* Email Login */}
+        <form className="flex flex-col space-y-6 flex-grow w-full">
           <div className="space-y-2">
             <label className="block text-sm text-gray-three">
-              Email<span className="text-blue-500">*</span>
+              Email <span className="text-printer-orange">*</span>
             </label>
             <div className="w-full p-3 rounded-lg bg-card-grad text-gray-three border border-cardborder">
               <input
@@ -61,25 +89,31 @@ const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
 
           <div className="text-sm text-gray-three flex items-center gap-2">
             <p>Protected by</p>
-            <img
-              src="/images/account/privy-logo.svg"
+            <Image
+              src={PrivyLogo}
               alt="Privy"
-              className="h-3"
+              className="h-3 w-12"
+              width={100}
+              height={100}
             />
           </div>
           <Button
             size="lg"
             className="w-full bg-green-grad hover:bg-green-grad-hover text-white py-4! px-4 rounded-[53px] border-printer-green border-1"
-            onPress={handleWalletLogin}
+            onPress={handleEmailLogin}
           >
-            Connect Wallet
+            Login via Email
           </Button>
         </form>
+
+        {/* Option Divider */}
         <div className="flex items-center gap-2 w-full">
           <div className="w-full h-[1px] bg-white"></div>
           <span className="text-sm text-dashboard-gray">OR</span>
           <div className="w-full h-[1px] bg-white"></div>
         </div>
+
+        {/* Google Login */}
         <Button
           size="lg"
           className="w-full bg-white-card-grad text-black font-medium py-4! px-4 flex items-center justify-center gap-2 rounded-[53px] border-white border-1"

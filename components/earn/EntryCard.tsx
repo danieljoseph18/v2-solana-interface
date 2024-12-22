@@ -111,7 +111,7 @@ const EntryCard = ({
               />
             </div>
             <div className="flex items-center gap-2">
-              <Button className="!min-w-[38px] !w-[38px] hidden md:flex !h-[30px] !min-h-[30px] text-13 md:text-15">
+              <Button className="bg-button-grad hover:bg-button-grad-hover !min-w-[38px] !w-[38px] hidden md:flex !h-[30px] !min-h-[30px] text-13 md:text-15 rounded-3 border-2 border-printer-orange">
                 MAX
               </Button>
             </div>

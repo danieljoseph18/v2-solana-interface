@@ -40,7 +40,10 @@ const EarnHero = ({
           <p className="text-gray-text text-xs">{secondSubTitle}</p>
         </div>
 
-        <Button href={docLink} className="w-full md:w-auto h-full">
+        <Button
+          href={docLink}
+          className="w-full md:w-auto bg-transparent h-full"
+        >
           {" "}
           <div className="flex w-full h-full md:w-auto items-center justify-center gap-2">
             <p>Read our Docs</p>

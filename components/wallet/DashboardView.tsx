@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  FaArrowDown,
-  FaArrowRight,
-  FaArrowUp,
-  FaExchangeAlt,
-} from "react-icons/fa";
-import { IoSettingsSharp } from "react-icons/io5";
+import { FaArrowDown, FaArrowRight, FaArrowUp } from "react-icons/fa";
 import { LuFileClock } from "react-icons/lu";
 import Image from "next/image";
 import DashboardSwiper from "./DashboardSwiper";
@@ -13,6 +7,7 @@ import { formatFloatWithCommas } from "@/lib/web3/formatters";
 import AccountGrowthChart from "./AccountGrowthChart";
 import { helperToast } from "@/lib/helperToast";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { usePrivy } from "@privy-io/react-auth";
 
 interface TokenInfo {
   symbol: string;
@@ -22,21 +17,17 @@ interface TokenInfo {
 }
 
 const DashboardView = ({
-  setShowSwapView,
   setShowDepositView,
   setShowWithdrawView,
   setShowHistoryView,
-  setShowSettingsView,
   closeAccountOverlay,
   prices,
   shouldRefresh,
   setShouldRefresh,
 }: {
-  setShowSwapView: () => void;
   setShowDepositView: () => void;
   setShowWithdrawView: () => void;
   setShowHistoryView: () => void;
-  setShowSettingsView: () => void;
   closeAccountOverlay: () => void;
   prices: { [key: string]: number };
   shouldRefresh: boolean;
@@ -44,20 +35,14 @@ const DashboardView = ({
 }) => {
   const [totalValue, setTotalValue] = useState(0);
 
+  const { logout } = usePrivy();
+
   const actions: {
     name: string;
     icon: React.ReactNode;
     action: () => void;
     rotate25?: boolean;
   }[] = [
-    {
-      name: "Swap",
-      icon: <FaExchangeAlt />,
-      action: () => {
-        setShowSwapView();
-      },
-      rotate25: true,
-    },
     {
       name: "Withdraw",
       icon: <FaArrowUp />,
@@ -124,13 +109,6 @@ const DashboardView = ({
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-medium text-nowrap">My Smart Wallet</h1>
           <div className="flex items-center gap-2">
-            {/* Settings button */}
-            <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
-              <IoSettingsSharp
-                className="text-white"
-                onClick={() => setShowSettingsView()}
-              />
-            </div>
             {/* Used to Hide Slide the Pop-up Back Right */}
             <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
               <FaArrowRight
@@ -209,14 +187,15 @@ const DashboardView = ({
         ))}
         <div className="w-full h-[1px] bg-white opacity-20 my-6"></div>
         <div className="flex items-center justify-center py-6">
-          <p
+          <button
             className="text-printer-red hover:text-red-bottom cursor-pointer"
             onClick={() => {
+              logout();
               helperToast.info("Wallet Disconnected");
             }}
           >
             Logout
-          </p>
+          </button>
         </div>
       </div>
     </div>
