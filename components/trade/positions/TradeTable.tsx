@@ -78,9 +78,7 @@ const TradeTable: React.FC<TradeTableProps> = ({
   const filterPositions = useCallback(
     (positions: any[]) => {
       if (currentMarketOnly && asset) {
-        return positions.filter(
-          (position) => position.symbol === asset.customId
-        );
+        return positions.filter((position) => position.symbol === asset.symbol);
       }
       return positions;
     },

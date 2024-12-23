@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import AssetSelectPopup from "./AssetSelectPopup";
 import { useAsset } from "./AssetContext";
 import { BsChevronDown } from "react-icons/bs";
-import {
-  getImageForToken,
-  getImageUrlFromTokenSymbol,
-} from "@/lib/utils/getTokenImage";
+import { getImageForToken } from "@/lib/utils/getTokenImage";
 
 const AssetSelect = () => {
   const [showPopup, setShowPopup] = useState(false);
@@ -20,25 +16,18 @@ const AssetSelect = () => {
     if (!asset) {
       // Set default asset if none is selected
       setAsset({
-        customId: "SOL:1",
-        symbol: "SOL",
-        fullName: "Solana",
-        leverage: 50,
-        price: 0,
-        change: 0,
-        image: getImageUrlFromTokenSymbol("SOL"),
-        categories: ["Hot"],
-        priceDecimals: 2,
-        apy: 0.01,
-        trustScore: 100,
-        isVerified: true,
-        marketId: "" as `0x${string}`,
-        xpMultiplier: 1,
-        totalLongDeposits: 0,
-        totalShortDeposits: 0,
-        liquidity: 0,
-        networks: {},
-        coingeckoId: "solana",
+        id: "1",
+        symbol: "TOPKEK",
+        tokenAddress: "F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF",
+        maxLeverage: 20,
+        maintainanceMargin: 0.01,
+        takerFee: 0.0005,
+        makerFee: 0.0005,
+        status: "ACTIVE" as MarketStatus,
+        fundingRate: 0.0001,
+        lastPrice: 100,
+        volume24h: 1000000,
+        openInterest: 1000000,
       });
     }
   }, [asset, setAsset]);
@@ -53,7 +42,7 @@ const AssetSelect = () => {
           <div className="flex gap-4 items-center ">
             <img
               src={getImageForToken(asset)}
-              alt={`${asset.fullName} logo`}
+              alt={`${asset.symbol} logo`}
               width={42}
               height={32}
               className="rounded-full"
@@ -64,10 +53,10 @@ const AssetSelect = () => {
               </p>
               <div className="flex flex-row gap-2">
                 <p className="text-gray-500 text-sm underline decoration-current">
-                  {asset.fullName}
+                  {asset.symbol}
                 </p>
                 <div className="flex items-center px-[2px] text-center text-dark-text font-bold border-cardborder border-2 text-xxs rounded bg-green-grad">
-                  {asset.leverage}x
+                  {asset.maxLeverage}x
                 </div>
               </div>
             </div>

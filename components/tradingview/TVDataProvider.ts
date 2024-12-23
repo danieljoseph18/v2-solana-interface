@@ -70,7 +70,9 @@ export class TVDataProvider implements IDatafeedChartApi {
     this.setChartPrice = setChartPrice;
     this.selectedAsset = selectedAsset;
     this.markPrice =
-      selectedAsset.price && selectedAsset.price > 0 ? selectedAsset.price : 0;
+      selectedAsset.lastPrice && selectedAsset.lastPrice > 0
+        ? selectedAsset.lastPrice
+        : 0;
   }
 
   async onReady(callback: any) {
@@ -211,7 +213,9 @@ export class TVDataProvider implements IDatafeedChartApi {
       const { full: fullSymbol }: any = {};
 
       // Determine the appropriate pricescale
-      const pricescale = this.calculatePricescale(this.selectedAsset!.price!);
+      const pricescale = this.calculatePricescale(
+        this.selectedAsset!.lastPrice!
+      );
 
       // Create the symbolInfo object
       const symbolInfo: LibrarySymbolInfo = {
@@ -262,7 +266,8 @@ export class TVDataProvider implements IDatafeedChartApi {
           format: "price",
           minmov: 1,
           pricescale:
-            this.calculatePricescale(this.selectedAsset.price!) || 100000000,
+            this.calculatePricescale(this.selectedAsset.lastPrice || 0) ||
+            100000000,
           has_intraday: true,
           intraday_multipliers: ["1", "5", "15", "30", "60"],
           has_empty_bars: false,
@@ -564,7 +569,7 @@ export class TVDataProvider implements IDatafeedChartApi {
     limit: number
   ): Promise<Bar[]> {
     return getLastCandlestickData(
-      this.selectedAsset.networks,
+      "solana" as any, // @audit very wrong --> just to stop err
       ticker,
       period,
       limit
@@ -645,7 +650,7 @@ export class TVDataProvider implements IDatafeedChartApi {
       // This could be similar to getLastCandlestickData or a real-time data subscription
       const period = SUPPORTED_RESOLUTIONS[resolution];
       const bars = await getLastCandlestickData(
-        this.selectedAsset.networks,
+        "solana" as any, // @audit very wrong --> just to stop err
         ticker,
         period,
         1

@@ -183,9 +183,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       fantom: "ftm",
     };
 
-    const network = Object.keys(asset.networks)[0];
+    const network = "solana";
     const geckoNetwork = networkMapping[network] || network;
-    const tokenAddress = asset.networks[network]?.tokenAddress;
+    const tokenAddress = "F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF";
 
     if (!tokenAddress) {
       // Topkek
@@ -199,7 +199,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     setShowGeckoTerminal(true);
   };
 
-  const canShowGeckoTerminal = Object.keys(asset.networks).length > 0;
+  const canShowGeckoTerminal = true;
 
   useEffect(() => {
     if (chartDataLoading) {

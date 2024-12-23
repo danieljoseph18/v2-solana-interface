@@ -78,7 +78,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
     }
     if (currentMarketOnly && asset) {
       return filteredPositions.filter(
-        (position) => position.symbol === asset.customId
+        (position) => position.symbol === asset.symbol
       );
     }
     return filteredPositions;

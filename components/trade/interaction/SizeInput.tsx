@@ -374,7 +374,9 @@ const SizeInput: React.FC<SizeInputProps> = ({
       <div className="flex justify-between items-center">
         <label className="block text-gray-400 text-[15px] mb-2">
           <span className="text-gray-text">Leverage</span> Up to{" "}
-          <span className="font-bold">{asset ? asset.leverage : "..."}x</span>
+          <span className="font-bold">
+            {asset ? asset.maxLeverage : "..."}x
+          </span>
         </label>
         <ToggleSwitch
           value={useSlider}
@@ -386,7 +388,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
         {useSlider ? (
           <LeverageSlider
             min={1.1}
-            max={asset ? asset.leverage : 1.1}
+            max={asset ? asset.maxLeverage : 1.1}
             step={0.1}
             initialValue={1.1}
             onChange={handleLeverageChange}
@@ -398,7 +400,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
             onChange={(event) =>
               handleLeverageChange(Number(event.target.value))
             }
-            maxLeverage={asset ? asset.leverage : 1.1}
+            maxLeverage={asset ? asset.maxLeverage : 1.1}
             isLongPosition={isLong}
           />
         )}
@@ -467,11 +469,11 @@ const SizeInput: React.FC<SizeInputProps> = ({
             }
           />
           <EntryButton
-            marketId={asset?.marketId || "0x3333"}
+            marketId={(asset?.id as `0x${string}`) || "0x3333"}
             isLong={isLong}
             isLimit={activeType === "Limit"}
             isTrigger={activeType === "Trigger"}
-            ticker={asset?.customId || "SOL:1"}
+            ticker={asset?.symbol || "SOL:1"}
             leverage={leverage}
             collateralToken={collateralType as `0x${string}`}
             collateralDelta={parseFloat(collateral)}

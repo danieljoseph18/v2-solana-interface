@@ -44,12 +44,12 @@ const MobileAssetTable: React.FC<MobileAssetTableProps> = ({
           <table className="min-w-full bg-transparent rounded-lg">
             <tbody>
               {sortedData.map((asset) => {
-                const priceDecimals = asset.price
-                  ? getPriceDecimals(asset.price)
+                const priceDecimals = asset.lastPrice
+                  ? getPriceDecimals(asset.lastPrice)
                   : 7;
                 return (
                   <tr
-                    key={asset.marketId}
+                    key={asset.id}
                     className="bg-transparent cursor-pointer hover:opacity-80"
                     onClick={() => onAssetClick(asset)}
                   >
@@ -58,10 +58,10 @@ const MobileAssetTable: React.FC<MobileAssetTableProps> = ({
                         <button
                           onClick={(event) => {
                             event.stopPropagation();
-                            toggleFavorite(asset.marketId);
+                            toggleFavorite(asset.id);
                           }}
                         >
-                          {isFavorite(asset.marketId) ? (
+                          {isFavorite(asset.id) ? (
                             <FaStar className="text-printer-orange text-2xl" />
                           ) : (
                             <FaStar className="text-[#71757A] text-2xl" />
@@ -79,29 +79,35 @@ const MobileAssetTable: React.FC<MobileAssetTableProps> = ({
                             {asset.symbol}
                           </span>
                           <span className="text-xs text-printer-gray font-medium">
-                            {`Liq - ${formatLiquidity(asset.liquidity)}`}
+                            {`24H Vol - ${formatLiquidity(
+                              asset.volume24h || 0
+                            )}`}
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className="py-1.5 whitespace-nowrap text-center text-dark-text font-bold">
                       <div className="border-cardborder border-2 text-xxs rounded bg-green-grad max-w-[50px]">
-                        {asset.leverage}X
+                        {asset.maxLeverage}X
                       </div>
                     </td>
                     <td className="whitespace-nowrap text-sm text-right text-printer-gray">
                       <div className="flex flex-col gap-1">
-                        <p>{asset.price!.toFixed(priceDecimals)}</p>
+                        <p>
+                          {asset.lastPrice
+                            ? asset.lastPrice.toFixed(priceDecimals)
+                            : "N/A"}
+                        </p>
                         <p
                           className={`whitespace-nowrap text-sm text-right ${
-                            asset.change! > 0
+                            asset.fundingRate! > 0
                               ? "text-printer-green"
                               : "text-printer-red"
                           }`}
                         >
                           {`${
-                            asset.change! > 0 ? "+" : ""
-                          }${asset.change!.toFixed(2)}%`}
+                            asset.fundingRate! > 0 ? "+" : ""
+                          }${asset.fundingRate!.toFixed(2)}%`}
                         </p>
                       </div>
                     </td>

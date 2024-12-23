@@ -68,7 +68,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 </th>
                 <th
                   className=" py-1 text-center text-xs font-medium text-base-gray cursor-pointer"
-                  onClick={() => requestSort("leverage")}
+                  onClick={() => requestSort("maxLeverage")}
                 >
                   <div className="flex flex-row gap-0.5 justify-center items-center">
                     <span>Lev</span>
@@ -77,7 +77,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 </th>
                 <th
                   className=" py-1 text-right text-xs font-medium text-base-gray cursor-pointer"
-                  onClick={() => requestSort("price")}
+                  onClick={() => requestSort("lastPrice")}
                 >
                   <div className="flex flex-row gap-0.5 justify-end items-center">
                     <span>Price</span>
@@ -86,19 +86,19 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 </th>
                 <th
                   className=" py-1 text-xs text-right font-medium text-base-gray cursor-pointer"
-                  onClick={() => requestSort("change")}
+                  onClick={() => requestSort("fundingRate")}
                 >
                   <div className="flex flex-row gap-0.5 justify-end items-center">
-                    <span>24H Change</span>
+                    <span>Funding Rate</span>
                     <FaSort />
                   </div>
                 </th>
                 <th
                   className=" py-1 text-xs text-right font-medium text-base-gray cursor-pointer"
-                  onClick={() => requestSort("liquidity")}
+                  onClick={() => requestSort("volume24h")}
                 >
                   <div className="flex flex-row gap-0.5 justify-end items-center">
-                    <span>Liquidity</span>
+                    <span>24H Vol</span>
                     <FaSort />
                   </div>
                 </th>
@@ -106,12 +106,12 @@ const AssetTable: React.FC<AssetTableProps> = ({
             </thead>
             <tbody>
               {sortedData.map((asset) => {
-                const priceDecimals = asset.price
-                  ? getPriceDecimals(asset.price)
+                const priceDecimals = asset.lastPrice
+                  ? getPriceDecimals(asset.lastPrice)
                   : 7;
                 return (
                   <tr
-                    key={asset.marketId}
+                    key={asset.id}
                     className="bg-transparent cursor-pointer hover:opacity-80"
                     onClick={() => onAssetClick(asset)}
                   >
@@ -120,10 +120,10 @@ const AssetTable: React.FC<AssetTableProps> = ({
                         <button
                           onClick={(event) => {
                             event.stopPropagation();
-                            toggleFavorite(asset.marketId);
+                            toggleFavorite(asset.id);
                           }}
                         >
-                          {isFavorite(asset.marketId) ? (
+                          {isFavorite(asset.id) ? (
                             <FaStar className="text-printer-orange text-2xl" />
                           ) : (
                             <FaStar className="text-[#71757A] text-2xl" />
@@ -138,31 +138,30 @@ const AssetTable: React.FC<AssetTableProps> = ({
                         />
                         <span className="text-base text-printer-gray font-bold">
                           {asset.symbol}
-                          <sup className="text-printer-gray text-xxs ml-1">
-                            {`(#${asset.marketId.slice(2, 6)})`}
-                          </sup>
                         </span>
                       </div>
                     </td>
                     <td className="py-1.5 whitespace-nowrap text-center text-dark-text font-bold">
                       <div className="border-cardborder border-2 text-xxs rounded bg-green-grad">
-                        {asset.leverage}X
+                        {asset.maxLeverage}X
                       </div>
                     </td>
                     <td className="py-1.5 whitespace-nowrap text-sm text-right text-printer-gray">
-                      {asset.price!.toFixed(priceDecimals)}
+                      {asset.lastPrice
+                        ? asset.lastPrice!.toFixed(priceDecimals)
+                        : "N/A"}
                     </td>
                     <td
                       className={`py-1.5 whitespace-nowrap text-sm text-right ${
-                        asset.change! > 0
+                        asset.fundingRate! > 0
                           ? "text-printer-green"
                           : "text-printer-red"
                       }`}
                     >
-                      {asset.change!.toFixed(2)}%
+                      {asset.fundingRate!.toFixed(2)}%
                     </td>
                     <td className="py-1.5 whitespace-nowrap text-sm text-right text-printer-gray">
-                      {formatLiquidity(asset.liquidity)}
+                      {formatLiquidity(asset.volume24h || 0)}
                     </td>
                   </tr>
                 );

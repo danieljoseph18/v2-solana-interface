@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from "react";
 import SearchInput from "@/components/common/SearchInput";
-import AssetPopupFilters from "./AssetPopupFilters";
 import HorizontalDivider from "./HorizontalDivider";
 import AssetTable from "./AssetTable";
 import { useAsset } from "./AssetContext";
@@ -22,7 +21,6 @@ const AssetSelectPopup: React.FC<AssetSelectPopupProps> = ({
   onClose,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
   const { allAssets, setAsset } = useAsset();
   const [favorites, setFavorites] = useLocalStorage<string[]>("favorites", []);
 
@@ -48,13 +46,8 @@ const AssetSelectPopup: React.FC<AssetSelectPopupProps> = ({
     [favorites]
   );
 
-  const filteredTokens = allAssets.filter(
-    (token) =>
-      token.fullName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (activeFilter === "All" ||
-        (activeFilter === "Favorites"
-          ? isFavorite(token.marketId)
-          : token.categories.includes(activeFilter)))
+  const filteredTokens = allAssets.filter((token) =>
+    token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAssetClick = (asset: Asset) => {
@@ -75,10 +68,6 @@ const AssetSelectPopup: React.FC<AssetSelectPopupProps> = ({
             />
             <ModalClose onClose={onClose} />
           </div>
-          <AssetPopupFilters
-            activeFilter={activeFilter}
-            setActiveFilter={setActiveFilter}
-          />
         </div>
         <HorizontalDivider dividerColour="cardborder" />
         <div className="flex flex-col gap-2 w-full p-2 sm:px-6 sm:pb-6 sm:pt-2 flex-grow overflow-auto">

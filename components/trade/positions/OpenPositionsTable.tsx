@@ -70,8 +70,8 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
     null
   );
 
-  const handleAssetSwitch = async (customId: string) => {
-    const asset = allAssets.find((asset) => asset.customId === customId);
+  const handleAssetSwitch = async (symbol: string) => {
+    const asset = allAssets.find((asset) => asset.symbol === symbol);
     if (!asset) return;
     setAsset(asset);
   };

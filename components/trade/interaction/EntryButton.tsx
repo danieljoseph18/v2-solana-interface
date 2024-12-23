@@ -4,7 +4,6 @@ import ConnectWallet from "@/components/nav/ConnectWallet";
 import { helperToast } from "@/lib/helperToast";
 import PercentageButtons from "./PercentageButtons";
 import ModalClose from "@/components/common/ModalClose";
-import { useAsset } from "../assets/AssetContext";
 import ModalV2 from "@/components/common/ModalV2";
 import { getPriceDecimals } from "@/lib/web3/formatters";
 import { formatFloatWithCommas } from "@/lib/web3/formatters";
@@ -90,7 +89,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   refreshPendingPosition,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { asset } = useAsset();
 
   const { address } = useWallet();
 

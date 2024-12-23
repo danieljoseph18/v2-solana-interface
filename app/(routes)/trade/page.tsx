@@ -24,6 +24,7 @@ import { getChartSymbol } from "@/components/trade/TVChartContainer/trading-view
 import { TVDataProvider } from "@/components/tradingview/TVDataProvider";
 import { v4 as uuidv4 } from "uuid";
 import SSEListener from "@/components/trade/positions/SSEListener";
+import { getAssets } from "@/app/actions/getAssets";
 
 const TradingViewChart = dynamic(
   () =>
@@ -222,6 +223,15 @@ const TradePage = () => {
     [allAssets.length, marketTokenPrices.ethPrice, marketTokenPrices.usdcPrice]
   );
 
+  // Fetch all assets
+  useEffect(() => {
+    const fetchAllAssets = async () => {
+      const assets = await getAssets();
+      setAllAssets(assets);
+    };
+    fetchAllAssets();
+  }, []);
+
   // Fetch position data once when component mounts or when critical dependencies change
   useEffect(() => {
     fetchPositionData(false);
@@ -296,7 +306,7 @@ const TradePage = () => {
       });
 
       const filteredLines = lines.filter((line) => {
-        return line.symbol === asset.customId;
+        return line.symbol === asset?.symbol;
       });
 
       setChartLines(filteredLines);
@@ -321,7 +331,7 @@ const TradePage = () => {
         <div
           className={` flex flex-col lg:gap-0 lg:w-[70%] lg:overflow-y-auto lg:sticky lg:max-h-[90vh] lg:left-0 lg:top-0 lg:h-fit no-scrollbar lg:pb-20  lg:border-r-2 border-r-cardborder  `}
         >
-          <AssetBanner markPrice={markPrice} refreshVolume={refreshVolume} />
+          <AssetBanner markPrice={markPrice} />
           <Script
             src="/static/datafeeds/udf/dist/bundle.js"
             strategy="lazyOnload"

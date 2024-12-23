@@ -6,16 +6,8 @@ import { useAsset } from "./AssetContext";
 import { getPriceDecimals } from "@/lib/web3/formatters";
 import { formatFloatWithCommas } from "@/lib/web3/formatters";
 
-const AssetBanner = ({
-  markPrice,
-  refreshVolume,
-}: {
-  markPrice: number;
-  refreshVolume: number;
-}) => {
+const AssetBanner = ({ markPrice }: { markPrice: number }) => {
   const [isAssetChanging, setIsAssetChanging] = useState(false);
-
-  const [volume, setVolume] = useState<number>(0);
 
   const lastCalculatedDecimals = useRef(30);
 
@@ -58,47 +50,35 @@ const AssetBanner = ({
                 ? "..."
                 : `$${markPrice ? markPrice.toFixed(priceDecimals) : "..."}`
             }
-            isPositive={asset ? asset.change! >= 0 : false}
+            isPositive={true}
             tracksDelta={true}
           />
           <VerticalDivider />
           <div className="flex flex-row w-full justify-around items-center overflow-x-auto">
             <AssetStat
               metric="24hr Change"
-              value={`${asset ? asset.change!.toFixed(2) : "..."}%`}
-              isPositive={asset ? asset.change! >= 0 : false}
+              value={`${"..."}%`}
+              isPositive={true}
               tracksDelta={true}
             />
             <VerticalDivider />
             <AssetStat
               metric="24hr Low"
-              value={`$${
-                asset
-                  ? asset.low24h
-                    ? asset.low24h.toFixed(priceDecimals)
-                    : "..."
-                  : "..."
-              }`}
+              value={`...`}
               isPositive={false}
               tracksDelta={false}
             />
             <VerticalDivider />
             <AssetStat
               metric="24hr High"
-              value={`$${
-                asset
-                  ? asset.high24h
-                    ? asset.high24h?.toFixed(priceDecimals)
-                    : "..."
-                  : "..."
-              }`}
+              value={`...`}
               isPositive={true}
               tracksDelta={false}
             />
             <VerticalDivider />
             <AssetStat
               metric="24hr Vol"
-              value={`$${formatFloatWithCommas(volume)}`}
+              value={`$${formatFloatWithCommas(asset?.volume24h || 0)}`}
               isPositive={true}
               tracksDelta={false}
             />
