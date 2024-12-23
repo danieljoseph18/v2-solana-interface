@@ -33,10 +33,22 @@ const AccountOverlay = () => {
       const BACKEND_URL =
         process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
+      const fetchSolPrice = fetch(`${BACKEND_URL}/price/sol`).then((res) => {
+        return res.json();
+      });
+
+      const fetchUsdcPrice = fetch(`${BACKEND_URL}/price/usdc`).then((res) => {
+        return res.json();
+      });
+
       const [solPrice, usdcPrice] = await Promise.all([
-        fetch(`${BACKEND_URL}/price/sol`).then((res) => res.json()),
-        fetch(`${BACKEND_URL}/price/usdc`).then((res) => res.json()),
+        fetchSolPrice,
+        fetchUsdcPrice,
       ]);
+
+      if (!solPrice || !usdcPrice) {
+        throw new Error("Failed to fetch prices");
+      }
 
       // Set the SOL and USDC prices in the prices object
       prices.SOL = Number(solPrice);

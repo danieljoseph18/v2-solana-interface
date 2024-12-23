@@ -7,27 +7,22 @@ import { formatFloatWithCommas } from "@/lib/web3/formatters";
 import AccountGrowthChart from "./AccountGrowthChart";
 import { helperToast } from "@/lib/helperToast";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@/hooks/useWallet";
+import { getBalance } from "@/app/actions/margin";
 
 interface TokenInfo {
   symbol: string;
   name: string;
-  balance: string;
-  price: number;
 }
 
 const tokens: TokenInfo[] = [
   {
     symbol: "SOL",
     name: "Solana",
-    balance: "0",
-    price: 0,
   },
   {
     symbol: "USDC",
     name: "USD Coin",
-    balance: "0",
-    price: 0,
   },
 ];
 
@@ -49,7 +44,12 @@ const DashboardView = ({
   setShouldRefresh: (value: boolean) => void;
 }) => {
   const [totalValue, setTotalValue] = useState(0);
-  const { disconnect } = useWallet();
+  const [balances, setBalances] = useState<{
+    solBalance: number;
+    usdcBalance: number;
+  }>({ solBalance: 0, usdcBalance: 0 });
+
+  const { address, disconnect } = useWallet();
 
   const actions: {
     name: string;
@@ -93,14 +93,28 @@ const DashboardView = ({
   };
 
   useEffect(() => {
-    setTotalValue(
-      tokens.reduce(
-        (acc, token) =>
-          acc + parseFloat(token.balance) * (token.price ? token.price : 0),
-        0
-      )
-    );
-  }, [tokens]);
+    const fetchBalances = async () => {
+      if (!address) return;
+      const [solBalance, usdcBalance] = await Promise.all([
+        getBalance(address, "SOL"),
+        getBalance(address, "USDC"),
+      ]);
+      setBalances({ solBalance, usdcBalance });
+    };
+    fetchBalances();
+  }, [address]);
+
+  useEffect(() => {
+    const solBalance = balances.solBalance;
+    const usdcBalance = balances.usdcBalance;
+
+    const solPrice = prices.SOL;
+    const usdcPrice = prices.USDC;
+
+    const totalValue = solBalance * solPrice + usdcBalance * usdcPrice;
+
+    setTotalValue(totalValue);
+  }, [balances, prices]);
 
   return (
     <div className="min-h-screen h-full bg-card-grad text-white p-4 py-20">
@@ -168,18 +182,26 @@ const DashboardView = ({
               <div>
                 <p className="text-white font-medium">{token.name}</p>
                 <p className="font-medium text-dashboard-gray text-base">
-                  ${token.price ? token.price.toFixed(2) : "0.00"}
+                  $
+                  {prices[token.symbol]
+                    ? prices[token.symbol].toFixed(2)
+                    : "0.00"}
                 </p>
               </div>
             </div>
             <div>
               <p className="text-white font-medium text-end">
-                {parseFloat(token.balance).toFixed(4)} {token.symbol}
+                {token.symbol === "SOL"
+                  ? balances.solBalance
+                  : balances.usdcBalance}
+                {token.symbol}
               </p>
               <p className="font-medium text-dashboard-gray text-base text-end">
                 US$
                 {formatFloatWithCommas(
-                  parseFloat(token.balance) * (token.price ? token.price : 0)
+                  token.symbol === "SOL"
+                    ? balances.solBalance * prices.SOL
+                    : balances.usdcBalance * prices.USDC
                 )}
               </p>
             </div>

@@ -9,8 +9,7 @@ import NumberInput from "../common/NumberInput";
 import { helperToast } from "@/lib/helperToast";
 import { useWallet } from "@/hooks/useWallet";
 import { depositMargin } from "@/app/actions/margin";
-
-const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET_ADDRESS!;
+import { getAdminWallet } from "@/lib/web3/config";
 
 const Deposit = ({
   handleDepositBackClick,
@@ -63,9 +62,7 @@ const Deposit = ({
     try {
       setIsLoading(true);
 
-      if (!ADMIN_WALLET) {
-        throw new Error("Admin wallet not set");
-      }
+      const ADMIN_WALLET = getAdminWallet();
 
       // Convert amount in USD to amount in tokens
       let tokenAmount: string;

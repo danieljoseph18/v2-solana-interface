@@ -9,7 +9,9 @@ export const depositMargin = async (
   token: TokenType,
   txHash: string
 ) => {
-  const response = await fetch(`${BACKEND_URL}/margin/deposit`, {
+  const url = `${BACKEND_URL}/margin/deposit`;
+
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -18,7 +20,7 @@ export const depositMargin = async (
   });
 
   if (!response.ok) {
-    throw new Error("Failed to process deposit");
+    throw new Error(`Failed to process deposit: ${response.statusText}`);
   }
 
   return response.json();
@@ -44,7 +46,10 @@ export const requestWithdrawal = async (
   return response.json();
 };
 
-export const getBalance = async (publicKey: string, token: TokenType) => {
+export const getBalance = async (
+  publicKey: string,
+  token: TokenType
+): Promise<number> => {
   const response = await fetch(
     `${BACKEND_URL}/margin/balance/${token}?publicKey=${publicKey}`,
     {
@@ -58,5 +63,16 @@ export const getBalance = async (publicKey: string, token: TokenType) => {
     throw new Error("Failed to fetch balance");
   }
 
-  return response.json();
+  const marginAccount: {
+    id: string;
+    userId: string;
+    token: TokenType;
+    availableBalance: string;
+    lockedBalance: string;
+    unrealizedPnl: string;
+    createdAt: string;
+    updatedAt: string;
+  } = await response.json();
+
+  return parseFloat(marginAccount.availableBalance);
 };

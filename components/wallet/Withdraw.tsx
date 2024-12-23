@@ -42,8 +42,8 @@ const Withdraw = ({
     }
 
     try {
-      const balanceData = await getBalance(address, withdrawToken);
-      setBalance(balanceData.amount);
+      const balance = await getBalance(address, withdrawToken);
+      setBalance(balance.toString());
     } catch (error) {
       console.error("Failed to fetch balance:", error);
       helperToast.error("Failed to fetch balance");

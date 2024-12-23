@@ -1,6 +1,6 @@
 // hooks/useWallet.ts
 import { useWallet as useSolanaWallet } from "@solana/wallet-adapter-react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import {
   Connection,
   PublicKey,
@@ -12,6 +12,7 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import { helperToast } from "@/lib/helperToast";
+import { WalletName } from "@solana/wallet-adapter-base";
 
 interface SendTransactionProps {
   to: string;
@@ -21,6 +22,7 @@ interface SendTransactionProps {
 
 const SOLANA_RPC_URL =
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const connection = new Connection(SOLANA_RPC_URL);
 
 const TOKEN_MINTS: { [key in TokenType]: string } = {
@@ -28,13 +30,50 @@ const TOKEN_MINTS: { [key in TokenType]: string } = {
   USDC: process.env.NEXT_PUBLIC_USDC_MINT!,
 };
 
+const registerUser = async (publicKey: string) => {
+  try {
+    if (!BACKEND_URL) {
+      throw new Error("Backend URL not configured");
+    }
+
+    const response = await fetch(`${BACKEND_URL}/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ publicKey }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to register user");
+    }
+  } catch (error) {
+    console.error("Error registering user:", error);
+    helperToast.error("Failed to register user");
+  }
+};
+
 export function useWallet() {
-  const { connected, publicKey, signTransaction, disconnect, select, wallet } =
-    useSolanaWallet();
+  const {
+    connected,
+    publicKey,
+    signTransaction,
+    disconnect,
+    select,
+    wallet,
+    wallets,
+    connecting,
+  } = useSolanaWallet();
 
   const address = useMemo(() => {
     return publicKey?.toBase58() || null;
   }, [publicKey]);
+
+  useEffect(() => {
+    if (connected && address) {
+      registerUser(address);
+    }
+  }, [connected, address]);
 
   const handleSendTransaction = useCallback(
     async ({ to, value, token }: SendTransactionProps): Promise<string> => {
@@ -116,23 +155,38 @@ export function useWallet() {
     [address, signTransaction]
   );
 
-  const connect = useCallback(() => {
-    try {
-      if (wallet) {
-        select(wallet.adapter.name);
+  const connect = useCallback(
+    (walletName?: WalletName) => {
+      try {
+        if (walletName) {
+          // Connect to specific wallet
+
+          select(walletName);
+        } else if (wallet) {
+          // Use existing wallet if already selected
+
+          select(wallet.adapter.name);
+        } else {
+          console.error("No wallet specified");
+          helperToast.error("Please select a wallet to connect");
+        }
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+        helperToast.error("Failed to connect wallet");
+        throw error;
       }
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      helperToast.error("Failed to connect wallet");
-      throw error;
-    }
-  }, [wallet, select]);
+    },
+    [wallet, select]
+  );
 
   return {
     address,
     isConnected: connected,
+    isConnecting: connecting,
     connect,
     disconnect,
     sendTransaction: handleSendTransaction,
+    availableWallets: wallets,
+    selectedWallet: wallet,
   };
 }
