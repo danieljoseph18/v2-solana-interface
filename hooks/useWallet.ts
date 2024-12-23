@@ -22,7 +22,8 @@ interface SendTransactionProps {
 
 const SOLANA_RPC_URL =
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 const connection = new Connection(SOLANA_RPC_URL);
 
 const TOKEN_MINTS: { [key in TokenType]: string } = {

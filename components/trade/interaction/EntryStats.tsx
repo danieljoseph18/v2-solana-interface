@@ -10,8 +10,6 @@ type EntryStatsProps = {
   priceDecimals: number;
   availableLiquidity: number;
   positionFee: number;
-  executionFee: number;
-  priceUpdateFee: number;
 };
 
 const EntryStats: React.FC<EntryStatsProps> = ({
@@ -23,8 +21,6 @@ const EntryStats: React.FC<EntryStatsProps> = ({
   priceDecimals,
   availableLiquidity,
   positionFee,
-  executionFee,
-  priceUpdateFee,
 }) => {
   const stats = [
     {
@@ -76,25 +72,13 @@ const EntryStats: React.FC<EntryStatsProps> = ({
                   ${positionFee.toFixed(2)}
                 </p>
               </div>
-              <div className="flex flex-row w-full justify-between gap-6 text-printer-gray">
-                <p>Execution Fee</p>
-                <p className="text-white font-bold">
-                  ${executionFee.toFixed(2)}
-                </p>
-              </div>
-              <div className="flex flex-row w-full justify-between gap-6 text-printer-gray">
-                <p>Price Update Fee</p>
-                <p className="text-white font-bold">
-                  ${priceUpdateFee.toFixed(2)}
-                </p>
-              </div>
             </div>
           }
           placement="top"
         >
           <div className="cursor-help text-sm">
             <p className="text-gray-text border-gray-text border-dashed border-b-1">
-              ${(positionFee + executionFee + priceUpdateFee).toFixed(2)}
+              ${positionFee.toFixed(2)}
             </p>
           </div>
         </CustomTooltip>

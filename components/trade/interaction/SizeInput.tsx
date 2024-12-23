@@ -15,6 +15,8 @@ import {
   getImageUrlFromTokenSymbol,
 } from "@/lib/utils/getTokenImage";
 import InputField from "@/components/common/InputField";
+import { getBalance } from "@/app/actions/margin";
+import { useWallet } from "@/hooks/useWallet";
 
 interface SizeInputProps {
   isLong: boolean;
@@ -26,7 +28,6 @@ interface SizeInputProps {
   markPrice: number;
   liqPrice: number;
   priceDecimals: number;
-  forDummyBox?: boolean;
   triggerRefetchPositions: () => void;
   marketStats: {
     borrowRateLong: number;
@@ -54,7 +55,6 @@ const SizeInput: React.FC<SizeInputProps> = ({
   markPrice,
   liqPrice,
   priceDecimals,
-  forDummyBox,
   triggerRefetchPositions,
   marketStats,
   triggerRefreshVolume,
@@ -64,11 +64,13 @@ const SizeInput: React.FC<SizeInputProps> = ({
 }) => {
   const { asset } = useAsset();
 
+  const { address } = useWallet();
+
   const [total, setTotal] = useState(0);
 
   const [useSlider, setUseSlider] = useState(false);
 
-  const [collateralType, setCollateralType] = useState("ETH");
+  const [collateralType, setCollateralType] = useState<TokenType>("SOL");
 
   const [limitPrice, setLimitPrice] = useState<string>("");
 
@@ -103,26 +105,18 @@ const SizeInput: React.FC<SizeInputProps> = ({
     showShort: false,
   });
 
-  const [executionFees, setExecutionFees] = useState<{
-    executionFee: number;
-    priceUpdateFee: number;
-  }>({
-    executionFee: 0,
-    priceUpdateFee: 0,
-  });
-
   const [leveragedValueUsd, setLeveragedValueUsd] = useState(0);
 
   // Used to cache prices so they're not refetched constantly when calculating equivalents
   const [cachedPrices, setCachedPrices] = useState<{
-    ethPrice: number;
+    solPrice: number;
     usdcPrice: number;
   }>({
-    ethPrice: 0,
+    solPrice: 0,
     usdcPrice: 0,
   });
 
-  const collateralOptions = isLong ? ["ETH", "WETH"] : ["USDC"];
+  const collateralOptions = ["SOL", "USDC"];
 
   const resetInputs = async () => {
     setCollateral("");
@@ -144,7 +138,37 @@ const SizeInput: React.FC<SizeInputProps> = ({
   }, [collateral, leverage, collateralPrice]);
 
   useEffect(() => {
-    setCollateralType(isLong ? "ETH" : "USDC");
+    const updateCollateralPrice = async () => {
+      let solPrice = cachedPrices.solPrice;
+      let usdcPrice = cachedPrices.usdcPrice;
+
+      if (solPrice === 0 || usdcPrice === 0) {
+        const BACKEND_URL =
+          process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+        const [solPrice, usdcPrice]: [number, number] = await Promise.all([
+          fetch(`${BACKEND_URL}/price/SOL`).then((res) => res.json()),
+          fetch(`${BACKEND_URL}/price/USDC`).then((res) => res.json()),
+        ]);
+
+        setCachedPrices({
+          solPrice: solPrice,
+          usdcPrice: usdcPrice,
+        });
+      }
+
+      const price = collateralType === "SOL" ? solPrice : usdcPrice;
+
+      setCollateralPrice(price ?? 0);
+    };
+
+    updateCollateralPrice();
+    setTotal(
+      calculateTotalUsd(parseFloat(collateral) || 0, leverage, collateralPrice)
+    );
+  }, [collateral, leverage, collateralType]);
+
+  useEffect(() => {
     resetInputs();
   }, [isLong]);
 
@@ -159,6 +183,15 @@ const SizeInput: React.FC<SizeInputProps> = ({
   useEffect(() => {
     setLimitPrice(markPrice.toString());
   }, [activeType]);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!address) return;
+      const balance = await getBalance(address, collateralType);
+      setBalance(balance.toString());
+    };
+    fetchBalance();
+  }, [address, collateralType]);
 
   useEffect(() => {
     const collateralInNumber = parseFloat(collateral) || 0;
@@ -195,11 +228,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
   };
 
   const handleCollateralTypeChange = (selectedType: string) => {
-    if (isLong && (selectedType === "ETH" || selectedType === "WETH")) {
-      setCollateralType(selectedType);
-    } else if (!isLong && selectedType === "USDC") {
-      setCollateralType(selectedType);
-    }
+    setCollateralType(selectedType as TokenType);
   };
 
   const handleMaxClick = () => {
@@ -232,9 +261,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
   };
 
   return (
-    <div
-      className={`flex flex-col gap-4 rounded-lg  ${forDummyBox ? "mt-4" : ""}`}
-    >
+    <div className={`flex flex-col gap-4 rounded-lg`}>
       <InputField
         readOnly={false}
         value={collateral}
@@ -243,33 +270,20 @@ const SizeInput: React.FC<SizeInputProps> = ({
         placeHolder="0.0"
         renderContent={
           <div className="flex flex-row w-full justify-end items-center gap-2">
-            {isLong ? (
-              <>
-                <Image
-                  src={getImageUrlFromTokenSymbol(collateralType)}
-                  alt={collateralType}
-                  width={24}
-                  height={24}
-                />
-                <CustomSelect
-                  options={collateralOptions}
-                  selectedOption={collateralType}
-                  onOptionSelect={handleCollateralTypeChange}
-                  showImages={true}
-                  showText={false}
-                />
-              </>
-            ) : (
-              <div className="flex items-center gap-2 bg-transparent rounded text-printer-gray font-bold">
-                <Image
-                  src={getImageUrlFromTokenSymbol("USDC")}
-                  alt="USDC"
-                  width={24}
-                  height={24}
-                />
-                <span>USDC</span>
-              </div>
-            )}
+            <Image
+              src={getImageUrlFromTokenSymbol(collateralType)}
+              alt={collateralType}
+              width={24}
+              height={24}
+              className="rounded-full"
+            />
+            <CustomSelect
+              options={collateralOptions}
+              selectedOption={collateralType}
+              onOptionSelect={handleCollateralTypeChange}
+              showImages={true}
+              showText={false}
+            />
           </div>
         }
         renderBalance={
@@ -405,105 +419,94 @@ const SizeInput: React.FC<SizeInputProps> = ({
           />
         )}
       </div>
-      {forDummyBox ? (
-        <></>
-      ) : (
-        <>
-          <div className="flex flex-col gap-4">
-            {((showTriggers.showLong && isLong) ||
-              (showTriggers.showShort && !isLong)) && (
-              <>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400 text-[15px]">Stop Loss</span>
-                  <ToggleSwitch
-                    value={stopLossEnabled}
-                    setValue={setStopLossEnabled}
-                    label=""
-                  />
-                </div>
-                {stopLossEnabled && (
-                  <TriggerButtons
-                    onChange={handleStopLossChange}
-                    onPriceChange={handleStopLossPriceChange}
-                    isLongPosition={isLong}
-                    customPrice={stopLossPrice}
-                    setCustomPrice={setStopLossPrice}
-                  />
-                )}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400 text-[15px]">Take Profit</span>
-                  <ToggleSwitch
-                    value={takeProfitEnabled}
-                    setValue={setTakeProfitEnabled}
-                    label=""
-                  />
-                </div>
-                {takeProfitEnabled && (
-                  <TriggerButtons
-                    onChange={handleTakeProfitChange}
-                    onPriceChange={handleTakeProfitPriceChange}
-                    isLongPosition={isLong}
-                    customPrice={takeProfitPrice}
-                    setCustomPrice={setTakeProfitPrice}
-                  />
-                )}
-              </>
-            )}
-          </div>
-          <EntryStats
-            collateralIn={parseFloat(collateral)}
-            leverage={leverage}
-            entryPrice={markPrice}
-            liqPrice={liqPrice}
-            priceImpact={priceImpact}
-            priceDecimals={priceDecimals}
-            availableLiquidity={
-              isLong
-                ? marketStats.availableLiquidityLong
-                : marketStats.availableLiquidityShort
-            }
-            positionFee={positionFee}
-            executionFee={executionFees.executionFee * cachedPrices.ethPrice}
-            priceUpdateFee={
-              executionFees.priceUpdateFee * cachedPrices.ethPrice
-            }
-          />
-          <EntryButton
-            marketId={(asset?.id as `0x${string}`) || "0x3333"}
-            isLong={isLong}
-            isLimit={activeType === "Limit"}
-            isTrigger={activeType === "Trigger"}
-            ticker={asset?.symbol || "SOL:1"}
-            leverage={leverage}
-            collateralToken={collateralType as `0x${string}`}
-            collateralDelta={parseFloat(collateral)}
-            collateralDeltaUsd={usdValue}
-            sizeDelta={leveragedValueUsd || 0}
-            limitPrice={parseFloat(limitPrice)}
-            isIncrease={true}
-            reverseWrap={collateralType === "ETH"}
-            stopLossSet={stopLossEnabled}
-            takeProfitSet={takeProfitEnabled}
-            stopLossPercentage={parseFloat(stopLossPercentage)}
-            takeProfitPercentage={parseFloat(takeProfitPercentage)}
-            stopLossPrice={parseFloat(stopLossPrice)}
-            takeProfitPrice={parseFloat(takeProfitPrice)}
-            entryPrice={markPrice || 0}
-            positionFee={positionFee}
-            executionFees={executionFees}
-            liqPrice={liqPrice}
-            priceImpact={priceImpact}
-            collateralPrices={cachedPrices}
-            triggerRefetchPositions={triggerRefetchPositions}
-            resetInputs={resetInputs}
-            fetchExecutionFees={() => {}}
-            triggerRefreshVolume={triggerRefreshVolume}
-            updateMarketStats={updateMarketStats}
-            createPendingPosition={createPendingPosition}
-            refreshPendingPosition={refreshPendingPosition}
-          />
-        </>
-      )}
+      <>
+        <div className="flex flex-col gap-4">
+          {((showTriggers.showLong && isLong) ||
+            (showTriggers.showShort && !isLong)) && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-[15px]">Stop Loss</span>
+                <ToggleSwitch
+                  value={stopLossEnabled}
+                  setValue={setStopLossEnabled}
+                  label=""
+                />
+              </div>
+              {stopLossEnabled && (
+                <TriggerButtons
+                  onChange={handleStopLossChange}
+                  onPriceChange={handleStopLossPriceChange}
+                  isLongPosition={isLong}
+                  customPrice={stopLossPrice}
+                  setCustomPrice={setStopLossPrice}
+                />
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-[15px]">Take Profit</span>
+                <ToggleSwitch
+                  value={takeProfitEnabled}
+                  setValue={setTakeProfitEnabled}
+                  label=""
+                />
+              </div>
+              {takeProfitEnabled && (
+                <TriggerButtons
+                  onChange={handleTakeProfitChange}
+                  onPriceChange={handleTakeProfitPriceChange}
+                  isLongPosition={isLong}
+                  customPrice={takeProfitPrice}
+                  setCustomPrice={setTakeProfitPrice}
+                />
+              )}
+            </>
+          )}
+        </div>
+        <EntryStats
+          collateralIn={parseFloat(collateral)}
+          leverage={leverage}
+          entryPrice={markPrice}
+          liqPrice={liqPrice}
+          priceImpact={priceImpact}
+          priceDecimals={priceDecimals}
+          availableLiquidity={
+            isLong
+              ? marketStats.availableLiquidityLong
+              : marketStats.availableLiquidityShort
+          }
+          positionFee={positionFee}
+        />
+        <EntryButton
+          marketId={(asset?.id as `0x${string}`) || "0x3333"}
+          isLong={isLong}
+          isLimit={activeType === "Limit"}
+          isTrigger={activeType === "Trigger"}
+          ticker={asset?.symbol || "SOL:1"}
+          leverage={leverage}
+          collateralToken={collateralType as `0x${string}`}
+          collateralDelta={parseFloat(collateral)}
+          collateralDeltaUsd={usdValue}
+          sizeDelta={leveragedValueUsd || 0}
+          limitPrice={parseFloat(limitPrice)}
+          isIncrease={true}
+          stopLossSet={stopLossEnabled}
+          takeProfitSet={takeProfitEnabled}
+          stopLossPercentage={parseFloat(stopLossPercentage)}
+          takeProfitPercentage={parseFloat(takeProfitPercentage)}
+          stopLossPrice={parseFloat(stopLossPrice)}
+          takeProfitPrice={parseFloat(takeProfitPrice)}
+          entryPrice={markPrice || 0}
+          positionFee={positionFee}
+          liqPrice={liqPrice}
+          priceImpact={priceImpact}
+          collateralPrices={cachedPrices}
+          triggerRefetchPositions={triggerRefetchPositions}
+          resetInputs={resetInputs}
+          triggerRefreshVolume={triggerRefreshVolume}
+          updateMarketStats={updateMarketStats}
+          createPendingPosition={createPendingPosition}
+          refreshPendingPosition={refreshPendingPosition}
+        />
+      </>
     </div>
   );
 };

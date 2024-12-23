@@ -26,7 +26,6 @@ type EntryButtonProps = {
   sizeDelta: number;
   limitPrice: number;
   isIncrease: boolean;
-  reverseWrap: boolean;
   stopLossSet: boolean;
   takeProfitSet: boolean;
   stopLossPercentage: number;
@@ -35,19 +34,14 @@ type EntryButtonProps = {
   takeProfitPrice: number;
   entryPrice: number;
   positionFee: number;
-  executionFees: {
-    executionFee: number;
-    priceUpdateFee: number;
-  };
   liqPrice: number;
   priceImpact: number;
   collateralPrices: {
-    ethPrice: number;
+    solPrice: number;
     usdcPrice: number;
   };
   triggerRefetchPositions: () => void;
   resetInputs: () => void;
-  fetchExecutionFees: () => void;
   triggerRefreshVolume: () => void;
   updateMarketStats: () => void;
   createPendingPosition: (position: Position) => void;
@@ -67,7 +61,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   sizeDelta,
   limitPrice,
   isIncrease,
-  reverseWrap,
   stopLossSet,
   takeProfitSet,
   stopLossPercentage,
@@ -76,13 +69,11 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   takeProfitPrice,
   entryPrice,
   positionFee,
-  executionFees,
   liqPrice,
   priceImpact,
   collateralPrices,
   triggerRefetchPositions,
   resetInputs,
-  fetchExecutionFees,
   triggerRefreshVolume,
   updateMarketStats,
   createPendingPosition,
@@ -96,10 +87,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     selectedOption: "0.3",
     customValue: "",
     availableLiquidity: 0,
-    isTransactionPendingModalOpen: false,
-    currentStep: 0,
-    hasFailedAtCurrentStep: false,
-    isTransactionComplete: false,
     positionFeeInCollateral: 0,
     isButtonDisabled: false,
     disabledText: "",
@@ -113,6 +100,25 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     setState((prevState) => ({ ...prevState, ...newState }));
   };
 
+  const getAvailableLiquidity = async () => {
+    const BACKEND_URL =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+    const response = await fetch(`${BACKEND_URL}/liquidity`);
+    const data: {
+      availableLiquidity: string;
+      totalLiquidity: string;
+      utilizationRate: string;
+      maxUtilizationRate: string;
+    } = await response.json();
+
+    let prevState = state;
+
+    prevState.availableLiquidity = parseFloat(data.availableLiquidity);
+
+    setState(prevState);
+  };
+
   const handleOpen = useCallback(() => {
     if (
       collateralDelta > 0 &&
@@ -122,12 +128,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
       onOpen();
     }
   }, [collateralDelta, state.isButtonDisabled, onOpen]);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchExecutionFees();
-    }
-  }, [isOpen, fetchExecutionFees]);
 
   useEffect(() => {
     const checkButtonState = () => {
@@ -178,7 +178,7 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   useEffect(() => {
     const fetchPositionFeeInCollateral = async () => {
       const collateralPrice = isLong
-        ? collateralPrices.ethPrice
+        ? collateralPrices.solPrice
         : collateralPrices.usdcPrice;
       const positionFeeInCollateral = positionFee / collateralPrice;
       updateState({ positionFeeInCollateral });
@@ -195,6 +195,10 @@ const EntryButton: React.FC<EntryButtonProps> = ({
 
     return () => clearInterval(timer);
   }, [entryPrice]);
+
+  useEffect(() => {
+    getAvailableLiquidity();
+  }, []);
 
   const buttonText = useMemo(() => {
     if (state.isButtonDisabled) return state.disabledText;
@@ -437,14 +441,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
             <div className="flex justify-between items-center text-gray-text">
               <p>Position Fee</p>
               <p>{`$${positionFee.toFixed(4)}`}</p>
-            </div>
-            <div className="flex justify-between items-center text-gray-text">
-              <p>Execution Fee</p>
-              <p>{`${executionFees.executionFee} ETH`}</p>
-            </div>
-            <div className="flex justify-between items-center text-gray-text">
-              <p>Price Update Fee</p>
-              <p>{`${executionFees.priceUpdateFee.toFixed(18)} ETH`}</p>
             </div>
             <div className="flex justify-between items-center text-gray-text">
               <p>Price Impact</p>
