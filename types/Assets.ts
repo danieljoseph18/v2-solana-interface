@@ -8,6 +8,7 @@ interface Asset {
   id: string;
   symbol: string;
   tokenAddress: string;
+  poolAddress: string;
   maxLeverage: number;
   maintainanceMargin: number;
   takerFee: number;

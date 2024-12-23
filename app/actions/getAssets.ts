@@ -22,6 +22,7 @@ export const getAssets = async (): Promise<Asset[]> => {
       id: string;
       symbol: string;
       tokenAddress: string;
+      poolAddress: string;
       maxLeverage: string;
       maintainanceMargin: string;
       takerFee: string;
@@ -39,6 +40,7 @@ export const getAssets = async (): Promise<Asset[]> => {
       id: asset.id,
       symbol: asset.symbol,
       tokenAddress: asset.tokenAddress,
+      poolAddress: asset.poolAddress,
       maxLeverage: Number(asset.maxLeverage),
       maintainanceMargin: Number(asset.maintainanceMargin),
       takerFee: Number(asset.takerFee),

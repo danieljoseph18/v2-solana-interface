@@ -18,7 +18,8 @@ const AssetSelect = () => {
       setAsset({
         id: "1",
         symbol: "TOPKEK",
-        tokenAddress: "F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF",
+        tokenAddress: "AqHsVVzWuu7e1de1j7sGJ4MdJ74xUvCeXf19Y4dLiM3S",
+        poolAddress: "F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF",
         maxLeverage: 20,
         maintainanceMargin: 0.01,
         takerFee: 0.0005,

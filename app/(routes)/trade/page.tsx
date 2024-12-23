@@ -25,6 +25,7 @@ import { TVDataProvider } from "@/components/tradingview/TVDataProvider";
 import { v4 as uuidv4 } from "uuid";
 import SSEListener from "@/components/trade/positions/SSEListener";
 import { getAssets } from "@/app/actions/getAssets";
+import useInterval from "@/hooks/useInterval";
 
 const TradingViewChart = dynamic(
   () =>
@@ -228,6 +229,9 @@ const TradePage = () => {
     const fetchAllAssets = async () => {
       const assets = await getAssets();
       setAllAssets(assets);
+      if (assets.length > 0) {
+        setAsset(assets[0]);
+      }
     };
     fetchAllAssets();
   }, []);
@@ -238,12 +242,42 @@ const TradePage = () => {
   }, [fetchPositionData]);
 
   useEffect(() => {
+    if (tvDataProviderRef.current) {
+      tvDataProviderRef.current.updateLivePrice(markPrice);
+    }
+  }, [markPrice]);
+
+  useEffect(() => {
     setMarkPrice(0);
+  }, [asset]);
+
+  // @audit - Can maybe set up a WS in backend to stream this
+  const updatePriceForAsset = useCallback(async () => {
+    if (asset && asset.symbol) {
+      const BACKEND_URL =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/price/market/${asset.id}`);
+
+        if (response.ok) {
+          const priceResponse: string = await response.json();
+          setMarkPrice(Number(priceResponse));
+        } else {
+          console.error(`Failed to fetch data for ${asset.symbol}`);
+        }
+      } catch (error) {
+        console.error(`Error fetching data for ${asset.symbol}:`, error);
+      }
+    }
   }, [asset]);
 
   useEffect(() => {
     setIsTablet(width !== undefined && width <= 768);
   }, [width]);
+
+  // Update the price every 1 second
+  useInterval(updatePriceForAsset, 1000);
 
   useEffect(() => {
     const fetchPriceDecimals = async () => {
@@ -340,18 +374,7 @@ const TradePage = () => {
             }}
           />
           <div className="relative w-full !h-[550px] !min-h-[550px]">
-            <div className="w-full h-full overflow-hidden">
-              <iframe
-                height="100%"
-                width="100%"
-                id="geckoterminal-embed"
-                title="GeckoTerminal Embed"
-                src={`https://www.geckoterminal.com/solana/pools/F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF?embed=1&info=0&swaps=0`}
-                allow="clipboard-write"
-                allowFullScreen
-              ></iframe>
-            </div>
-            {/* {asset && isScriptReady && isMarkPriceReady ? (
+            {asset && isScriptReady && isMarkPriceReady ? (
               // To Chart Positions, pass orders in to chartLines below
               <TradingViewChart
                 asset={asset}
@@ -359,7 +382,9 @@ const TradePage = () => {
                 assetForPrice={asset.symbol}
                 setChartPrice={setChartPrice}
                 symbol={getChartSymbol(asset)}
-                priceDecimals={asset.priceDecimals ?? 2}
+                priceDecimals={
+                  asset.lastPrice ? getPriceDecimals(asset.lastPrice) : 7
+                }
                 period={"1" as ResolutionString}
                 onSelectToken={setAsset}
                 savedShouldShowPositionLines={showPositionLines}
@@ -367,7 +392,7 @@ const TradePage = () => {
               />
             ) : (
               <Loader />
-            )} */}
+            )}
           </div>
 
           <TabNavigation

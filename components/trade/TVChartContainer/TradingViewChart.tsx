@@ -74,15 +74,12 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     markPrice,
     isMarkPriceReady: assetForPrice === asset.symbol && markPrice !== 0,
   });
-  const { width } = useWindowSize();
-  const isMobile = width && width < 550;
-  const symbolRef = useRef(symbol);
   const tvWidgetRef = useRef<IChartingLibraryWidget | null>(null);
   const [chartReady, setChartReady] = useState(false);
   const [chartDataLoading, setChartDataLoading] = useState(true);
   const [noDataAvailable, setNoDataAvailable] = useState(false);
-  // Show by default
-  const [showGeckoTerminal, setShowGeckoTerminal] = useState(true);
+  // Show GeckoTerminal only when explicitly requested
+  const [showGeckoTerminal, setShowGeckoTerminal] = useState(false);
   const linesRef = useRef<IPositionLineAdapter[]>([]);
   const [chartError, setChartError] = useState<string | null>(null);
 
@@ -94,12 +91,18 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, 5000);
 
   const initializeChart = useCallback(() => {
+    console.log("Initializing chart with:", {
+      symbol,
+      period,
+      showGeckoTerminal,
+    });
     setChartReady(false);
     setChartDataLoading(true);
     setNoDataAvailable(false);
     setChartError(null);
 
     if (tvWidgetRef.current) {
+      console.log("Removing existing chart instance");
       tvWidgetRef.current.remove();
       tvWidgetRef.current = null;
     }
@@ -127,10 +130,13 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       ) as any,
     };
 
+    console.log("Creating new chart with options:", widgetOptions);
+
     try {
       const tvWidget = new widget(widgetOptions);
 
       tvWidget.onChartReady(() => {
+        console.log("Chart is ready");
         tvWidgetRef.current = tvWidget;
         setChartReady(true);
         tvWidget.applyOverrides({
@@ -138,6 +144,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           "paneProperties.backgroundType": "solid",
         });
         tvWidget.activeChart().dataReady(() => {
+          console.log("Chart data is ready");
           setChartDataLoading(false);
         });
       });
@@ -146,7 +153,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       setChartError(`Failed to initialize chart: ${error.message}`);
       setChartDataLoading(false);
     }
-  }, [symbol, period, datafeed, tvCharts, onSelectToken, setTvCharts]);
+  }, [symbol, period, datafeed]);
 
   const drawLineOnChart = useCallback(
     (title: string, price: number, color: string, textColor: string) => {
@@ -171,28 +178,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   );
 
   const getGeckoTerminalUrl = useCallback(() => {
-    const networkMapping: { [key: string]: string } = {
-      "binance-smart-chain": "bsc",
-      ethereum: "eth",
-      "arbitrum-one": "arbitrum",
-      "polygon-pos": "polygon_pos",
-      avalanche: "avax",
-      "optimistic-ethereum": "optimism",
-      sui: "sui-network",
-      "sei-network": "sei-evm",
-      fantom: "ftm",
-    };
-
-    const network = "solana";
-    const geckoNetwork = networkMapping[network] || network;
-    const tokenAddress = "F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF";
-
-    if (!tokenAddress) {
-      // Topkek
-      return `https://www.geckoterminal.com/solana/pools/F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF?embed=1&info=0&swaps=0`;
-    }
-
-    return `https://www.geckoterminal.com/${geckoNetwork}/pools/${tokenAddress}?embed=1&info=0&swaps=0`;
+    return `https://www.geckoterminal.com/solana/pools/${asset.poolAddress}?embed=1&info=0&swaps=0`;
   }, [asset]);
 
   const handleIlliquidChartClick = () => {
@@ -278,7 +264,9 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, []);
 
   useEffect(() => {
-    if (showGeckoTerminal) {
+    if (!showGeckoTerminal) {
+      initializeChart();
+    } else {
       if (tvWidgetRef.current) {
         tvWidgetRef.current.remove();
         tvWidgetRef.current = null;
@@ -286,14 +274,7 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       setChartReady(false);
       setChartDataLoading(false);
       setChartError(null);
-    } else {
-      initializeChart();
     }
-  }, [showGeckoTerminal, initializeChart]);
-
-  useEffect(() => {
-    setShowGeckoTerminal(false);
-    initializeChart();
 
     return () => {
       if (tvWidgetRef.current) {
@@ -304,69 +285,53 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
       setChartDataLoading(true);
       setChartError(null);
     };
-  }, [symbol, period, initializeChart]);
+  }, [showGeckoTerminal, symbol, period, initializeChart]);
 
   return (
-    <div className="relative w-full h-full">
-      <div className="w-full h-full overflow-hidden">
-        <iframe
-          height="100%"
-          width="100%"
-          id="geckoterminal-embed"
-          title="GeckoTerminal Embed"
-          src={`https://www.geckoterminal.com/solana/pools/F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF?embed=1&info=0&swaps=0`}
-          allow="clipboard-write"
-          allowFullScreen
-        ></iframe>
-      </div>
+    <div className="relative w-full h-full" ref={containerRef}>
+      {chartDataLoading && <Loader />}
+      {chartError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
+          <p>{chartError}</p>
+        </div>
+      )}
+      {showGeckoTerminal ? (
+        <div className="w-full h-full overflow-hidden">
+          <iframe
+            height="100%"
+            width="100%"
+            id="geckoterminal-embed"
+            title="GeckoTerminal Embed"
+            src={getGeckoTerminalUrl()}
+            allow="clipboard-write"
+            allowFullScreen
+          ></iframe>
+        </div>
+      ) : (
+        <>
+          <div
+            id="tv_chart_container"
+            className="TVChartContainer"
+            ref={chartContainerRef}
+            style={{
+              visibility:
+                !chartDataLoading && !chartError ? "visible" : "hidden",
+              position: "relative",
+            }}
+          />
+          {canShowGeckoTerminal && (
+            <button
+              className="absolute bottom-2 right-2 bg-input-grad border-cardborder border-2 text-white text-xs py-1 px-2 rounded-md flex items-center opacity-70 hover:opacity-100"
+              onClick={handleIlliquidChartClick}
+            >
+              Illiquid Chart
+              <FaQuestionCircle className="text-xs text-printer-orange ml-2" />
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
-
-  // return (
-  //   <div className="relative w-full h-full" ref={containerRef}>
-  //     {chartDataLoading && <Loader />}
-  //     {chartError && (
-  //       <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
-  //         <p>{chartError}</p>
-  //       </div>
-  //     )}
-  //     {showGeckoTerminal ? (
-  //       <div className="w-full h-full overflow-hidden">
-  //         <iframe
-  //           height="100%"
-  //           width="100%"
-  //           id="geckoterminal-embed"
-  //           title="GeckoTerminal Embed"
-  //           src={getGeckoTerminalUrl()}
-  //           allow="clipboard-write"
-  //           allowFullScreen
-  //         ></iframe>
-  //       </div>
-  //     ) : (
-  //       <>
-  //         <div
-  //           id="tv_chart_container"
-  //           className="TVChartContainer"
-  //           ref={chartContainerRef}
-  //           style={{
-  //             visibility:
-  //               !chartDataLoading && !chartError ? "visible" : "hidden",
-  //             position: "relative",
-  //           }}
-  //         />
-  //         {canShowGeckoTerminal && (
-  //           <button
-  //             className="absolute bottom-2 right-2 bg-input-grad border-cardborder border-2 text-white text-xs py-1 px-2 rounded-md flex items-center opacity-70 hover:opacity-100"
-  //             onClick={handleIlliquidChartClick}
-  //           >
-  //             Illiquid Chart
-  //             <FaQuestionCircle className="text-xs text-printer-orange ml-2" />
-  //           </button>
-  //         )}
-  //       </>
-  //     )}
-  //   </div>
-  // );
 };
 
 export default TradingViewChart;
