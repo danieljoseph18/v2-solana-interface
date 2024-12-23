@@ -63,15 +63,27 @@ const Deposit = ({
     try {
       setIsLoading(true);
 
+      if (!ADMIN_WALLET) {
+        throw new Error("Admin wallet not set");
+      }
+
+      // Convert amount in USD to amount in tokens
+      let tokenAmount: string;
+      if (depositToken === "SOL") {
+        tokenAmount = (Number(amountUsd) / prices.SOL).toFixed(8);
+      } else {
+        tokenAmount = (Number(amountUsd) / prices.USDC).toFixed(2);
+      }
+
       // Send transaction to admin wallet
       const txHash = await sendTransaction({
         to: ADMIN_WALLET,
-        value: amountUsd,
+        value: tokenAmount,
         token: depositToken,
       });
 
       // Notify backend about the deposit
-      await depositMargin(address, amountUsd, depositToken, txHash);
+      await depositMargin(address, tokenAmount, depositToken, txHash);
 
       helperToast.success("Deposit successful!");
       onSuccess();

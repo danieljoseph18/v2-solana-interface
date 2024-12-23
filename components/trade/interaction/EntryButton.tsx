@@ -10,7 +10,9 @@ import { getPriceDecimals } from "@/lib/web3/formatters";
 import { formatFloatWithCommas } from "@/lib/web3/formatters";
 import CustomTooltip from "@/components/common/CustomTooltip";
 import { FaRegQuestionCircle } from "react-icons/fa";
-import { v4 as uuidv4 } from "uuid";
+import { createMarketOrder } from "@/app/actions/marketOrder";
+import { useWallet } from "@/hooks/useWallet";
+import { createLimitOrder } from "@/app/actions/limitOrder";
 
 type EntryButtonProps = {
   marketId: `0x${string}`;
@@ -53,44 +55,6 @@ type EntryButtonProps = {
   refreshPendingPosition: (id: string, success: boolean) => void;
 };
 
-const marketOrderSteps = [
-  {
-    text: "Approve Tokens",
-    subtext: "Approve the contract to spend tokens.",
-    failedText: "Failed to approve tokens.",
-    failedSubtext: "Please try again.",
-    successText: "Tokens Approved!",
-    successSubtext: "You can now deposit tokens.",
-  },
-  {
-    text: "Initiate Transaction",
-    subtext: "Initiate the transaction onchain.",
-    failedText: "Failed to initiate transaction.",
-    failedSubtext: "Please try again.",
-    successText: "Transaction Initiated!",
-    successSubtext: "Waiting for a keeper to execute the transaction.",
-  },
-];
-
-const limitOrderSteps = [
-  {
-    text: "Approve Tokens",
-    subtext: "Approve the contract to spend tokens.",
-    failedText: "Failed to approve tokens.",
-    failedSubtext: "Please try again.",
-    successText: "Tokens Approved!",
-    successSubtext: "You can now deposit tokens.",
-  },
-  {
-    text: "Initiate Transaction",
-    subtext: "Initiate the transaction onchain.",
-    failedText: "Failed to initiate transaction.",
-    failedSubtext: "Please try again.",
-    successText: "Transaction Initiated!",
-    successSubtext: "Waiting for a keeper to execute the transaction.",
-  },
-];
-
 const EntryButton: React.FC<EntryButtonProps> = ({
   marketId,
   isLong,
@@ -128,6 +92,8 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { asset } = useAsset();
 
+  const { address } = useWallet();
+
   const [state, setState] = useState({
     selectedOption: "0.3",
     customValue: "",
@@ -141,7 +107,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     disabledText: "",
   });
 
-  const [isLiquidityModalOpen, setIsLiquidityModalOpen] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
   const active = true;
@@ -271,6 +236,129 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     };
   }, [takeProfitSet, takeProfitPrice, entryPrice, sizeDelta]);
 
+  /**
+   * ========================== ACTIONS ==========================
+   */
+
+  const handleCreateOrder = async () => {
+    if (isLimit) {
+      handleCreateLimitOrder();
+    } else {
+      handleCreateMarketOrder();
+    }
+  };
+
+  const handleCreateMarketOrder = async () => {
+    if (!address) {
+      helperToast.error("Please connect your wallet");
+      return;
+    }
+
+    try {
+      const orderRequest: OrderRequest = {
+        marketId,
+        userId: address,
+        side: isLong ? OrderSide.LONG : OrderSide.SHORT,
+        size: sizeDelta.toString(),
+        leverage: leverage.toString(),
+        stopLossPrice: stopLossSet ? stopLossPrice.toString() : undefined,
+        takeProfitPrice: takeProfitSet ? takeProfitPrice.toString() : undefined,
+      };
+
+      onClose();
+
+      const response = await createMarketOrder(orderRequest);
+      if (!response || !response.success) {
+        throw new Error(
+          response?.error || "Unknown error creating market order"
+        );
+      }
+
+      triggerRefetchPositions();
+      resetInputs();
+      helperToast.success("Order placed successfully");
+    } catch (error: any) {
+      console.error("[Market Order Error]:", {
+        error,
+        message: error.message,
+        code: error.code,
+        data: error.data,
+        stack: error.stack,
+      });
+
+      let errorMessage = "Failed to place market order";
+
+      if (error.code === "NETWORK_ERROR") {
+        errorMessage = "Network error - please check your connection";
+      } else if (error.message?.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds for this trade";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      helperToast.error(errorMessage);
+    }
+  };
+
+  const handleCreateLimitOrder = async () => {
+    if (!address) {
+      helperToast.error("Please connect your wallet");
+      return;
+    }
+
+    try {
+      const limitOrderRequest: LimitOrderRequest = {
+        marketId,
+        userId: address,
+        side: isLong ? OrderSide.LONG : OrderSide.SHORT,
+        size: sizeDelta.toString(),
+        leverage: leverage.toString(),
+        stopLossPrice: stopLossSet ? stopLossPrice.toString() : undefined,
+        takeProfitPrice: takeProfitSet ? takeProfitPrice.toString() : undefined,
+        price: limitPrice.toString(),
+        token: collateralToken as TokenType,
+        type: OrderType.LIMIT,
+      };
+
+      onClose();
+
+      const response = await createLimitOrder(limitOrderRequest);
+      if (!response || !response.success) {
+        throw new Error(
+          response?.error || "Unknown error creating limit order"
+        );
+      }
+
+      triggerRefetchPositions();
+      resetInputs();
+      helperToast.success("Limit order placed successfully");
+    } catch (error: any) {
+      console.error("[Limit Order Error]:", {
+        error,
+        message: error.message,
+        code: error.code,
+        data: error.data,
+        stack: error.stack,
+      });
+
+      let errorMessage = "Failed to place limit order";
+
+      if (error.code === "NETWORK_ERROR") {
+        errorMessage = "Network error - please check your connection";
+      } else if (error.message?.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds for this trade";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      helperToast.error(errorMessage);
+    }
+  };
+
+  /**
+   * ========================== RENDER ==========================
+   */
+
   const renderButton = () => {
     if (
       state.isButtonDisabled &&
@@ -278,7 +366,7 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     ) {
       return (
         <Button
-          onPress={() => setIsLiquidityModalOpen(true)}
+          onPress={() => {}}
           className="w-full flex items-center justify-center text-center text-base bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 text-white py-4 font-bold"
         >
           {state.disabledText}

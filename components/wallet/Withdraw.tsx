@@ -85,12 +85,12 @@ const Withdraw = ({
       return;
     }
 
-    if (parseFloat(amountUsd) <= 0) {
+    if (parseFloat(tokenAmount) <= 0) {
       helperToast.error("Please enter a valid amount");
       return;
     }
 
-    if (parseFloat(amountUsd) > parseFloat(balance)) {
+    if (parseFloat(tokenAmount) > parseFloat(balance)) {
       helperToast.error("Insufficient balance");
       return;
     }
@@ -98,7 +98,7 @@ const Withdraw = ({
     try {
       setIsLoading(true);
 
-      await requestWithdrawal(address, amountUsd, withdrawToken);
+      await requestWithdrawal(address, tokenAmount, withdrawToken);
 
       helperToast.success("Withdrawal request submitted successfully!");
       onSuccess();

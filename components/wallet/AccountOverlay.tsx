@@ -28,6 +28,24 @@ const AccountOverlay = () => {
     }
   }, [connected]);
 
+  useEffect(() => {
+    const fetchPrices = async () => {
+      const BACKEND_URL =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+      const [solPrice, usdcPrice] = await Promise.all([
+        fetch(`${BACKEND_URL}/price/sol`).then((res) => res.json()),
+        fetch(`${BACKEND_URL}/price/usdc`).then((res) => res.json()),
+      ]);
+
+      // Set the SOL and USDC prices in the prices object
+      prices.SOL = Number(solPrice);
+      prices.USDC = Number(usdcPrice);
+    };
+
+    fetchPrices();
+  }, [shouldRefresh]);
+
   const handleLoginClick = () => {
     setShowLoginView(true);
   };
