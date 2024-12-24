@@ -14,15 +14,23 @@ import { getPriceDecimals } from "@/lib/web3/formatters";
 import OrderDetailsModal from "./OrderDetailsModal";
 
 const isPosition = (position: any): position is Position => {
-  return position && typeof position.positionKey !== "undefined";
+  return (
+    position &&
+    typeof position.status !== "undefined" &&
+    position.status === "OPEN"
+  );
 };
 
 const isOrder = (position: any): position is Order => {
   return position && typeof position.triggerPrice !== "undefined";
 };
 
-const isClosedPosition = (position: any): position is ClosedPosition => {
-  return position && typeof position.exitPrice !== "undefined";
+const isClosedPosition = (position: any): position is Position => {
+  return (
+    position &&
+    typeof position.status !== "undefined" &&
+    (position.status === "CLOSED" || position.status === "LIQUIDATED")
+  );
 };
 
 const EmptyState = ({ message, image }: { message: string; image: string }) => (
@@ -44,12 +52,10 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
   triggerGetTradeData,
   isLoading,
   currentMarketOnly,
-  pendingPositions,
   updateMarketStats,
-  setDecreasingPosition,
 }) => {
   const [selectedPosition, setSelectedPosition] = useState<
-    Position | Order | ClosedPosition | null
+    Position | Order | null
   >(null);
 
   const [positionProfitLoss, setPositionProfitLoss] = useState<{
@@ -73,9 +79,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
 
   const filterPositions = (positions: any[]) => {
     let filteredPositions = positions;
-    if (activeTab === "My Trades") {
-      filteredPositions = [...positions, ...pendingPositions];
-    }
+
     if (currentMarketOnly && asset) {
       return filteredPositions.filter(
         (position) => position.symbol === asset.symbol
@@ -109,7 +113,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
   }, [tradesData]);
 
   const handlePositionClick = (
-    trade: Position | Order | ClosedPosition,
+    trade: Position | Order,
     profitLoss: {
       pnlUsd: string;
       pnlPercentage: string;
@@ -126,7 +130,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
         <TradeDetailsModal
           position={trade}
           profitLoss={profitLoss}
-          markPrice={prices[trade.symbol] || 0}
+          markPrice={prices[trade.marketId] || 0}
           handleCloseClick={() => handleCloseClick(trade)}
           handleOptionClick={(option) =>
             handleOptionClick(index!, trade, option)
@@ -139,7 +143,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
       setModalContent(
         <OrderDetailsModal
           order={trade}
-          markPrice={prices[trade.symbol] || 0}
+          markPrice={prices[trade.marketId] || 0}
           onClose={() => setIsModalOpen(false)}
           triggerGetTradeData={triggerGetTradeData}
         />
@@ -162,10 +166,9 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
         <CollateralEdit
           isDeposit={true}
           onClose={() => setIsModalOpen(false)}
-          marketId={position.marketId}
           position={position}
           triggerRefetchPositions={triggerGetTradeData}
-          markPrice={prices[position.symbol] || 0}
+          markPrice={prices[position.marketId] || 0}
         />
       );
     } else if (option === "Withdraw Collateral") {
@@ -173,10 +176,9 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
         <CollateralEdit
           isDeposit={false}
           onClose={() => setIsModalOpen(false)}
-          marketId={position.marketId}
           position={position}
           triggerRefetchPositions={triggerGetTradeData}
-          markPrice={prices[position.symbol] || 0}
+          markPrice={prices[position.marketId] || 0}
         />
       );
     }
@@ -187,10 +189,9 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
       <DecreasePosition
         onClose={() => setIsModalOpen(false)}
         position={trade}
-        markPrice={prices[trade.symbol] || 0}
+        markPrice={prices[trade.marketId] || 0}
         triggerRefetchPositions={triggerGetTradeData}
         updateMarketStats={updateMarketStats}
-        setDecreasingPosition={setDecreasingPosition!}
       />
     );
   };
@@ -220,7 +221,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
     }
   };
 
-  const renderTableData = (data: (Position | Order | ClosedPosition)[]) => {
+  const renderTableData = (data: (Position | Order)[]) => {
     const filteredData = filterPositions(data);
 
     if (filteredData.length === 0) {
@@ -228,8 +229,8 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
     }
 
     return filteredData.map((position, index) => {
-      const markPrice = prices[position.symbol] || 0;
-      const symbol = position.symbol.split(":")[0];
+      const markPrice = prices[position.marketId] || 0;
+      const symbol = position.symbol;
       const profitLoss = isClosedPosition(position)
         ? getClosedPositionProfitLoss(position)
         : isOrder(position)
@@ -292,7 +293,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
             <div className="flex flex-col">
               <span className="text-xs text-end">
                 {isPosition(position)
-                  ? `$${position.collateral.toFixed(2)}`
+                  ? `$${position.margin.toFixed(2)}`
                   : "N/A"}
               </span>
               <span

@@ -40,12 +40,11 @@ type EntryButtonProps = {
     solPrice: number;
     usdcPrice: number;
   };
+  availableLiquidity: number;
   triggerRefetchPositions: () => void;
   resetInputs: () => void;
   triggerRefreshVolume: () => void;
   updateMarketStats: () => void;
-  createPendingPosition: (position: Position) => void;
-  refreshPendingPosition: (id: string, success: boolean) => void;
 };
 
 const EntryButton: React.FC<EntryButtonProps> = ({
@@ -60,7 +59,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   collateralDeltaUsd,
   sizeDelta,
   limitPrice,
-  isIncrease,
   stopLossSet,
   takeProfitSet,
   stopLossPercentage,
@@ -72,12 +70,11 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   liqPrice,
   priceImpact,
   collateralPrices,
+  availableLiquidity,
   triggerRefetchPositions,
   resetInputs,
   triggerRefreshVolume,
   updateMarketStats,
-  createPendingPosition,
-  refreshPendingPosition,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -86,37 +83,16 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   const [state, setState] = useState({
     selectedOption: "0.3",
     customValue: "",
-    availableLiquidity: 0,
+    availableLiquidity: availableLiquidity,
     positionFeeInCollateral: 0,
     isButtonDisabled: false,
     disabledText: "",
   });
 
-  const [countdown, setCountdown] = useState(5);
-
   const active = true;
 
   const updateState = (newState: Partial<typeof state>) => {
     setState((prevState) => ({ ...prevState, ...newState }));
-  };
-
-  const getAvailableLiquidity = async () => {
-    const BACKEND_URL =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-
-    const response = await fetch(`${BACKEND_URL}/liquidity`);
-    const data: {
-      availableLiquidity: string;
-      totalLiquidity: string;
-      utilizationRate: string;
-      maxUtilizationRate: string;
-    } = await response.json();
-
-    let prevState = state;
-
-    prevState.availableLiquidity = parseFloat(data.availableLiquidity);
-
-    setState(prevState);
   };
 
   const handleOpen = useCallback(() => {
@@ -137,9 +113,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
       if (collateralDeltaUsd === 0 || Number.isNaN(collateralDeltaUsd)) {
         isDisabled = true;
         text = "Enter an Amount";
-      } else if (collateralDeltaUsd < 2) {
-        isDisabled = true;
-        text = "Min Trade Size 2 USD";
       } else if (sizeDelta > state.availableLiquidity) {
         isDisabled = true;
         text = "Insufficient Liquidity";
@@ -187,22 +160,8 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     fetchPositionFeeInCollateral();
   }, [positionFee, collateralPrices, isLong]);
 
-  useEffect(() => {
-    setCountdown(5);
-    const timer = setInterval(() => {
-      setCountdown((prevCount) => (prevCount > 0 ? prevCount - 1 : 5));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [entryPrice]);
-
-  useEffect(() => {
-    getAvailableLiquidity();
-  }, []);
-
   const buttonText = useMemo(() => {
     if (state.isButtonDisabled) return state.disabledText;
-    if (collateralDeltaUsd < 2) return "Min Trade Size 2 USD";
     if (isTrigger) return "Create Trigger Order";
     return `${isLimit ? "Limit" : "Market"} ${isLong ? "Long" : "Short"} ${
       ticker.split(":")[0]
@@ -220,12 +179,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   const getDisplayPrice = (price: number) => {
     const priceDecimals = getPriceDecimals(price);
     return price.toFixed(priceDecimals);
-  };
-
-  const getCountdownColor = (seconds: number) => {
-    if (seconds >= 4) return "text-printer-green";
-    if (seconds === 3) return "text-printer-orange";
-    return "text-printer-red";
   };
 
   const calculateProjectedEarnings = useCallback(() => {
@@ -257,15 +210,21 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     }
 
     try {
+      /**
+       * @audit Add a parameter for preferred margin type.
+       * Whatever the user selects, we should use that margin type preferentially.
+       */
       const orderRequest: OrderRequest = {
         marketId,
         userId: address,
-        side: isLong ? OrderSide.LONG : OrderSide.SHORT,
+        side: isLong ? ("LONG" as OrderSide) : ("SHORT" as OrderSide),
         size: sizeDelta.toString(),
         leverage: leverage.toString(),
         stopLossPrice: stopLossSet ? stopLossPrice.toString() : undefined,
         takeProfitPrice: takeProfitSet ? takeProfitPrice.toString() : undefined,
       };
+
+      console.log("orderRequest", orderRequest);
 
       onClose();
 
@@ -312,14 +271,14 @@ const EntryButton: React.FC<EntryButtonProps> = ({
       const limitOrderRequest: LimitOrderRequest = {
         marketId,
         userId: address,
-        side: isLong ? OrderSide.LONG : OrderSide.SHORT,
+        side: isLong ? ("LONG" as OrderSide) : ("SHORT" as OrderSide),
         size: sizeDelta.toString(),
         leverage: leverage.toString(),
         stopLossPrice: stopLossSet ? stopLossPrice.toString() : undefined,
         takeProfitPrice: takeProfitSet ? takeProfitPrice.toString() : undefined,
         price: limitPrice.toString(),
         token: collateralToken as TokenType,
-        type: OrderType.LIMIT,
+        type: "LIMIT" as OrderType,
       };
 
       onClose();
@@ -423,12 +382,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
               <p>Entry Price</p>
               <p>{`$${getDisplayPrice(entryPrice)}`}</p>
             </div>
-            <div className="flex justify-between items-center text-gray-text w-full">
-              <p>Price reserved for the next:</p>
-              <p className={`font-bold ${getCountdownColor(countdown)}`}>
-                {countdown}s
-              </p>
-            </div>
             <div className="flex justify-between items-center text-gray-text">
               <p>Liq Price</p>
               <p>{`$${getDisplayPrice(liqPrice)}`}</p>
@@ -478,7 +431,7 @@ const EntryButton: React.FC<EntryButtonProps> = ({
 
           <Button
             type="submit"
-            onPress={() => {}}
+            onPress={handleCreateOrder}
             disabled={!active}
             className="w-full flex items-center justify-center text-center text-base bg-green-grad hover:bg-green-grad-hover border-2 border-printer-green !rounded-3 text-white !py-4 md:py-6 font-bold"
           >

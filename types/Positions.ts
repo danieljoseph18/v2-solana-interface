@@ -1,47 +1,83 @@
 interface Position {
-  id?: string;
-  isPending?: boolean;
-  isDecreasing?: boolean;
+  positionId: string;
+  userAddress: string;
   symbol: string;
+  marketId: string;
   isLong: boolean;
   size: number;
-  collateral: number;
+  leverage: number;
   entryPrice: number;
-  entryTime: string;
-  liqPrice: number;
-  adlEvents: AdlEvent[];
-  marketId: `0x${string}`;
-  positionKey: `0x${string}`;
+  stopLossPrice?: number;
+  takeProfitPrice?: number;
+  trailingStopDistance?: number;
+  status: "OPEN" | "CLOSED" | "LIQUIDATED";
+  closingPrice?: number;
+  margin: number;
+  lockedMarginSOL: number;
+  lockedMarginUSDC: number;
+  realizedPnl?: number;
+  accumulatedFunding: number;
+  accumulatedBorrowingFee: number;
+  lastBorrowingFeeUpdate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-interface AdlEvent {
-  sizeDelta: number;
-  time: string;
+interface PositionReturnType {
+  id: string; // positionId
+  userId: string; // publicKey of user
+  symbol: string;
+  marketId: string;
+  side: "LONG" | "SHORT";
+  size: string;
+  entryPrice: string;
+  leverage: string;
+  stopLossPrice?: string;
+  takeProfitPrice?: string;
+  trailingStopDistance?: string;
+  margin: string;
+  lockedMarginSOL: string;
+  lockedMarginUSDC: string;
+  realizedPnl?: string;
+  status: "OPEN" | "CLOSED" | "LIQUIDATED";
+  closingPrice?: string;
+  closedAt?: string;
+  accumulatedFunding: string;
+  accumulatedBorrowingFee: string;
+  lastBorrowingFeeUpdate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Order {
+  orderId: string;
+  userAddress: string;
+  marketId: string;
   symbol: string;
   isLong: boolean;
-  orderType: string;
   size: number;
-  collateralDelta: number; // in tokens
   triggerPrice: number;
-  triggerAbove: boolean;
-  timeCreated: string;
-  marketId: `0x${string}`;
-  orderKey: `0x${string}`;
+  leverage: number;
+  marginToken: "SOL" | "USDC";
+  requiredMargin: number;
+  status: "OPEN" | "FILLED" | "CANCELLED";
+  orderType: "Limit" | "Stop Loss" | "Take Profit";
+  createdAt: string;
+  updatedAt: string;
 }
 
-interface ClosedPosition {
+interface OrderReturnType {
+  id: string;
+  userId: string;
+  marketId: string;
   symbol: string;
-  isLong: boolean;
-  size: number;
-  collateral: number;
-  entryTime: string;
-  entryPrice: number;
-  exitPrice: number;
-  exitStatus: string; // Closed or Liquidated
-  realizedPnl: number;
-  pnlPercentage: number;
-  marketId: `0x${string}`;
+  side: "LONG" | "SHORT";
+  size: string;
+  price: string;
+  leverage: string;
+  token: "SOL" | "USDC";
+  requiredMargin: string;
+  status: "OPEN" | "FILLED" | "CANCELLED";
+  createdAt: string;
+  updatedAt: string;
 }

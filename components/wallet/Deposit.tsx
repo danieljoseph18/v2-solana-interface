@@ -83,7 +83,8 @@ const Deposit = ({
       await depositMargin(address, tokenAmount, depositToken, txHash);
 
       helperToast.success("Deposit successful!");
-      onSuccess();
+      handleDepositBackClick(); // Return to dashboard
+      onSuccess(); // Trigger refresh
     } catch (error) {
       console.error("Deposit failed:", error);
       helperToast.error(

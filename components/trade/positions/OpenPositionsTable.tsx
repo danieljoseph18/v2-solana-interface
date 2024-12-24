@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { getLiqPrice, getProfitLoss } from "./helpers";
+import React, { useMemo, useState } from "react";
+import { getProfitLoss } from "./helpers";
 import { getPriceDecimals } from "@/lib/web3/formatters";
-import { Button, Spinner } from "@nextui-org/react";
+import { Button } from "@nextui-org/react";
 import { useAsset } from "../assets/AssetContext";
 import CollateralEdit from "./CollateralEdit";
 import CustomSelect from "../interaction/CustomSelect";
@@ -10,6 +10,8 @@ import { IoIosWarning } from "react-icons/io";
 import TradeShare from "./TradeShare";
 import { FaShareSquare } from "react-icons/fa";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { estimateLiquidationPrice } from "@/lib/web3/position/estimateLiquidationPrice";
+import { formatDateTime } from "@/lib/utils/dates";
 
 interface OpenPositionsTableProps {
   positions: Position[];
@@ -31,8 +33,6 @@ interface OpenPositionsTableProps {
       | "full"
   ) => void;
   prices: { [key: string]: number };
-  pendingPositions: Position[];
-  decreasingPosition: Position | null;
 }
 
 const calculateUnwindingThreshold = (leverage: number): number => {
@@ -60,8 +60,6 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
   setIsModalOpen,
   setModalSize,
   prices,
-  pendingPositions,
-  decreasingPosition,
 }) => {
   const { allAssets, setAsset } = useAsset();
 
@@ -90,10 +88,9 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
         <CollateralEdit
           isDeposit={true}
           onClose={() => setIsModalOpen(false)}
-          marketId={position.marketId}
           position={position}
           triggerRefetchPositions={triggerGetTradeData}
-          markPrice={prices[position.symbol] || 0}
+          markPrice={prices[position.marketId] || 0}
         />
       );
     } else if (option === "Withdraw Collateral") {
@@ -101,10 +98,9 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
         <CollateralEdit
           isDeposit={false}
           onClose={() => setIsModalOpen(false)}
-          marketId={position.marketId}
           position={position}
           triggerRefetchPositions={triggerGetTradeData}
-          markPrice={prices[position.symbol] || 0}
+          markPrice={prices[position.marketId] || 0}
         />
       );
     }
@@ -115,21 +111,19 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
   const handleShareClick = (position: Position) => {
     setSelectedPosition(position);
 
-    const markPrice = prices[position.symbol] || 0;
+    const markPrice = prices[position.marketId] || 0;
 
     const profitLoss = getProfitLoss(markPrice, position);
 
-    const leverage = parseFloat(
-      (position.size / position.collateral).toFixed(2)
-    );
+    const leverage = parseFloat((position.size / position.margin).toFixed(2));
 
     setModalContent(
       <TradeShare
-        position={position.symbol.split(":")[0]}
+        position={position.marketId}
         pnlPercentage={parseFloat(profitLoss.pnlPercentage)}
         entryPrice={position.entryPrice}
         currentPrice={markPrice}
-        assetLogo={getImageUrlFromTokenSymbol(position.symbol.split(":")[0])}
+        assetLogo={getImageUrlFromTokenSymbol(position.marketId)}
         isLong={position.isLong}
         leverage={leverage}
         onClose={() => setIsModalOpen(false)}
@@ -142,71 +136,15 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
 
   // size / collateral
   const getLeverage = (position: any) => {
-    return (position.size / position.collateral).toFixed(2);
+    return (position.size / position.margin).toFixed(2);
   };
-
-  const checkUnwindingConditionAndRefresh = () => {
-    const shouldRefresh = positions.some((position) => {
-      if (position.size === 0 || position.collateral === 0) return false;
-      if (position.isPending || position.id) return false;
-      const markPrice = prices[position.symbol] || 0;
-      if (markPrice === 0) return false;
-      const profitLoss = getProfitLoss(markPrice, position);
-      const currentPnlPercentage = parseFloat(profitLoss.pnlPercentage);
-      const unwindingPnlPercentage = -(
-        100 - calculateUnwindingThreshold(parseFloat(getLeverage(position)))
-      );
-      return currentPnlPercentage <= unwindingPnlPercentage;
-    });
-
-    if (shouldRefresh) {
-      setTimeout(triggerGetTradeData, 1000);
-    }
-  };
-
-  // Call this function whenever positions or prices change
-  useEffect(() => {
-    checkUnwindingConditionAndRefresh();
-  }, [positions, prices]);
 
   // Memoize computed positions to avoid unnecessary recalculations
-  const computedPositions = useMemo(() => {
-    return positions
-      .filter((position) => {
-        // Filter out positions with empty or invalid values
-        return (
-          position.size !== 0 &&
-          position.collateral !== 0 &&
-          position.entryPrice !== 0 &&
-          !position.isPending &&
-          !position.id // Assuming 'id' is set for valid positions
-        );
-      })
-      .map((position) => {
-        const markPrice = prices[position.symbol] || 0;
-        const profitLoss = getProfitLoss(markPrice, position);
-        const liqPrice = getLiqPrice(position) || 0;
-        const priceDecimals = getPriceDecimals(markPrice);
-        const leverage = parseFloat(getLeverage(position));
-        const unwindingThreshold = calculateUnwindingThreshold(leverage);
-
-        return {
-          ...position,
-          markPrice,
-          profitLoss,
-          liqPrice,
-          priceDecimals,
-          leverage,
-          unwindingThreshold,
-        };
-      });
-  }, [positions, prices]);
-
-  const computedPendingPositions = useMemo(() => {
-    return pendingPositions.map((position) => {
-      const markPrice = prices[position.symbol] || 0;
+  const allPositions = useMemo(() => {
+    return positions.map((position) => {
+      const markPrice = prices[position.marketId] || 0;
       const profitLoss = getProfitLoss(markPrice, position);
-      const liqPrice = getLiqPrice(position) || 0;
+      const liqPrice = estimateLiquidationPrice(position) || 0;
       const priceDecimals = getPriceDecimals(markPrice);
       const leverage = parseFloat(getLeverage(position));
       const unwindingThreshold = calculateUnwindingThreshold(leverage);
@@ -217,16 +155,11 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
         profitLoss,
         liqPrice,
         priceDecimals,
-        leverage: Number((position.size / position.collateral).toFixed(2)),
-        pnlUsd: profitLoss.pnlUsd || "0",
-        pnlPercentage: profitLoss.pnlPercentage || "0",
-        hasProfit: profitLoss.hasProfit || false,
-        unwindingThreshold: unwindingThreshold || 0,
+        leverage,
+        unwindingThreshold,
       };
     });
-  }, [pendingPositions, prices]);
-
-  const allPositions = [...computedPendingPositions, ...computedPositions];
+  }, [positions, prices]);
 
   return (
     <table className="min-w-full divide-y divide-cardborder">
@@ -269,11 +202,6 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
       </thead>
       <tbody className="border-b border-cardborder bg-card-grad text-white text-sm">
         {allPositions.map((position, index) => {
-          const isPending = position.isPending;
-          const isDecreasing =
-            decreasingPosition &&
-            position.symbol === decreasingPosition.symbol &&
-            position.isLong === decreasingPosition.isLong;
           const currentPnlPercentage = parseFloat(
             position.profitLoss?.pnlPercentage || "0"
           );
@@ -281,25 +209,15 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
             100 - (position.unwindingThreshold || 0)
           );
 
-          if (!isPending && currentPnlPercentage <= unwindingPnlPercentage) {
-            checkUnwindingConditionAndRefresh();
-          }
-
           return (
             <tr
-              key={position.id || index}
-              onClick={() =>
-                !isPending &&
-                !isDecreasing &&
-                handleAssetSwitch(position.symbol)
-              }
-              className={`border-y-cardborder border-y-1 bg-card-grad ${
-                isPending || isDecreasing ? "opacity-75" : "cursor-pointer"
-              }`}
+              key={position.positionId || index}
+              onClick={() => handleAssetSwitch(position.symbol)}
+              className={`border-y-cardborder border-y-1 bg-card-grad cursor-pointer`}
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex flex-col">
-                  <span>{`${position.symbol.split(":")[0]}/USD`}</span>
+                  <span>{`${position.symbol}/USD`}</span>
                   <span
                     className={`
                       ${
@@ -328,7 +246,9 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
                       ? "..."
                       : position.entryPrice.toFixed(position.priceDecimals)
                   }`}</span>
-                  <span className="text-base-gray">{position.entryTime}</span>
+                  <span className="text-base-gray">
+                    {formatDateTime(position.createdAt)}
+                  </span>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
@@ -384,52 +304,41 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center justify-center gap-4">
-                  {isPending || isDecreasing ? (
-                    <>
-                      <Spinner size="sm" color="white" />
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex flex-row justify-center gap-2">
-                        <FaShareSquare
-                          className="text-printer-orange text-xl hover:text-printer-dark-orange cursor-pointer mr-2"
-                          onClick={() => handleShareClick(position)}
-                        />
-                        <CustomSelect
-                          options={[
-                            "Deposit Collateral",
-                            "Withdraw Collateral",
-                          ]}
-                          selectedOption=""
-                          onOptionSelect={(option: string) => {
-                            if (
-                              option === "Deposit Collateral" ||
-                              option === "Withdraw Collateral"
-                            ) {
-                              handleOptionClick(index, position, option);
-                            }
-                          }}
-                          showImages={false}
-                          showText={true}
-                          defaultDisplay={
-                            <p className="text-printer-orange hover:printer-dark-orace">
-                              Edit
-                            </p>
-                          }
-                          hideDropdownArrow={true}
-                          positionAbove={true}
-                        />
-                      </div>
-                      <Button
-                        className="ml-2 text-white px-2 cursor-pointer bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 font-bold"
-                        onPress={() => {
-                          handleDecreaseClick(position);
-                        }}
-                      >
-                        Close
-                      </Button>
-                    </>
-                  )}
+                  <div className="flex flex-row justify-center gap-2">
+                    <FaShareSquare
+                      className="text-printer-orange text-xl hover:text-printer-dark-orange cursor-pointer mr-2"
+                      onClick={() => handleShareClick(position)}
+                    />
+                    <CustomSelect
+                      options={["Deposit Collateral", "Withdraw Collateral"]}
+                      selectedOption=""
+                      onOptionSelect={(option: string) => {
+                        if (
+                          option === "Deposit Collateral" ||
+                          option === "Withdraw Collateral"
+                        ) {
+                          handleOptionClick(index, position, option);
+                        }
+                      }}
+                      showImages={false}
+                      showText={true}
+                      defaultDisplay={
+                        <p className="text-printer-orange hover:printer-dark-orace">
+                          Edit
+                        </p>
+                      }
+                      hideDropdownArrow={true}
+                      positionAbove={true}
+                    />
+                  </div>
+                  <Button
+                    className="ml-2 text-white px-2 cursor-pointer bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 font-bold"
+                    onPress={() => {
+                      handleDecreaseClick(position);
+                    }}
+                  >
+                    Close
+                  </Button>
                 </div>
               </td>
             </tr>

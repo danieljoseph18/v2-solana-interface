@@ -6,13 +6,10 @@ export type TradeTableProps = {
   handleOptionClick?: () => void;
   updateMarketStats: () => void;
   isLoading?: boolean;
-  pendingPositions: Position[];
-  decreasingPosition: Position | null;
-  setDecreasingPosition?: (position: Position | null) => void;
 };
 
 interface TableData {
   openPositions: Position[];
   orders: Order[];
-  closedPositions: ClosedPosition[];
+  closedPositions: Position[];
 }

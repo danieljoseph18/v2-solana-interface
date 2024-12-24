@@ -1,13 +1,9 @@
-export const getLiqPrice = (position: any) => {
-  return position.liqPrice;
-};
-
-export const getClosedPositionProfitLoss = (position: ClosedPosition) => {
-  const pnlPercentage = (position.realizedPnl / position.collateral) * 100;
+export const getClosedPositionProfitLoss = (position: Position) => {
+  const pnlPercentage = (position.realizedPnl! / position.margin) * 100;
   return {
-    pnlUsd: `$${position.realizedPnl.toFixed(2)}`,
+    pnlUsd: `$${position.realizedPnl!.toFixed(2)}`,
     pnlPercentage: `${pnlPercentage.toFixed(2)}%`,
-    hasProfit: position.realizedPnl >= 0,
+    hasProfit: position.realizedPnl! >= 0,
   };
 };
 
@@ -19,7 +15,7 @@ export const getProfitLoss = (
   pnlPercentage: string;
   hasProfit: boolean;
 } => {
-  if (!position.entryPrice || !position.collateral) {
+  if (!position.entryPrice || !position.margin) {
     return { pnlUsd: "0.00", pnlPercentage: "0.00", hasProfit: false };
   }
 
@@ -36,7 +32,7 @@ export const getProfitLoss = (
   }
 
   // Calculate percentage relative to collateral
-  const percentage = (pnlUsd / position.collateral) * 100;
+  const percentage = (pnlUsd / position.margin) * 100;
   hasProfit = pnlUsd >= 0;
 
   const percentageString = `${percentage.toFixed(2)}%`;

@@ -1,10 +1,11 @@
 import { addMinutes, format as formatDateFn } from "date-fns";
 
-export function formatDateTime(time: number) {
-  if (time === 0 || time === undefined) {
+export function formatDateTime(time: string) {
+  const timestamp = new Date(time).getTime() / 1000;
+  if (timestamp === 0 || timestamp === undefined) {
     return "N/A";
   }
-  return formatDateFn(time * 1000, "dd MMM yyyy, h:mm a");
+  return formatDateFn(timestamp * 1000, "dd MMM yyyy, h:mm a");
 }
 
 export function formatDate(time: number) {

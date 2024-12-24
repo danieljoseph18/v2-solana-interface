@@ -7,24 +7,22 @@ import InfoTooltip from "@/components/common/InfoTooltip";
 const MarketStats = ({
   isLong,
   entryPrice,
-  liqPrice,
   priceDecimals,
   marketStats,
+  availableLiquidity,
 }: {
   isLong: boolean;
   entryPrice: number;
-  liqPrice: number;
   priceDecimals: number;
   marketStats: {
     borrowRateLong: number;
     borrowRateShort: number;
     fundingRate: number;
     fundingRateVelocity: number;
-    availableLiquidityLong: number;
-    availableLiquidityShort: number;
     openInterestLong: number;
     openInterestShort: number;
   };
+  availableLiquidity: number;
 }) => {
   const { asset } = useAsset();
 
@@ -46,12 +44,6 @@ const MarketStats = ({
       value: `$${entryPrice.toFixed(priceDecimals) ?? 0.0}`,
     },
     {
-      title: "Liq Price",
-      value: `$${
-        Number.isNaN(liqPrice) ? 0.0 : liqPrice.toFixed(priceDecimals)
-      }`,
-    },
-    {
       title: "Borrow Fee",
       value: formatRate(
         isLong ? marketStats.borrowRateLong : marketStats.borrowRateShort
@@ -68,15 +60,8 @@ const MarketStats = ({
     {
       title: "Available Liquidity",
       value: {
-        display: `$${formatFloatWithCommas(
-          isLong
-            ? marketStats.availableLiquidityLong
-            : marketStats.availableLiquidityShort
-        )}`,
-        full: `$${(isLong
-          ? marketStats.availableLiquidityLong
-          : marketStats.availableLiquidityShort
-        ).toFixed(20)}`,
+        display: `$${formatFloatWithCommas(availableLiquidity)}`,
+        full: `$${availableLiquidity.toFixed(20)}`,
       },
     },
   ];

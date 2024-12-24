@@ -177,16 +177,6 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
     [chartReady]
   );
 
-  const getGeckoTerminalUrl = useCallback(() => {
-    return `https://www.geckoterminal.com/solana/pools/${asset.poolAddress}?embed=1&info=0&swaps=0`;
-  }, [asset]);
-
-  const handleIlliquidChartClick = () => {
-    setShowGeckoTerminal(true);
-  };
-
-  const canShowGeckoTerminal = true;
-
   useEffect(() => {
     if (chartDataLoading) {
       resetTimeout();
@@ -295,41 +285,15 @@ const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <p>{chartError}</p>
         </div>
       )}
-      {showGeckoTerminal ? (
-        <div className="w-full h-full overflow-hidden">
-          <iframe
-            height="100%"
-            width="100%"
-            id="geckoterminal-embed"
-            title="GeckoTerminal Embed"
-            src={getGeckoTerminalUrl()}
-            allow="clipboard-write"
-            allowFullScreen
-          ></iframe>
-        </div>
-      ) : (
-        <>
-          <div
-            id="tv_chart_container"
-            className="TVChartContainer"
-            ref={chartContainerRef}
-            style={{
-              visibility:
-                !chartDataLoading && !chartError ? "visible" : "hidden",
-              position: "relative",
-            }}
-          />
-          {canShowGeckoTerminal && (
-            <button
-              className="absolute bottom-2 right-2 bg-input-grad border-cardborder border-2 text-white text-xs py-1 px-2 rounded-md flex items-center opacity-70 hover:opacity-100"
-              onClick={handleIlliquidChartClick}
-            >
-              Illiquid Chart
-              <FaQuestionCircle className="text-xs text-printer-orange ml-2" />
-            </button>
-          )}
-        </>
-      )}
+      <div
+        id="tv_chart_container"
+        className="TVChartContainer"
+        ref={chartContainerRef}
+        style={{
+          visibility: !chartDataLoading && !chartError ? "visible" : "hidden",
+          position: "relative",
+        }}
+      />
     </div>
   );
 };

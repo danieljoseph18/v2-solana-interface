@@ -1,5 +1,3 @@
-"use server";
-
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
@@ -18,8 +16,19 @@ export async function createLimitOrder(orderRequest: LimitOrderRequest) {
       throw new Error(errorData.message || "Failed to create limit order");
     }
 
-    return response.json();
-  } catch (error) {
-    throw error;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = await response.json();
+      return { success: true, data };
+    } else {
+      const text = await response.text();
+      return { success: true, data: text };
+    }
+  } catch (error: any) {
+    console.error("[Limit Order Error]:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to create limit order",
+    };
   }
 }

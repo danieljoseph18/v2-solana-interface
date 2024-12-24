@@ -16,16 +16,20 @@ import SizeInput from "@/components/trade/interaction/SizeInput";
 import MarketStats from "@/components/trade/stats/MarketStats";
 import Loader from "@/components/trade/TVChartContainer/Loader";
 import { ChartLine } from "@/components/trade/TVChartContainer/TradingViewChart";
-import { formatUnixTimestamp, getPriceDecimals } from "@/lib/web3/formatters";
+import { getPriceDecimals } from "@/lib/web3/formatters";
 import { Selection } from "@nextui-org/react";
 import ModalV2 from "@/components/common/ModalV2";
 import ModalClose from "@/components/common/ModalClose";
 import { getChartSymbol } from "@/components/trade/TVChartContainer/trading-view-symbols";
 import { TVDataProvider } from "@/components/tradingview/TVDataProvider";
-import { v4 as uuidv4 } from "uuid";
 import SSEListener from "@/components/trade/positions/SSEListener";
 import { getAssets } from "@/app/actions/getAssets";
 import useInterval from "@/hooks/useInterval";
+import {
+  estimateLiquidationPrice,
+  preCalculateLiquidationPrice,
+} from "@/lib/web3/position/estimateLiquidationPrice";
+import { useWallet } from "@/hooks/useWallet";
 
 const TradingViewChart = dynamic(
   () =>
@@ -38,6 +42,8 @@ const TradingViewChart = dynamic(
 const TradePage = () => {
   const [activeTab, setActiveTab] = useState("My Trades");
   const { width } = useWindowSize();
+
+  const { address } = useWallet();
 
   const pathname = usePathname();
 
@@ -53,10 +59,9 @@ const TradePage = () => {
   const [activeType, setActiveType] = useState("Market");
   const [openPositions, setOpenPositions] = useState<Position[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [closedPositions, setClosedPositions] = useState<ClosedPosition[]>([]);
+  const [closedPositions, setClosedPositions] = useState<Position[]>([]);
   const [chartLines, setChartLines] = useState<ChartLine[]>([]);
   // Pass into size input
-  const [liqPrice, setLiqPrice] = useState(0);
   const [collateral, setCollateral] = useState<string>("");
   const [leverage, setLeverage] = useState(1.1);
   const [priceDecimals, setPriceDecimals] = useState(7);
@@ -65,12 +70,13 @@ const TradePage = () => {
   const [isTablet, setIsTablet] = useState(false);
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [currentMarketOnly, setCurrentMarketOnly] = useState(false);
+  const [availableLiquidity, setAvailableLiquidity] = useState(0);
   const [refreshVolume, setRefreshVolume] = useState(0);
   const [marketTokenPrices, setMarketTokenPrices] = useState<{
-    ethPrice: number;
+    solPrice: number;
     usdcPrice: number;
   }>({
-    ethPrice: 0,
+    solPrice: 0,
     usdcPrice: 0,
   });
   const [marketStats, setMarketStats] = useState<{
@@ -78,8 +84,6 @@ const TradePage = () => {
     borrowRateShort: number;
     fundingRate: number;
     fundingRateVelocity: number;
-    availableLiquidityLong: number;
-    availableLiquidityShort: number;
     openInterestLong: number;
     openInterestShort: number;
   }>({
@@ -87,12 +91,9 @@ const TradePage = () => {
     borrowRateShort: 0,
     fundingRate: 0,
     fundingRateVelocity: 0,
-    availableLiquidityLong: 0,
-    availableLiquidityShort: 0,
     openInterestLong: 0,
     openInterestShort: 0,
   });
-  const [pendingPositions, setPendingPositions] = useState<Position[]>([]);
   const [decreasingPosition, setDecreasingPosition] = useState<Position | null>(
     null
   );
@@ -118,111 +119,125 @@ const TradePage = () => {
     setIsTradeModalOpen(false);
   };
 
-  const createPendingPosition = (position: Position) => {
-    const pendingPosition: Position = {
-      id: uuidv4(),
-      isPending: true,
-      symbol: position.symbol || "",
-      isLong: position.isLong || false,
-      size: position.size || 0,
-      collateral: position.collateral || 0,
-      entryPrice: 0,
-      entryTime: formatUnixTimestamp(Date.now() / 1000),
-      liqPrice: 0,
-      adlEvents: [],
-      marketId: `0x0`,
-      positionKey: `0x0`,
-    };
-    // Wait 3s
-    setTimeout(() => {}, 3000);
-    setPendingPositions((prevPositions) => [pendingPosition, ...prevPositions]);
-  };
+  const fetchPositionData = useCallback(async () => {
+    if (!address) {
+      return;
+    }
 
-  const refreshPendingPosition = useCallback(
-    async (id: string, success: boolean) => {
-      // if (!account connected return )
+    setIsTableLoading(true);
 
-      if (success) {
-        const fetchPositionsWithRetry = async (
-          retryCount = 0
-        ): Promise<void> => {
-          // Wait for 3 seconds before calling getAllPositions
-          await new Promise((resolve) => setTimeout(resolve, 3000));
+    const BACKEND_URL =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
-          try {
-            // Fetch all updated positions
-            let newOpenPositions: Position[] = [];
-            let newOrders: Order[] = [];
-            let newClosedPositions: ClosedPosition[] = [];
+    try {
+      // Fetch positions and orders in parallel
+      const [positionResponse, orderResponse] = await Promise.all([
+        fetch(`${BACKEND_URL}/trade/positions?publicKey=${address}`),
+        fetch(`${BACKEND_URL}/limit-orders?publicKey=${address}`),
+      ]);
 
-            const filteredPendingPositions = pendingPositions.filter(
-              (pos) => pos.id !== id
-            );
+      const [positionData, orderData]: [
+        PositionReturnType[],
+        OrderReturnType[]
+      ] = await Promise.all([positionResponse.json(), orderResponse.json()]);
 
-            // Remove the pending position
-            setPendingPositions(filteredPendingPositions);
+      if (positionData.length > 0) {
+        const mappedPositions: Position[] = positionData.map((pos) => {
+          return {
+            positionId: pos.id,
+            userAddress: pos.userId,
+            symbol: pos.symbol,
+            marketId: pos.marketId,
+            isLong: pos.side === "LONG",
+            size: Number(pos.size),
+            leverage: Number(pos.leverage),
+            entryPrice: Number(pos.entryPrice),
+            stopLossPrice: pos.stopLossPrice
+              ? Number(pos.stopLossPrice)
+              : undefined,
+            takeProfitPrice: pos.takeProfitPrice
+              ? Number(pos.takeProfitPrice)
+              : undefined,
+            trailingStopDistance: pos.trailingStopDistance
+              ? Number(pos.trailingStopDistance)
+              : undefined,
+            status: pos.status,
+            closingPrice: pos.closingPrice
+              ? Number(pos.closingPrice)
+              : undefined,
+            margin: Number(pos.margin),
+            lockedMarginSOL: Number(pos.lockedMarginSOL),
+            lockedMarginUSDC: Number(pos.lockedMarginUSDC),
+            realizedPnl: pos.realizedPnl ? Number(pos.realizedPnl) : undefined,
+            accumulatedFunding: Number(pos.accumulatedFunding),
+            accumulatedBorrowingFee: Number(pos.accumulatedBorrowingFee),
+            lastBorrowingFeeUpdate: pos.lastBorrowingFeeUpdate,
+            createdAt: pos.createdAt,
+            updatedAt: pos.updatedAt,
+          };
+        });
 
-            if (
-              newOpenPositions.length === openPositions.length &&
-              retryCount < 2
-            ) {
-              // If there's no change in openPositions, retry after 3 seconds
-              return fetchPositionsWithRetry(retryCount + 1);
-            }
-
-            // Update all position states
-            setOpenPositions(newOpenPositions);
-            setOrders(newOrders);
-            setClosedPositions(newClosedPositions);
-          } catch (error) {
-            console.error("Error refreshing positions:", error);
-          }
-        };
-
-        fetchPositionsWithRetry();
-      } else {
-        // If not successful, simply remove the pending position
-        setPendingPositions((prevPositions) =>
-          prevPositions.filter((pos) => pos.id !== id)
+        const newOpenPositions = mappedPositions.filter(
+          (pos) => pos.status === "OPEN"
         );
-      }
-    },
-    [
-      marketTokenPrices.ethPrice,
-      marketTokenPrices.usdcPrice,
-      openPositions.length,
-      pendingPositions,
-    ]
-  );
-
-  const fetchPositionData = useCallback(
-    async (shouldRefresh: boolean) => {
-      if (
-        allAssets.length === 0 ||
-        marketTokenPrices.ethPrice === 0 ||
-        marketTokenPrices.usdcPrice === 0
-      ) {
-        return;
-      }
-
-      setIsTableLoading(true);
-
-      try {
-        let newOpenPositions: Position[] = [];
-        let newOrders: Order[] = [];
-        let newClosedPositions: ClosedPosition[] = [];
+        const newClosedPositions = mappedPositions.filter(
+          (pos) => pos.status === "CLOSED" || pos.status === "LIQUIDATED"
+        );
 
         setOpenPositions(newOpenPositions);
-        setOrders(newOrders);
         setClosedPositions(newClosedPositions);
-      } catch (error) {
-        console.error("Error fetching position data:", error);
-      } finally {
-        setIsTableLoading(false);
       }
-    },
-    [allAssets.length, marketTokenPrices.ethPrice, marketTokenPrices.usdcPrice]
-  );
+
+      /**
+       * @audit Need to add SL/TPS
+       */
+      if (orderData.length > 0) {
+        const mappedOrders: Order[] = orderData.map((order) => {
+          return {
+            orderId: order.id,
+            userAddress: order.userId,
+            marketId: order.marketId,
+            symbol: order.symbol,
+            isLong: order.side === "LONG",
+            size: Number(order.size),
+            triggerPrice: Number(order.price),
+            leverage: Number(order.leverage),
+            marginToken: order.token,
+            requiredMargin: Number(order.requiredMargin),
+            status: order.status,
+            orderType: "Limit", // Defaulted (add SL/TP)
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
+          };
+        });
+
+        const filteredOrders = mappedOrders.filter(
+          (order) => order.status === "OPEN"
+        );
+
+        setOrders(filteredOrders);
+      }
+    } catch (error) {
+      console.error("Error fetching position data:", error);
+    } finally {
+      setIsTableLoading(false);
+    }
+  }, [address]);
+
+  const getAvailableLiquidity = async () => {
+    const BACKEND_URL =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+    const response = await fetch(`${BACKEND_URL}/liquidity`);
+    const data: {
+      availableLiquidity: string;
+      totalLiquidity: string;
+      utilizationRate: string;
+      maxUtilizationRate: string;
+    } = await response.json();
+
+    setAvailableLiquidity(parseFloat(data.availableLiquidity));
+  };
 
   // Fetch all assets
   useEffect(() => {
@@ -238,7 +253,7 @@ const TradePage = () => {
 
   // Fetch position data once when component mounts or when critical dependencies change
   useEffect(() => {
-    fetchPositionData(false);
+    fetchPositionData();
   }, [fetchPositionData]);
 
   useEffect(() => {
@@ -250,6 +265,10 @@ const TradePage = () => {
   useEffect(() => {
     setMarkPrice(0);
   }, [asset]);
+
+  useEffect(() => {
+    getAvailableLiquidity();
+  }, []);
 
   // @audit - Can maybe set up a WS in backend to stream this
   const updatePriceForAsset = useCallback(async () => {
@@ -315,7 +334,7 @@ const TradePage = () => {
           symbol: position.symbol,
         };
         const liquidationLine: ChartLine = {
-          price: position.liqPrice,
+          price: estimateLiquidationPrice(position),
           title: `Liquidation ${position.symbol} - ${
             position.isLong ? "Long" : "Short"
           }`,
@@ -351,6 +370,16 @@ const TradePage = () => {
 
   const isMarkPriceReady = markPrice !== 0;
 
+  // Add a new state to track SSE updates
+  const [sseUpdateCounter, setSSEUpdateCounter] = useState(0);
+
+  // Use an effect to handle the actual data fetching
+  useEffect(() => {
+    if (sseUpdateCounter > 0) {
+      fetchPositionData();
+    }
+  }, [sseUpdateCounter, fetchPositionData]);
+
   return (
     <AssetProvider
       asset={asset}
@@ -358,7 +387,13 @@ const TradePage = () => {
       allAssets={allAssets}
       setAllAssets={setAllAssets}
     >
-      <SSEListener onUpdate={() => fetchPositionData(true)} timeout={5000} />
+      <SSEListener
+        onUpdate={() => {
+          // Instead of directly fetching, increment the counter
+          setSSEUpdateCounter((prev) => prev + 1);
+        }}
+        timeout={3000}
+      />
       <div
         className={`flex flex-col gap-4 relative lg:gap-0 lg:mt-0 lg:px-0 lg:flex-row w-full md:max-h-[90vh] bottom-0 left-0 right-0 bg-[#07080A] 3xl:border-b border-cardborder 3xl:border-x`}
       >
@@ -412,7 +447,6 @@ const TradePage = () => {
             triggerGetTradeData={() => {}}
             isTableLoading={isTableLoading}
             currentMarketOnly={currentMarketOnly}
-            pendingPositions={pendingPositions}
             updateMarketStats={() => {}}
             decreasingPosition={decreasingPosition}
             setDecreasingPosition={setDecreasingPosition}
@@ -438,24 +472,30 @@ const TradePage = () => {
                   collateral={collateral}
                   setCollateral={setCollateral}
                   markPrice={markPrice}
-                  liqPrice={liqPrice || 0}
+                  liqPrice={
+                    preCalculateLiquidationPrice(
+                      markPrice,
+                      Number(collateral),
+                      Number(collateral) * leverage,
+                      isLong
+                    ) || 0
+                  }
                   priceDecimals={priceDecimals}
                   triggerRefetchPositions={() => {}}
                   marketStats={marketStats}
+                  availableLiquidity={availableLiquidity}
                   triggerRefreshVolume={() =>
                     setRefreshVolume((prev) => prev + 1)
                   }
                   updateMarketStats={() => {}}
-                  createPendingPosition={createPendingPosition}
-                  refreshPendingPosition={refreshPendingPosition}
                 />
               </div>
               <MarketStats
                 isLong={isLong}
                 entryPrice={markPrice ?? 0.0}
-                liqPrice={liqPrice || 0}
                 priceDecimals={priceDecimals}
                 marketStats={marketStats}
+                availableLiquidity={availableLiquidity}
               />
             </div>
           )}
@@ -491,18 +531,24 @@ const TradePage = () => {
                 collateral={collateral}
                 setCollateral={setCollateral}
                 markPrice={markPrice}
-                liqPrice={liqPrice || 0}
+                liqPrice={
+                  preCalculateLiquidationPrice(
+                    markPrice,
+                    Number(collateral),
+                    Number(collateral) * leverage,
+                    isLong
+                  ) || 0
+                }
                 priceDecimals={priceDecimals}
                 triggerRefetchPositions={() => {
                   closeTradeModal(); //Close the modal after execution
                 }}
                 marketStats={marketStats}
+                availableLiquidity={availableLiquidity}
                 triggerRefreshVolume={() =>
                   setRefreshVolume((prev) => prev + 1)
                 }
                 updateMarketStats={() => {}}
-                createPendingPosition={createPendingPosition}
-                refreshPendingPosition={refreshPendingPosition}
               />
             </div>
           </div>

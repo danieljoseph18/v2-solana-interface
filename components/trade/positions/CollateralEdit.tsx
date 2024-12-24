@@ -8,6 +8,7 @@ import InfoTip from "@/app/assets/common/info-tip.svg";
 import SlippageDropdown from "../interaction/SlippageDropdown";
 import CollateralInput from "../interaction/CollateralInput";
 import { getPriceDecimals } from "@/lib/web3/formatters";
+import { estimateLiquidationPrice } from "@/lib/web3/position/estimateLiquidationPrice";
 
 const MIN_COLLATERAL_USD = 2;
 const MAX_LEVERAGE = 1000;
@@ -15,14 +16,12 @@ const MAX_LEVERAGE = 1000;
 const CollateralEdit = ({
   isDeposit,
   onClose,
-  marketId,
   position,
   triggerRefetchPositions,
   markPrice,
 }: {
   isDeposit: boolean;
   onClose: () => void;
-  marketId: `0x${string}`;
   position: Position;
   triggerRefetchPositions: () => void;
   markPrice: number;
@@ -31,7 +30,7 @@ const CollateralEdit = ({
 
   const [collateral, setCollateral] = useState("");
 
-  const [collateralType, setCollateralType] = useState("ETH");
+  const [collateralType, setCollateralType] = useState("SOL");
 
   const [liqPriceAfter, setLiqPriceAfter] = useState(0);
 
@@ -68,10 +67,10 @@ const CollateralEdit = ({
 
   // Used to cache prices so they're not refetched constantly when calculating equivalents
   const [cachedPrices, setCachedPrices] = useState<{
-    ethPrice: number;
+    solPrice: number;
     usdcPrice: number;
   }>({
-    ethPrice: 0,
+    solPrice: 0,
     usdcPrice: 0,
   });
 
@@ -80,15 +79,6 @@ const CollateralEdit = ({
   // Max Slippage
   const [selectedOption, setSelectedOption] = useState<string>("0.3");
   const [customValue, setCustomValue] = useState<string>("");
-
-  const [isTransactionPendingModalOpen, setIsTransactionPendingModalOpen] =
-    useState(false);
-
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const [hasFailedAtCurrentStep, setHasFailedAtCurrentStep] = useState(false);
-
-  const [isTransactionComplete, setIsTransactionComplete] = useState(false);
 
   const [isValidLeverage, setIsValidLeverage] = useState(true);
   const [leverageErrorMessage, setLeverageErrorMessage] = useState("");
@@ -104,15 +94,13 @@ const CollateralEdit = ({
 
     if (!isDeposit) {
       const withdrawalAmountUsd = parseFloat(value) * collateralPrice;
-      const remainingCollateralUsd = position.collateral - withdrawalAmountUsd;
+      const remainingCollateralUsd = position.margin - withdrawalAmountUsd;
       setIsValidWithdrawal(remainingCollateralUsd >= MIN_COLLATERAL_USD);
     }
   };
 
   const handleCollateralTypeChange = (option: string) => {
-    if (position.isLong && (option === "ETH" || option === "WETH")) {
-      setCollateralType(option);
-    }
+    setCollateralType(option);
   };
 
   const handleMaxClick = () => {
@@ -140,9 +128,9 @@ const CollateralEdit = ({
 
       let newLeverage;
       if (isDeposit) {
-        newLeverage = position.size / (position.collateral + equivalents.value);
+        newLeverage = position.size / (position.margin + equivalents.value);
       } else {
-        newLeverage = position.size / (position.collateral - equivalents.value);
+        newLeverage = position.size / (position.margin - equivalents.value);
       }
 
       if (newLeverage < 1.1) {
@@ -161,7 +149,7 @@ const CollateralEdit = ({
   }, [
     equivalents.value,
     position.size,
-    position.collateral,
+    position.margin,
     MAX_LEVERAGE,
     isDeposit,
   ]);
@@ -172,7 +160,7 @@ const CollateralEdit = ({
 
   useEffect(() => {
     const fetchLeverages = async () => {
-      const leverageBefore = (position.size / position.collateral).toFixed(2);
+      const leverageBefore = (position.size / position.margin).toFixed(2);
       let leverageAfter;
       if (equivalents.value === 0) {
         leverageAfter = leverageBefore;
@@ -180,12 +168,12 @@ const CollateralEdit = ({
         if (isDeposit) {
           leverageAfter = (
             position.size /
-            (position.collateral + equivalents.value)
+            (position.margin + equivalents.value)
           ).toFixed(2);
         } else {
           leverageAfter = (
             position.size /
-            (position.collateral - equivalents.value)
+            (position.margin - equivalents.value)
           ).toFixed(2);
         }
       }
@@ -196,7 +184,7 @@ const CollateralEdit = ({
     };
 
     fetchLeverages();
-  }, [collateral, equivalents.value, position.collateral, position.size]);
+  }, [collateral, equivalents.value, position.margin, position.size]);
 
   const priceDecimals = useMemo(() => {
     const newDecimals = getPriceDecimals(markPrice);
@@ -257,13 +245,13 @@ const CollateralEdit = ({
               isDeposit ? "text-printer-green" : "text-printer-red"
             } text-nowrap flex items-center`}
           >
-            <span className="text-gray-text">{`$${position.collateral.toFixed(
+            <span className="text-gray-text">{`$${position.margin.toFixed(
               2
             )}`}</span>
             <PiArrowRightFill className="mx-1" />
             <span>{`$${(isDeposit
-              ? position.collateral + equivalents.value
-              : position.collateral - equivalents.value
+              ? position.margin + equivalents.value
+              : position.margin - equivalents.value
             ).toFixed(2)}`}</span>
           </p>
         </div>
@@ -292,8 +280,8 @@ const CollateralEdit = ({
               isDeposit ? "text-printer-green" : "text-printer-red"
             } flex flex-col items-end justify-between`}
           >
-            <span className="text-gray-text">{`$${position.liqPrice.toFixed(
-              priceDecimals
+            <span className="text-gray-text">{`$${estimateLiquidationPrice(
+              position
             )}`}</span>
             <PiArrowDownFill className="my-1" />
             <span>{`$${liqPriceAfter.toFixed(priceDecimals)}`}</span>

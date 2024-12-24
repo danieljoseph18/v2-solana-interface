@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { FaShareSquare } from "react-icons/fa";
-import { getLiqPrice } from "./helpers";
 import TokenLogo from "@/components/common/TokenLogo";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import { Button } from "@nextui-org/react";
@@ -8,6 +7,7 @@ import ModalClose from "@/components/common/ModalClose";
 import { formatSmallNumber, getPriceDecimals } from "@/lib/web3/formatters";
 import ModalV2 from "@/components/common/ModalV2";
 import TradeShare from "./TradeShare";
+import { estimateLiquidationPrice } from "@/lib/web3/position/estimateLiquidationPrice";
 
 const TradeDetailsModal = ({
   position,
@@ -45,7 +45,7 @@ const TradeDetailsModal = ({
 
   // size / collateral
   const getLeverage = () => {
-    return (position.size / position.collateral).toFixed(2);
+    return (position.size / position.margin).toFixed(2);
   };
 
   return (
@@ -54,7 +54,7 @@ const TradeDetailsModal = ({
         <p className="text-lg font-medium max-w-[80%]">
           Manage Position:{" "}
           <span className="text-printer-orange font-bold">
-            {position.symbol.split(":")[0]} / USD{" "}
+            {position.symbol} / USD{" "}
           </span>
           <span
             className={`text-sm  ${
@@ -71,7 +71,7 @@ const TradeDetailsModal = ({
       <div className="flex justify-between text-base text-printer-gray">
         <span>Collateral </span>
         <div className="flex flex-col">
-          <span className="text-xs text-end">{`$${position.collateral.toFixed(
+          <span className="text-xs text-end">{`$${position.margin.toFixed(
             2
           )}`}</span>
           <span
@@ -95,7 +95,7 @@ const TradeDetailsModal = ({
       </div>
       <div className="flex justify-between text-base text-printer-gray">
         <span>Liquidation Price </span>
-        <span>{`$${getLiqPrice(position)}`}</span>
+        <span>{`$${estimateLiquidationPrice(position)}`}</span>
       </div>
       <div className="flex justify-between text-base text-printer-gray">
         <span>Collateral Asset</span>
@@ -130,11 +130,11 @@ const TradeDetailsModal = ({
       </div>
       <ModalV2 isOpen={isShareModalOpen} setIsModalOpen={setIsShareModalOpen}>
         <TradeShare
-          position={position.symbol.split(":")[0]}
+          position={position.symbol}
           pnlPercentage={parseFloat(profitLoss.pnlPercentage)}
           entryPrice={position.entryPrice}
           currentPrice={markPrice}
-          assetLogo={getImageUrlFromTokenSymbol(position.symbol.split(":")[0])}
+          assetLogo={getImageUrlFromTokenSymbol(position.symbol)}
           isLong={position.isLong}
           leverage={parseFloat(getLeverage())}
           onClose={() => setIsShareModalOpen(false)}

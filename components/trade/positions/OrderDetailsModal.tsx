@@ -4,6 +4,7 @@ import TokenLogo from "@/components/common/TokenLogo";
 import { getPriceDecimals } from "@/lib/web3/formatters";
 import ModalClose from "@/components/common/ModalClose";
 import { helperToast } from "@/lib/helperToast";
+import { formatDateTime } from "@/lib/utils/dates";
 
 interface OrderDetailsModalProps {
   order: Order;
@@ -48,7 +49,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       </div>
       <div className="flex justify-between text-base text-printer-gray">
         <span>Time Created</span>
-        <span>{order.timeCreated}</span>
+        <span>{formatDateTime(order.createdAt)}</span>
       </div>
       <div className="flex justify-between text-base text-printer-gray">
         <span>Collateral Asset</span>

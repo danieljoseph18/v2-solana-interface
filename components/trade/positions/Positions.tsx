@@ -8,7 +8,7 @@ const MOBILE_SCREEN_SIZE = 768;
 interface TableData {
   openPositions: Position[];
   orders: Order[];
-  closedPositions: ClosedPosition[];
+  closedPositions: Position[];
 }
 
 const Positions = ({
@@ -19,7 +19,6 @@ const Positions = ({
   triggerGetTradeData,
   isTableLoading,
   currentMarketOnly,
-  pendingPositions,
   updateMarketStats,
   decreasingPosition,
   setDecreasingPosition,
@@ -27,11 +26,10 @@ const Positions = ({
   activeTab: string;
   openPositions: Position[];
   orders: Order[];
-  closedPositions: ClosedPosition[];
+  closedPositions: Position[];
   triggerGetTradeData: () => void;
   isTableLoading: boolean;
   currentMarketOnly: boolean;
-  pendingPositions: Position[];
   updateMarketStats: () => void;
   decreasingPosition: Position | null;
   setDecreasingPosition: (position: Position | null) => void;
@@ -54,10 +52,7 @@ const Positions = ({
           triggerGetTradeData={triggerGetTradeData}
           isLoading={isTableLoading}
           currentMarketOnly={currentMarketOnly}
-          pendingPositions={pendingPositions}
           updateMarketStats={updateMarketStats}
-          decreasingPosition={decreasingPosition}
-          setDecreasingPosition={setDecreasingPosition}
         />
       ) : (
         <TradeTable
@@ -66,10 +61,7 @@ const Positions = ({
           triggerGetTradeData={triggerGetTradeData}
           isLoading={isTableLoading}
           currentMarketOnly={currentMarketOnly}
-          pendingPositions={pendingPositions}
           updateMarketStats={updateMarketStats}
-          decreasingPosition={decreasingPosition}
-          setDecreasingPosition={setDecreasingPosition}
         />
       )}
     </div>

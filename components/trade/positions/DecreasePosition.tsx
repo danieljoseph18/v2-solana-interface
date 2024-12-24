@@ -5,7 +5,6 @@ import { Button } from "@nextui-org/react";
 import TypeButtons from "../interaction/TypeButtons";
 import PercentageButtons from "../interaction/PercentageButtons";
 import InfoRow from "./stats/InfoRow";
-import FeesInfo from "./stats/FeesInfo";
 import ToggleSwitch from "@/components/common/ToggleSwitch";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import Image from "next/image";
@@ -14,6 +13,9 @@ import { helperToast } from "@/lib/helperToast";
 import { formatSmallNumber, getPriceDecimals } from "@/lib/web3/formatters";
 import NumberInput from "@/components/common/NumberInput";
 import InfoRowWithDelta from "./stats/InfoRowWithDelta";
+import { estimateLiquidationPrice } from "@/lib/web3/position/estimateLiquidationPrice";
+import { closePosition } from "@/app/actions/closePosition";
+import { useWallet } from "@/hooks/useWallet";
 
 const DecreasePosition = ({
   onClose,
@@ -21,15 +23,15 @@ const DecreasePosition = ({
   markPrice = 0,
   triggerRefetchPositions,
   updateMarketStats,
-  setDecreasingPosition,
 }: {
   onClose: () => void;
   position: Position;
   markPrice: number;
   triggerRefetchPositions: () => void;
   updateMarketStats: () => void;
-  setDecreasingPosition: (position: Position | null) => void;
 }) => {
+  const { address } = useWallet();
+
   const [collateralType, setCollateralType] = useState("ETH");
 
   const [unwrap, setUnwrap] = useState(true);
@@ -47,10 +49,10 @@ const DecreasePosition = ({
 
   // Used to cache prices so they're not refetched constantly when calculating equivalents
   const [prices, setPrices] = useState<{
-    ethPrice: number;
+    solPrice: number;
     usdcPrice: number;
   }>({
-    ethPrice: 0,
+    solPrice: 0,
     usdcPrice: 0,
   });
 
@@ -64,16 +66,7 @@ const DecreasePosition = ({
     priceImpact: 0,
   });
 
-  const [fees, setFees] = useState<{
-    positionFee: number;
-    executionFee: number;
-    priceUpdateFee: number;
-  }>({
-    positionFee: 0,
-    executionFee: 0,
-    priceUpdateFee: 0,
-  });
-
+  const [positionFee, setPositionFee] = useState<number>(0);
   // Percentage to close
   const [decreaseOption, setDecreaseOption] = useState<string>("100");
   const [customDecreasePercentage, setCustomDecreasePercentage] =
@@ -82,15 +75,6 @@ const DecreasePosition = ({
   // Max Slippage
   const [selectedSlippage, setSelectedSlippage] = useState<string>("0.3");
   const [customSlippage, setCustomSlippage] = useState<string>("");
-
-  const [isTransactionPendingModalOpen, setIsTransactionPendingModalOpen] =
-    useState(false);
-
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const [hasFailedAtCurrentStep, setHasFailedAtCurrentStep] = useState(false);
-
-  const [isTransactionComplete, setIsTransactionComplete] = useState(false);
 
   const [receiveAmounts, setReceiveAmounts] = useState<{
     tokenAmount: number;
@@ -117,13 +101,6 @@ const DecreasePosition = ({
   const slippageOptions = ["0.1", "0.3", "0.5", "1", "Custom"];
 
   const lastCalculatedDecimals = useRef(30);
-
-  const resetExecutionModalState = () => {
-    setIsTransactionPendingModalOpen(false);
-    setCurrentStep(0);
-    setHasFailedAtCurrentStep(false);
-    setIsTransactionComplete(false);
-  };
 
   const handleMaxClick = () => {
     setCustomDecreasePercentage("100");
@@ -187,19 +164,19 @@ const DecreasePosition = ({
       } else if (decreaseOption !== "Custom" && decreaseOption !== "") {
         const decreasePercentage = parseFloat(decreaseOption) / 100;
         sizeAfter = position.size * (1 - decreasePercentage);
-        collateralAfter = position.collateral * (1 - decreasePercentage);
+        collateralAfter = position.margin * (1 - decreasePercentage);
       } else if (customSizeDelta !== "") {
         sizeAfter = position.size - parseFloat(customSizeDelta);
         const decreasePercentage = parseFloat(customDecreasePercentage) / 100;
-        collateralAfter = position.collateral * (1 - decreasePercentage);
+        collateralAfter = position.margin * (1 - decreasePercentage);
       } else if (customDecreasePercentage !== "") {
         const decreasePercentage = parseFloat(customDecreasePercentage) / 100;
         sizeAfter = position.size * (1 - decreasePercentage);
-        collateralAfter = position.collateral * (1 - decreasePercentage);
+        collateralAfter = position.margin * (1 - decreasePercentage);
       } else {
         // No valid input, size remains the same
         sizeAfter = position.size;
-        collateralAfter = position.collateral;
+        collateralAfter = position.margin;
       }
 
       setSizesAfter({
@@ -239,11 +216,7 @@ const DecreasePosition = ({
       return true;
     }
 
-    let totalFees =
-      closingFees.borrowFee +
-      fees.positionFee +
-      fees.executionFee +
-      fees.priceUpdateFee;
+    let totalFees = closingFees.borrowFee + positionFee;
 
     if (position.isLong) {
       totalFees += closingFees.fundingFee;
@@ -254,7 +227,7 @@ const DecreasePosition = ({
     totalFees -= Number(pnl.replace("$", ""));
 
     const collateralDelta =
-      position.collateral * (parseFloat(decreaseOption) / 100);
+      position.margin * (parseFloat(decreaseOption) / 100);
 
     return collateralDelta < totalFees;
   }, [
@@ -265,10 +238,10 @@ const DecreasePosition = ({
     customDecreasePercentage,
     sizesAfter.collateralAfter,
     closingFees,
-    fees,
+    positionFee,
     pnl,
     position.isLong,
-    position.collateral,
+    position.margin,
   ]);
 
   const getButtonText = () => {
@@ -284,19 +257,8 @@ const DecreasePosition = ({
       }
       return "Set Take Profit";
     }
-    if (
-      decreaseOption !== "100" &&
-      customDecreasePercentage !== "100" &&
-      sizesAfter.collateralAfter < 2
-    ) {
-      return "Min Collateral $2";
-    }
 
-    let totalFees =
-      closingFees.borrowFee +
-      fees.positionFee +
-      fees.executionFee +
-      fees.priceUpdateFee;
+    let totalFees = closingFees.borrowFee + positionFee;
 
     if (position.isLong) {
       totalFees += closingFees.fundingFee;
@@ -308,12 +270,39 @@ const DecreasePosition = ({
     totalFees -= Number(pnl.replace("$", ""));
 
     const collateralDelta =
-      position.collateral * (parseFloat(decreaseOption) / 100);
+      position.margin * (parseFloat(decreaseOption) / 100);
 
     if (collateralDelta < totalFees) {
       return "Collateral Delta Must Exceed Fees";
     }
     return "Close Position";
+  };
+
+  const handleClosePosition = async () => {
+    try {
+      if (!position.positionId || !address) return;
+
+      const sizeDeltaNum = customSizeDelta
+        ? parseFloat(customSizeDelta)
+        : position.size * (parseFloat(decreaseOption) / 100);
+
+      const result = await closePosition(
+        position.positionId,
+        sizeDeltaNum,
+        address
+      );
+
+      if (result.success) {
+        helperToast.success("Position closed successfully");
+        triggerRefetchPositions();
+        updateMarketStats();
+        onClose();
+      } else {
+        helperToast.error(result.error || "Failed to close position");
+      }
+    } catch (error: any) {
+      helperToast.error(error.message || "Failed to close position");
+    }
   };
 
   return (
@@ -323,7 +312,7 @@ const DecreasePosition = ({
           <p className="text-xl font-medium">
             Decrease Position:{" "}
             <span className="text-printer-orange font-bold">
-              {position.symbol.split(":")[0]} / USD{" "}
+              {position.symbol} / USD{" "}
             </span>
             <span
               className={`text-sm  ${
@@ -336,7 +325,7 @@ const DecreasePosition = ({
         <p className="text-xl font-medium hidden lg:block">
           Decrease Position:{" "}
           <span className="text-printer-orange font-bold">
-            {position.symbol.split(":")[0]} / USD{" "}
+            {position.symbol} / USD{" "}
           </span>
           <span
             className={`text-sm  ${
@@ -484,7 +473,9 @@ const DecreasePosition = ({
           />
           <InfoRow
             label="Liquidation Price"
-            value={`$${position.liqPrice.toFixed(priceDecimals)}`}
+            value={`$${estimateLiquidationPrice(position).toFixed(
+              priceDecimals
+            )}`}
           />
           <div className="w-full h-px bg-gray-text" />
           <InfoRowWithDelta
@@ -500,14 +491,14 @@ const DecreasePosition = ({
           />
           <InfoRowWithDelta
             label="Collateral Value"
-            valueBefore={`${position.collateral.toFixed(2)} USD`}
+            valueBefore={`${position.margin.toFixed(2)} USD`}
             valueAfter={`${sizesAfter.collateralAfter.toFixed(2)} USD`}
             valueColour="text-printer-red"
             arrowColour="text-printer-red"
           />
           <InfoRow
             label="Leverage"
-            value={`${(position.size / position.collateral).toFixed(2)}x`}
+            value={`${(position.size / position.margin).toFixed(2)}x`}
           />
           <div className="w-full h-px bg-gray-text" />
           <InfoRow
@@ -560,11 +551,7 @@ const DecreasePosition = ({
             }
           />
           <div className="w-full h-px bg-gray-text" />
-          <FeesInfo
-            positionFee={fees.positionFee}
-            executionFee={fees.executionFee}
-            priceUpdateFee={fees.priceUpdateFee}
-          />
+          <InfoRow label="Position Fee" value={`$${positionFee}`} />
           <div className="w-full h-px bg-gray-text" />
           <div className="flex flex-row justify-between text-sm text-gray-text py-4">
             <span>Receive</span>
@@ -578,7 +565,7 @@ const DecreasePosition = ({
         </div>
         <div className="py-4">
           <Button
-            onPress={() => {}}
+            onPress={handleClosePosition}
             disabled={isButtonDisabled}
             className={`w-full flex items-center justify-center text-center text-base bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 text-white py-6 font-bold ${
               isButtonDisabled ? "cursor-not-allowed" : ""

@@ -29,14 +29,11 @@ const TradeTable: React.FC<TradeTableProps> = ({
   triggerGetTradeData,
   isLoading,
   currentMarketOnly,
-  pendingPositions,
   updateMarketStats,
-  decreasingPosition,
-  setDecreasingPosition,
 }) => {
   const { asset, allAssets, setAsset } = useAsset();
 
-  const [symbols, setSymbols] = useState<string[]>([]);
+  const [ids, setIds] = useState<string[]>([]);
 
   const [prices, setPrices] = useState<{ [key: string]: number }>({});
 
@@ -85,10 +82,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
     [currentMarketOnly, asset]
   );
 
-  const handleOrderClose = (order: Order) => {
-    console.log("Order closed:", order);
-  };
-
   const handleAssetSwitch = async (symbol: string) => {
     const asset = allAssets.find((asset) => asset.symbol === symbol);
     if (!asset) return;
@@ -102,10 +95,9 @@ const TradeTable: React.FC<TradeTableProps> = ({
       <DecreasePosition
         onClose={() => setIsModalOpen(false)}
         position={position}
-        markPrice={prices[position.symbol]}
+        markPrice={prices[position.marketId]}
         triggerRefetchPositions={triggerGetTradeData}
         updateMarketStats={updateMarketStats}
-        setDecreasingPosition={setDecreasingPosition!}
       />
     );
 
@@ -114,17 +106,70 @@ const TradeTable: React.FC<TradeTableProps> = ({
     setIsModalOpen(true);
   };
 
+  const updatePricesForAssets = useCallback(async (ids: string[]) => {
+    const BACKEND_URL =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+    try {
+      const pricePromises = ids.map(async (id) => {
+        const response = await fetch(`${BACKEND_URL}/price/market/${id}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch price for ${id}`);
+        }
+        const priceStr: string = await response.json();
+        const price = parseFloat(priceStr);
+        return {
+          customId: id,
+          price,
+        };
+      });
+
+      const priceResponses = await Promise.all(pricePromises);
+
+      const updatedPrices: { [key: string]: number } = {};
+      priceResponses.forEach((item) => {
+        updatedPrices[item.customId] = item.price;
+      });
+
+      setPrices((prevPrices) => ({
+        ...prevPrices,
+        ...updatedPrices,
+      }));
+    } catch (error) {
+      console.error("Error fetching prices:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const allPositions = [
       ...tradesData.openPositions,
       ...tradesData.orders,
       ...tradesData.closedPositions,
     ];
-    const uniqueSymbols = [
-      ...new Set(allPositions.map((position) => position.symbol)),
+    const uniqueIds = [
+      ...new Set(allPositions.map((position) => position.marketId)),
     ];
-    setSymbols(uniqueSymbols);
+    setIds(uniqueIds);
   }, [tradesData]);
+
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    if (ids.length > 0) {
+      updatePricesForAssets(ids);
+      intervalRef.current = setInterval(() => {
+        updatePricesForAssets(ids);
+      }, 3000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [ids, updatePricesForAssets]);
 
   return (
     <div className="border-cardborder border-2 bg-card-grad h-64 border-r-0 overflow-y-auto custom-scrollbar">
@@ -133,8 +178,7 @@ const TradeTable: React.FC<TradeTableProps> = ({
       ) : (
         <div className="overflow-y-auto custom-scrollbar">
           <div className={activeTab === "My Trades" ? "" : "hidden"}>
-            {tradesData.openPositions.length === 0 &&
-            pendingPositions.length === 0 ? (
+            {tradesData.openPositions.length === 0 ? (
               <EmptyState message={getEmptyMessage()} image={getEmptyImage()} />
             ) : (
               <OpenPositionsTable
@@ -145,8 +189,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
                 setIsModalOpen={setIsModalOpen}
                 setModalSize={setModalSize}
                 prices={prices}
-                pendingPositions={pendingPositions}
-                decreasingPosition={decreasingPosition}
               />
             )}
           </div>
@@ -156,8 +198,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
             ) : (
               <OrdersTable
                 orders={filterPositions(tradesData.orders)}
-                handleOrderClose={handleOrderClose}
-                triggerGetTradeData={triggerGetTradeData}
                 prices={prices}
               />
             )}

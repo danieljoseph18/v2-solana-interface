@@ -34,15 +34,12 @@ interface SizeInputProps {
     borrowRateShort: number;
     fundingRate: number;
     fundingRateVelocity: number;
-    availableLiquidityLong: number;
-    availableLiquidityShort: number;
     openInterestLong: number;
     openInterestShort: number;
   };
+  availableLiquidity: number;
   triggerRefreshVolume: () => void;
   updateMarketStats: () => void;
-  createPendingPosition: (position: Position) => void;
-  refreshPendingPosition: (id: string, success: boolean) => void;
 }
 
 const SizeInput: React.FC<SizeInputProps> = ({
@@ -57,10 +54,9 @@ const SizeInput: React.FC<SizeInputProps> = ({
   priceDecimals,
   triggerRefetchPositions,
   marketStats,
+  availableLiquidity,
   triggerRefreshVolume,
   updateMarketStats,
-  createPendingPosition,
-  refreshPendingPosition,
 }) => {
   const { asset } = useAsset();
 
@@ -323,7 +319,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
           <div className="flex flex-row w-full justify-end items-center gap-2">
             {asset ? (
               <>
-                <img
+                <Image
                   src={getImageForToken(asset)}
                   alt={asset.symbol}
                   width={24}
@@ -364,11 +360,12 @@ const SizeInput: React.FC<SizeInputProps> = ({
               <div className="flex flex-row w-full justify-end items-center gap-2">
                 {asset ? (
                   <>
-                    <img
+                    <Image
                       src={getImageForToken(asset)}
                       alt={asset.symbol}
                       width={24}
                       height={24}
+                      className="rounded-full"
                     />
                     <span className="font-bold text-lg text-printer-gray">
                       {asset.symbol}
@@ -468,11 +465,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
           liqPrice={liqPrice}
           priceImpact={priceImpact}
           priceDecimals={priceDecimals}
-          availableLiquidity={
-            isLong
-              ? marketStats.availableLiquidityLong
-              : marketStats.availableLiquidityShort
-          }
+          availableLiquidity={availableLiquidity}
           positionFee={positionFee}
         />
         <EntryButton
@@ -499,12 +492,11 @@ const SizeInput: React.FC<SizeInputProps> = ({
           liqPrice={liqPrice}
           priceImpact={priceImpact}
           collateralPrices={cachedPrices}
+          availableLiquidity={availableLiquidity}
           triggerRefetchPositions={triggerRefetchPositions}
           resetInputs={resetInputs}
           triggerRefreshVolume={triggerRefreshVolume}
           updateMarketStats={updateMarketStats}
-          createPendingPosition={createPendingPosition}
-          refreshPendingPosition={refreshPendingPosition}
         />
       </>
     </div>

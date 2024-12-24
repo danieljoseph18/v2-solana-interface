@@ -4,28 +4,30 @@ import { FaShareSquare } from "react-icons/fa";
 import ModalV2 from "@/components/common/ModalV2";
 import TradeShare from "./TradeShare";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
+import { formatDateTime } from "@/lib/utils/dates";
 
 interface ClosedPositionsTableProps {
-  closedPositions: ClosedPosition[];
+  closedPositions: Position[];
 }
 
 const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
   closedPositions,
 }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [selectedPosition, setSelectedPosition] =
-    useState<ClosedPosition | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(
+    null
+  );
 
-  const getLeverage = (position: ClosedPosition) => {
-    return (position.size / position.collateral).toFixed(2);
+  const getLeverage = (position: Position) => {
+    return (position.size / position.margin).toFixed(2);
   };
 
   // Sort closedPositions array by entryTime, newest to oldest
   const sortedPositions = [...closedPositions].sort((a, b) => {
-    return new Date(b.entryTime).getTime() - new Date(a.entryTime).getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  const handleShareClick = (position: ClosedPosition) => {
+  const handleShareClick = (position: Position) => {
     setSelectedPosition(position);
     setIsShareModalOpen(true);
   };
@@ -57,9 +59,9 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
         </thead>
         <tbody className="border-b border-cardborder bg-card-grad text-white text-sm">
           {sortedPositions.map((position, index) => {
-            const priceDecimals = getPriceDecimals(position.exitPrice);
+            const priceDecimals = getPriceDecimals(position.closingPrice!);
             const pnlPercentage =
-              (position.realizedPnl / position.collateral) * 100;
+              (position.realizedPnl! / position.margin) * 100;
 
             return (
               <tr
@@ -68,7 +70,7 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex flex-col">
-                    <span>{`${position.symbol.split(":")[0]}/USD`}</span>
+                    <span>{`${position.symbol}/USD`}</span>
                     <span
                       className={`
                     ${
@@ -97,36 +99,36 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
                         ? position.entryPrice.toFixed(priceDecimals)
                         : position.entryPrice
                     }`}</span>
-                    <span className="text-base-gray">{position.entryTime}</span>
+                    <span className="text-base-gray">
+                      {formatDateTime(position.createdAt)}
+                    </span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex flex-col">
-                    <span>{`$${position.exitPrice.toFixed(
+                    <span>{`$${position.closingPrice!.toFixed(
                       priceDecimals
                     )}`}</span>
-                    <span className="text-base-gray">
-                      {position.exitStatus}
-                    </span>
+                    <span className="text-base-gray">{position.status}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div
                     className={`flex flex-col ${
-                      position.realizedPnl >= 0
+                      position.realizedPnl! >= 0
                         ? "text-printer-green"
                         : "text-printer-red"
                     }`}
                   >
                     <span>
-                      {position.exitStatus === "Liquidated"
-                        ? `-$${position.collateral.toFixed(2)}`
-                        : `${position.realizedPnl >= 0 ? "$" : "-$"}${Math.abs(
-                            position.realizedPnl
+                      {position.status === "LIQUIDATED"
+                        ? `-$${position.margin.toFixed(2)}`
+                        : `${position.realizedPnl! >= 0 ? "$" : "-$"}${Math.abs(
+                            position.realizedPnl!
                           ).toFixed(2)}`}
                     </span>
                     <span>{`${
-                      position.exitStatus === "Liquidated"
+                      position.status === "LIQUIDATED"
                         ? "-100.00"
                         : pnlPercentage.toFixed(2)
                     }%`}</span>
@@ -150,23 +152,21 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
       >
         {selectedPosition && (
           <TradeShare
-            position={`${selectedPosition.symbol.split(":")[0]}/USD`}
+            position={`${selectedPosition.symbol}/USD`}
             pnlPercentage={
-              selectedPosition.exitStatus === "Liquidated"
+              selectedPosition.status === "LIQUIDATED"
                 ? -100.0
                 : parseFloat(
                     (
-                      (selectedPosition.realizedPnl /
-                        selectedPosition.collateral) *
+                      (selectedPosition.realizedPnl! /
+                        selectedPosition.margin) *
                       100
                     ).toFixed(2)
                   )
             }
             entryPrice={selectedPosition.entryPrice}
-            currentPrice={selectedPosition.exitPrice}
-            assetLogo={getImageUrlFromTokenSymbol(
-              selectedPosition.symbol.split(":")[0]
-            )}
+            currentPrice={selectedPosition.closingPrice!}
+            assetLogo={getImageUrlFromTokenSymbol(selectedPosition.symbol)}
             isLong={selectedPosition.isLong}
             leverage={parseFloat(getLeverage(selectedPosition))}
             onClose={() => setIsShareModalOpen(false)}
