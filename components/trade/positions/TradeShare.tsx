@@ -67,7 +67,7 @@ const TradeShare: React.FC<TradeShareProps> = (props) => {
 
     const tweetText = `I'm trading ${props.position} with ${props.leverage}X leverage on @PRINT3Rxyz.
 
-Trade anything, anywhere #onchain 👇`;
+Trade DAOS FUN memes at high speed on Solana 👇`;
     const tweetLink = getTwitterIntentURL(
       tweetText,
       getShareURL(uploadedImageInfo)

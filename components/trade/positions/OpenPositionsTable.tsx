@@ -16,7 +16,6 @@ import { formatDateTime } from "@/lib/utils/dates";
 interface OpenPositionsTableProps {
   positions: Position[];
   handleDecreaseClick: (position: Position) => void;
-  triggerGetTradeData: () => void;
   setModalContent: (content: React.ReactNode) => void;
   setIsModalOpen: (isOpen: boolean) => void;
   setModalSize: (
@@ -55,7 +54,6 @@ const calculateUnwindingThreshold = (leverage: number): number => {
 const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
   positions,
   handleDecreaseClick,
-  triggerGetTradeData,
   setModalContent,
   setIsModalOpen,
   setModalSize,
@@ -89,7 +87,6 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
           isDeposit={true}
           onClose={() => setIsModalOpen(false)}
           position={position}
-          triggerRefetchPositions={triggerGetTradeData}
           markPrice={prices[position.marketId] || 0}
         />
       );
@@ -99,7 +96,6 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
           isDeposit={false}
           onClose={() => setIsModalOpen(false)}
           position={position}
-          triggerRefetchPositions={triggerGetTradeData}
           markPrice={prices[position.marketId] || 0}
         />
       );

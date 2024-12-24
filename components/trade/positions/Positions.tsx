@@ -16,23 +16,17 @@ const Positions = ({
   openPositions,
   orders,
   closedPositions,
-  triggerGetTradeData,
   isTableLoading,
   currentMarketOnly,
   updateMarketStats,
-  decreasingPosition,
-  setDecreasingPosition,
 }: {
   activeTab: string;
   openPositions: Position[];
   orders: Order[];
   closedPositions: Position[];
-  triggerGetTradeData: () => void;
   isTableLoading: boolean;
   currentMarketOnly: boolean;
   updateMarketStats: () => void;
-  decreasingPosition: Position | null;
-  setDecreasingPosition: (position: Position | null) => void;
 }) => {
   const { width } = useWindowSize();
   const isMobile = width && width < MOBILE_SCREEN_SIZE;
@@ -49,7 +43,6 @@ const Positions = ({
         <MobileTradeTable
           activeTab={activeTab}
           tradesData={tradesData}
-          triggerGetTradeData={triggerGetTradeData}
           isLoading={isTableLoading}
           currentMarketOnly={currentMarketOnly}
           updateMarketStats={updateMarketStats}
@@ -58,7 +51,6 @@ const Positions = ({
         <TradeTable
           activeTab={activeTab}
           tradesData={tradesData}
-          triggerGetTradeData={triggerGetTradeData}
           isLoading={isTableLoading}
           currentMarketOnly={currentMarketOnly}
           updateMarketStats={updateMarketStats}

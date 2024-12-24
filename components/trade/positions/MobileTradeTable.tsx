@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TradeTableProps } from "./types";
 import TradeDetailsModal from "./TradeDetailsModal";
 import { MdKeyboardArrowRight } from "react-icons/md";
@@ -49,7 +49,6 @@ const EmptyState = ({ message, image }: { message: string; image: string }) => (
 const MobileTradeTable: React.FC<TradeTableProps> = ({
   activeTab,
   tradesData,
-  triggerGetTradeData,
   isLoading,
   currentMarketOnly,
   updateMarketStats,
@@ -73,9 +72,11 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
   const [iconUrls, setIconUrls] = useState<{ [symbol: string]: string }>({});
   const [prices, setPrices] = useState<{ [key: string]: number }>({});
-  const [symbols, setSymbols] = useState<string[]>([]);
+  const [ids, setIds] = useState<string[]>([]);
 
   const { asset } = useAsset();
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const filterPositions = (positions: any[]) => {
     let filteredPositions = positions;
@@ -88,29 +89,70 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
     return filteredPositions;
   };
 
-  useEffect(() => {
-    const fetchIcons = async () => {
-      const urls: { [symbol: string]: string } = {};
-      for (const trade of tradesData.openPositions) {
-        const symbol = trade.symbol.split(":")[0];
-        const iconUrl = getImageUrlFromTokenSymbol(symbol);
-        urls[symbol] = iconUrl;
-      }
-      setIconUrls(urls);
-    };
-    fetchIcons();
-  }, [tradesData.openPositions]);
+  const updatePricesForAssets = useCallback(async (ids: string[]) => {
+    const BACKEND_URL =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+    try {
+      const pricePromises = ids.map(async (id) => {
+        const response = await fetch(`${BACKEND_URL}/price/market/${id}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch price for ${id}`);
+        }
+        const priceStr: string = await response.json();
+        const price = parseFloat(priceStr);
+        return {
+          customId: id,
+          price,
+        };
+      });
+
+      const priceResponses = await Promise.all(pricePromises);
+
+      const updatedPrices: { [key: string]: number } = {};
+      priceResponses.forEach((item) => {
+        updatedPrices[item.customId] = item.price;
+      });
+
+      setPrices((prevPrices) => ({
+        ...prevPrices,
+        ...updatedPrices,
+      }));
+    } catch (error) {
+      console.error("Error fetching prices:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    const uniqueSymbols = [
-      ...new Set([
-        ...tradesData.openPositions.map((position) => position.symbol),
-        ...tradesData.orders.map((order) => order.symbol),
-        ...tradesData.closedPositions.map((position) => position.symbol),
-      ]),
+    const allPositions = [
+      ...tradesData.openPositions,
+      ...tradesData.orders,
+      ...tradesData.closedPositions,
     ];
-    setSymbols(uniqueSymbols);
+    const uniqueIds = [
+      ...new Set(allPositions.map((position) => position.marketId)),
+    ];
+    setIds(uniqueIds);
   }, [tradesData]);
+
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    if (ids.length > 0) {
+      updatePricesForAssets(ids);
+      intervalRef.current = setInterval(() => {
+        updatePricesForAssets(ids);
+      }, 3000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [ids, updatePricesForAssets]);
 
   const handlePositionClick = (
     trade: Position | Order,
@@ -145,7 +187,6 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
           order={trade}
           markPrice={prices[trade.marketId] || 0}
           onClose={() => setIsModalOpen(false)}
-          triggerGetTradeData={triggerGetTradeData}
         />
       );
       setIsModalOpen(true);
@@ -167,7 +208,6 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
           isDeposit={true}
           onClose={() => setIsModalOpen(false)}
           position={position}
-          triggerRefetchPositions={triggerGetTradeData}
           markPrice={prices[position.marketId] || 0}
         />
       );
@@ -177,7 +217,6 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
           isDeposit={false}
           onClose={() => setIsModalOpen(false)}
           position={position}
-          triggerRefetchPositions={triggerGetTradeData}
           markPrice={prices[position.marketId] || 0}
         />
       );
@@ -190,7 +229,6 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
         onClose={() => setIsModalOpen(false)}
         position={trade}
         markPrice={prices[trade.marketId] || 0}
-        triggerRefetchPositions={triggerGetTradeData}
         updateMarketStats={updateMarketStats}
       />
     );
@@ -281,7 +319,7 @@ const MobileTradeTable: React.FC<TradeTableProps> = ({
           </div>
           <div className="flex justify-between text-sm text-printer-gray">
             <span>Collateral Asset: </span>
-            <TokenLogo tokenSymbol={position.isLong ? "ETH" : "USDC"} />
+            <TokenLogo tokenSymbol={position.marginToken} />
           </div>
           <div className="flex justify-between text-sm text-printer-gray">
             <div className="flex flex-col">

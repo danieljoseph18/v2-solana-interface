@@ -13,6 +13,7 @@ interface Position {
   status: "OPEN" | "CLOSED" | "LIQUIDATED";
   closingPrice?: number;
   margin: number;
+  marginToken: "SOL" | "USDC";
   lockedMarginSOL: number;
   lockedMarginUSDC: number;
   realizedPnl?: number;
@@ -36,6 +37,7 @@ interface PositionReturnType {
   takeProfitPrice?: string;
   trailingStopDistance?: string;
   margin: string;
+  token: "SOL" | "USDC";
   lockedMarginSOL: string;
   lockedMarginUSDC: string;
   realizedPnl?: string;

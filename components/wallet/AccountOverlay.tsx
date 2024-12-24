@@ -9,6 +9,7 @@ import Deposit from "./Deposit";
 import Withdraw from "./Withdraw";
 import History from "./History";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { fetchCollateralPrices } from "@/app/actions/fetchCollateralPrices";
 
 const AccountOverlay = () => {
   const { isAccountOverlayOpen, closeAccountOverlay } = useAccountOverlay();
@@ -30,29 +31,11 @@ const AccountOverlay = () => {
 
   useEffect(() => {
     const fetchPrices = async () => {
-      const BACKEND_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-
-      const fetchSolPrice = fetch(`${BACKEND_URL}/price/sol`).then((res) => {
-        return res.json();
-      });
-
-      const fetchUsdcPrice = fetch(`${BACKEND_URL}/price/usdc`).then((res) => {
-        return res.json();
-      });
-
-      const [solPrice, usdcPrice] = await Promise.all([
-        fetchSolPrice,
-        fetchUsdcPrice,
-      ]);
-
-      if (!solPrice || !usdcPrice) {
-        throw new Error("Failed to fetch prices");
-      }
+      const { solPrice, usdcPrice } = await fetchCollateralPrices();
 
       // Set the SOL and USDC prices in the prices object
-      prices.SOL = Number(solPrice);
-      prices.USDC = Number(usdcPrice);
+      prices.SOL = solPrice;
+      prices.USDC = usdcPrice;
     };
 
     fetchPrices();

@@ -83,7 +83,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   const [state, setState] = useState({
     selectedOption: "0.3",
     customValue: "",
-    availableLiquidity: availableLiquidity,
     positionFeeInCollateral: 0,
     isButtonDisabled: false,
     disabledText: "",
@@ -113,7 +112,9 @@ const EntryButton: React.FC<EntryButtonProps> = ({
       if (collateralDeltaUsd === 0 || Number.isNaN(collateralDeltaUsd)) {
         isDisabled = true;
         text = "Enter an Amount";
-      } else if (sizeDelta > state.availableLiquidity) {
+      } else if (sizeDelta > availableLiquidity) {
+        console.log("sizeDelta", sizeDelta);
+        console.log("availableLiquidity", availableLiquidity);
         isDisabled = true;
         text = "Insufficient Liquidity";
       } else {
@@ -142,7 +143,7 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   }, [
     collateralDeltaUsd,
     sizeDelta,
-    state.availableLiquidity,
+    availableLiquidity,
     priceImpact,
     state.selectedOption,
     state.customValue,
@@ -222,6 +223,7 @@ const EntryButton: React.FC<EntryButtonProps> = ({
         leverage: leverage.toString(),
         stopLossPrice: stopLossSet ? stopLossPrice.toString() : undefined,
         takeProfitPrice: takeProfitSet ? takeProfitPrice.toString() : undefined,
+        token: collateralToken as TokenType,
       };
 
       console.log("orderRequest", orderRequest);

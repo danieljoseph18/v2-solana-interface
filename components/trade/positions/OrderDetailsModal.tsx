@@ -10,15 +10,15 @@ interface OrderDetailsModalProps {
   order: Order;
   markPrice: number;
   onClose: () => void;
-  triggerGetTradeData: () => void;
 }
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   order,
   markPrice,
   onClose,
-  triggerGetTradeData,
 }) => {
+  const cancelOrder = async () => {};
+
   const priceDecimals = getPriceDecimals(markPrice);
   const symbol = order.symbol.split(":")[0];
 
@@ -53,7 +53,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       </div>
       <div className="flex justify-between text-base text-printer-gray">
         <span>Collateral Asset</span>
-        <TokenLogo tokenSymbol={order.isLong ? "ETH" : "USDC"} />
+        <TokenLogo tokenSymbol={order.marginToken} />
       </div>
       <div className="flex justify-center mt-4">
         <Button

@@ -3,14 +3,8 @@ enum OrderSide {
   SHORT = "SHORT",
 }
 
-enum MarginType {
-  ISOLATED = "ISOLATED",
-  CROSS = "CROSS",
-}
-
 interface LimitOrderRequest extends OrderRequest {
   price: string;
-  token: TokenType;
   type: OrderType;
 }
 
@@ -21,7 +15,7 @@ interface OrderRequest {
   side: OrderSide;
   size: string;
   leverage: string;
-  marginType?: MarginType;
+  token: TokenType;
   stopLossPrice?: string;
   takeProfitPrice?: string;
 }

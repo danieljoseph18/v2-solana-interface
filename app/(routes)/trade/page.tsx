@@ -94,9 +94,6 @@ const TradePage = () => {
     openInterestLong: 0,
     openInterestShort: 0,
   });
-  const [decreasingPosition, setDecreasingPosition] = useState<Position | null>(
-    null
-  );
 
   const tvDataProviderRef = useRef<TVDataProvider | null>(null);
 
@@ -166,6 +163,7 @@ const TradePage = () => {
               ? Number(pos.closingPrice)
               : undefined,
             margin: Number(pos.margin),
+            marginToken: pos.token,
             lockedMarginSOL: Number(pos.lockedMarginSOL),
             lockedMarginUSDC: Number(pos.lockedMarginUSDC),
             realizedPnl: pos.realizedPnl ? Number(pos.realizedPnl) : undefined,
@@ -343,6 +341,32 @@ const TradePage = () => {
         };
         lines.push(entryLine);
         lines.push(liquidationLine);
+
+        // Add Stop Loss line if it exists
+        if (position.stopLossPrice) {
+          const stopLossLine: ChartLine = {
+            price: position.stopLossPrice,
+            title: `Stop Loss ${position.symbol} - ${
+              position.isLong ? "Long" : "Short"
+            }`,
+            type: "Stop Loss",
+            symbol: position.symbol,
+          };
+          lines.push(stopLossLine);
+        }
+
+        // Add Take Profit line if it exists
+        if (position.takeProfitPrice) {
+          const takeProfitLine: ChartLine = {
+            price: position.takeProfitPrice,
+            title: `Take Profit ${position.symbol} - ${
+              position.isLong ? "Long" : "Short"
+            }`,
+            type: "Take Profit",
+            symbol: position.symbol,
+          };
+          lines.push(takeProfitLine);
+        }
       });
 
       orders.forEach((order) => {
@@ -392,7 +416,7 @@ const TradePage = () => {
           // Instead of directly fetching, increment the counter
           setSSEUpdateCounter((prev) => prev + 1);
         }}
-        timeout={3000}
+        timeout={1_000}
       />
       <div
         className={`flex flex-col gap-4 relative lg:gap-0 lg:mt-0 lg:px-0 lg:flex-row w-full md:max-h-[90vh] bottom-0 left-0 right-0 bg-[#07080A] 3xl:border-b border-cardborder 3xl:border-x`}
@@ -444,12 +468,9 @@ const TradePage = () => {
             openPositions={openPositions}
             orders={orders}
             closedPositions={closedPositions}
-            triggerGetTradeData={() => {}}
             isTableLoading={isTableLoading}
             currentMarketOnly={currentMarketOnly}
             updateMarketStats={() => {}}
-            decreasingPosition={decreasingPosition}
-            setDecreasingPosition={setDecreasingPosition}
           />
         </div>
         <div

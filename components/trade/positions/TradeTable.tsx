@@ -26,7 +26,6 @@ const EmptyState = ({ message, image }: { message: string; image: string }) => (
 const TradeTable: React.FC<TradeTableProps> = ({
   activeTab,
   tradesData,
-  triggerGetTradeData,
   isLoading,
   currentMarketOnly,
   updateMarketStats,
@@ -96,7 +95,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
         onClose={() => setIsModalOpen(false)}
         position={position}
         markPrice={prices[position.marketId]}
-        triggerRefetchPositions={triggerGetTradeData}
         updateMarketStats={updateMarketStats}
       />
     );
@@ -184,7 +182,6 @@ const TradeTable: React.FC<TradeTableProps> = ({
               <OpenPositionsTable
                 positions={filterPositions(tradesData.openPositions)}
                 handleDecreaseClick={handleDecreaseClick}
-                triggerGetTradeData={triggerGetTradeData}
                 setModalContent={setModalContent}
                 setIsModalOpen={setIsModalOpen}
                 setModalSize={setModalSize}

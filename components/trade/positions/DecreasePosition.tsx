@@ -16,23 +16,22 @@ import InfoRowWithDelta from "./stats/InfoRowWithDelta";
 import { estimateLiquidationPrice } from "@/lib/web3/position/estimateLiquidationPrice";
 import { closePosition } from "@/app/actions/closePosition";
 import { useWallet } from "@/hooks/useWallet";
+import { setStopLossTakeProfit } from "@/app/actions/setStopLossTakeProfit";
 
 const DecreasePosition = ({
   onClose,
   position,
   markPrice = 0,
-  triggerRefetchPositions,
   updateMarketStats,
 }: {
   onClose: () => void;
   position: Position;
   markPrice: number;
-  triggerRefetchPositions: () => void;
   updateMarketStats: () => void;
 }) => {
   const { address } = useWallet();
 
-  const [collateralType, setCollateralType] = useState("ETH");
+  const [collateralType, setCollateralType] = useState("SOL");
 
   const [unwrap, setUnwrap] = useState(true);
 
@@ -149,10 +148,6 @@ const DecreasePosition = ({
 
     fetchPnl();
   }, [markPrice, limitPrice, position, activeType, decreaseOption]);
-
-  useEffect(() => {
-    setCollateralType(position.isLong ? "ETH" : "USDC");
-  }, [position.isLong]);
 
   useEffect(() => {
     const calculateSizesAfter = () => {
@@ -294,15 +289,41 @@ const DecreasePosition = ({
 
       if (result.success) {
         helperToast.success("Position closed successfully");
-        triggerRefetchPositions();
         updateMarketStats();
-        onClose();
       } else {
         helperToast.error(result.error || "Failed to close position");
       }
     } catch (error: any) {
       helperToast.error(error.message || "Failed to close position");
     }
+
+    onClose();
+  };
+
+  const handleStopLossTakeProfit = async () => {
+    if (!address) return;
+
+    try {
+      const result = await setStopLossTakeProfit(
+        position.positionId,
+        parseFloat(limitPrice),
+        address,
+        activeType === "Stop Loss"
+      );
+
+      if (result.success) {
+        helperToast.success("Stop loss/take profit set successfully");
+      } else {
+        helperToast.error(
+          result.error || "Failed to set stop loss/take profit"
+        );
+      }
+    } catch (error: any) {
+      console.error("[Set Stop Loss Take Profit Error]:", error);
+      helperToast.error(error.message || "Failed to set stop loss/take profit");
+    }
+
+    onClose();
   };
 
   return (
@@ -433,28 +454,20 @@ const DecreasePosition = ({
           customValue={customSlippage}
           setCustomValue={setCustomSlippage}
         />
-        {collateralType === "ETH" && (
-          <div className="flex flex-row justify-between items-center my-4">
-            <ToggleSwitch
-              value={unwrap}
-              setValue={setUnwrap}
-              label="Unwrap Ether"
+
+        <div className="flex flex-row justify-between items-center my-4">
+          <div className="flex flex-row gap-2 items-center">
+            <p className="text-gray-text text-base">Receive: </p>
+            <Image
+              src={getImageUrlFromTokenSymbol(collateralType)}
+              alt="token logo"
+              width={24}
+              height={24}
+              className="rounded-full"
             />
-            <div className="flex flex-row gap-2 items-center">
-              <p className="text-gray-text text-base">Receive: </p>
-              <Image
-                src={
-                  unwrap
-                    ? getImageUrlFromTokenSymbol("ETH")
-                    : getImageUrlFromTokenSymbol("WETH")
-                }
-                alt="token logo"
-                width={24}
-                height={24}
-              />
-            </div>
           </div>
-        )}
+        </div>
+
         <div className="w-full h-px bg-gray-text my-4" />
       </div>
 
@@ -565,7 +578,11 @@ const DecreasePosition = ({
         </div>
         <div className="py-4">
           <Button
-            onPress={handleClosePosition}
+            onPress={
+              activeType === "Market"
+                ? handleClosePosition
+                : handleStopLossTakeProfit
+            }
             disabled={isButtonDisabled}
             className={`w-full flex items-center justify-center text-center text-base bg-p3-button hover:bg-p3-button-hover border-2 border-p3 !rounded-3 text-white py-6 font-bold ${
               isButtonDisabled ? "cursor-not-allowed" : ""

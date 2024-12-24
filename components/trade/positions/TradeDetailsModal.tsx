@@ -100,7 +100,7 @@ const TradeDetailsModal = ({
       <div className="flex justify-between text-base text-printer-gray">
         <span>Collateral Asset</span>
         <TokenLogo
-          tokenSymbol={position.isLong ? "ETH" : "USDC"}
+          tokenSymbol={position.marginToken}
           tokenImageClass="w-5 h-5 rounded-full"
         />
       </div>
