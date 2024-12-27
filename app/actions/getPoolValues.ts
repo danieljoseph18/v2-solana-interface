@@ -8,7 +8,7 @@
 // const provider = new anchor.AnchorProvider(connection, window.solana, {
 //   commitment: "confirmed",
 // });
-// const programId = new PublicKey("CkpZTxULEPgWHKkmWcNdvBR4SkijmUMY3sRYurGeTTvF");
+// const programId = new PublicKey("FzYDoZSVj3MeLFGrK4699EsvdGEUbuV8x1nyP2tryFVy");
 
 // export const program = new Program(idl as SolanaLiquidityPool, provider);
 

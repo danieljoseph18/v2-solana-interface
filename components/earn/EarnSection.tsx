@@ -5,12 +5,12 @@ import ModalV2 from "../common/ModalV2";
 import { TabType, CollateralType } from "@/types/earn";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { useWallet } from "@/hooks/useWallet";
-import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 import { Program } from "@coral-xyz/anchor";
 import { contractAddresses } from "@/lib/web3/config";
-import * as anchor from "@coral-xyz/anchor";
+import { useConnection } from "@solana/wallet-adapter-react";
 
 interface StatItemProps {
   iconSrc: string;
@@ -67,7 +67,7 @@ const EarnSection = () => {
 
   const isDeposit = activeTab === "deposit";
 
-  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+  const { connection } = useConnection();
 
   const program = new Program(idl as SolanaLiquidityPool, {
     connection,

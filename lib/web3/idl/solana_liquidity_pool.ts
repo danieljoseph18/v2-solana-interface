@@ -1,5 +1,5 @@
 export const idl = {
-  address: "CkpZTxULEPgWHKkmWcNdvBR4SkijmUMY3sRYurGeTTvF",
+  address: "3JhuFvHHTxCGeJviVMv4SYUWQ1qAb9tFNy7ZU8dxBhpq",
   metadata: {
     name: "solana_liquidity_pool",
     version: "0.1.0",
@@ -64,6 +64,14 @@ export const idl = {
         {
           name: "pool_state",
           writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
         },
         {
           name: "vault_account",
@@ -104,6 +112,14 @@ export const idl = {
         {
           name: "pool_state",
           writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
         },
         {
           name: "user_state",
@@ -137,6 +153,35 @@ export const idl = {
       args: [],
     },
     {
+      name: "close_pool",
+      docs: ["Close the pool (admin only)"],
+      discriminator: [140, 189, 209, 23, 239, 62, 239, 11],
+      accounts: [
+        {
+          name: "admin",
+          writable: true,
+          signer: true,
+        },
+        {
+          name: "pool_state",
+          writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
+        },
+        {
+          name: "system_program",
+          address: "11111111111111111111111111111111",
+        },
+      ],
+      args: [],
+    },
+    {
       name: "deposit",
       docs: ["Deposit SOL or USDC into the pool"],
       discriminator: [242, 35, 198, 137, 82, 225, 242, 182],
@@ -150,6 +195,14 @@ export const idl = {
           name: "pool_state",
           docs: ["Global PoolState"],
           writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
         },
         {
           name: "user_token_account",
@@ -272,12 +325,7 @@ export const idl = {
           address: "SysvarRent111111111111111111111111111111111",
         },
       ],
-      args: [
-        {
-          name: "_bump",
-          type: "u8",
-        },
-      ],
+      args: [],
     },
     {
       name: "start_rewards",
@@ -292,10 +340,18 @@ export const idl = {
         {
           name: "pool_state",
           writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
         },
         {
           name: "admin_usdc_account",
-          docs: ["Admin’s USDC token account"],
+          docs: ["Admin's USDC token account"],
           writable: true,
         },
         {
@@ -332,6 +388,14 @@ export const idl = {
         {
           name: "pool_state",
           writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
         },
         {
           name: "user_state",

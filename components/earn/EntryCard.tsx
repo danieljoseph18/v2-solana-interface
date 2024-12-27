@@ -7,6 +7,17 @@ import { COLLATERAL_OPTIONS } from "@/lib/constants";
 import NumberInput from "../common/NumberInput";
 import ModalClose from "../common/ModalClose";
 import { Button } from "@nextui-org/react";
+import { useCallback, useState } from "react";
+import { BN } from "@coral-xyz/anchor";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { toast } from "react-toastify";
+import { useWallet } from "@/hooks/useWallet";
+import { contractAddresses } from "@/lib/web3/config";
+import { getOrCreateUsdcAccount } from "@/lib/web3/actions/getOrCreateUsdcAccount";
+import { getOrCreateWrappedSolAccount } from "@/lib/web3/actions/getOrCreateWrappedSolAccount";
+import { createSyncNativeInstruction } from "@solana/spl-token";
+import getOrCreateAssociatedTokenAccount from "@/lib/web3/actions/getOrCreateTokenAccount";
+import { getOrCreateCustomSolAccount } from "@/lib/web3/actions/getOrCreateCustomSolAccount";
 
 const EntryCard = ({
   isDeposit,
@@ -31,6 +42,155 @@ const EntryCard = ({
   handleCardClick?: () => void;
   setIsModalOpen?: (isOpen: boolean) => void;
 }) => {
+  const {
+    address: publicKey,
+    connection,
+    program,
+    signTransaction,
+    sendRegularTransaction,
+  } = useWallet();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTransaction = useCallback(async () => {
+    if (!publicKey || !amount || !program || !signTransaction) return;
+
+    setIsLoading(true);
+    try {
+      const amountLamports = parseFloat(amount) * 1e9; // Convert to lamports
+
+      const userKey = new PublicKey(publicKey);
+      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+
+      // Get user token account (WSOL or USDC)
+      const userTokenAccount =
+        collateralType === "SOL"
+          ? await getOrCreateCustomSolAccount(
+              userKey,
+              connection,
+              sendRegularTransaction
+            )
+          : await getOrCreateUsdcAccount(
+              userKey,
+              connection,
+              sendRegularTransaction
+            );
+
+      // If depositing SOL, wrap it first
+      if (collateralType === "SOL") {
+        const wrapSolTransaction = new Transaction();
+
+        // Add instruction to transfer SOL to the wrapped SOL account
+        wrapSolTransaction.add(
+          SystemProgram.transfer({
+            fromPubkey: userKey,
+            toPubkey: userTokenAccount,
+            lamports: amountLamports,
+          })
+        );
+
+        // Add instruction to sync native account
+        wrapSolTransaction.add(createSyncNativeInstruction(userTokenAccount));
+
+        // Send and confirm wrapping transaction
+        const signature = await sendRegularTransaction(
+          wrapSolTransaction,
+          connection
+        );
+        await connection.confirmTransaction(signature, "confirmed");
+
+        console.log("SOL wrapped successfully:", signature);
+      }
+
+      const [userStateAccount] = PublicKey.findProgramAddressSync(
+        [Buffer.from("user-state"), new PublicKey(publicKey).toBuffer()],
+        program.programId
+      );
+
+      console.log("userStateAccount", userStateAccount.toBase58());
+
+      // Get pool state PDA
+      const poolState = await program.account.poolState.fetch(poolAddress);
+
+      console.log("poolState", poolState);
+
+      // Get LP token mint from pool state
+      const lpTokenMint = poolState.lpTokenMint;
+
+      console.log("lpTokenMint", lpTokenMint.toBase58());
+
+      const userLpTokenAccount = await getOrCreateAssociatedTokenAccount(
+        connection,
+        userKey,
+        lpTokenMint,
+        userKey,
+        signTransaction
+      );
+
+      console.log("userLpTokenAccount", userLpTokenAccount.toBase58());
+
+      // Get vault account based on collateral type
+      const vaultAccount = new PublicKey(
+        collateralType === "SOL" ? poolState.solVault : poolState.usdcVault
+      );
+
+      console.log("vaultAccount", vaultAccount.toBase58());
+
+      if (isDeposit) {
+        const tx = await program.methods
+          .deposit(new BN(parseFloat(amount) * 1e9))
+          .accountsStrict({
+            user: userKey,
+            poolState: poolAddress,
+            userTokenAccount: userTokenAccount,
+            vaultAccount,
+            userState: userStateAccount,
+            lpTokenMint,
+            userLpTokenAccount: userLpTokenAccount,
+            chainlinkProgram: new PublicKey(
+              contractAddresses.devnet.chainlinkProgram
+            ),
+            chainlinkFeed: new PublicKey(
+              contractAddresses.devnet.chainlinkFeed
+            ),
+            tokenProgram: new PublicKey(contractAddresses.devnet.tokenProgram),
+            systemProgram: new PublicKey(
+              contractAddresses.devnet.systemProgram
+            ),
+          })
+          .rpc();
+
+        toast.success("Deposit successful!");
+      } else {
+        const tx = await program.methods
+          .withdraw(new BN(parseFloat(amount) * 1e9))
+          .accountsStrict({
+            user: userKey,
+            poolState: poolAddress,
+            userState: userStateAccount,
+            lpTokenMint,
+            userLpTokenAccount,
+            vaultAccount,
+            userTokenAccount,
+            chainlinkProgram: new PublicKey(
+              contractAddresses.devnet.chainlinkProgram
+            ),
+            chainlinkFeed: new PublicKey(
+              contractAddresses.devnet.chainlinkFeed
+            ),
+            tokenProgram: new PublicKey(contractAddresses.devnet.tokenProgram),
+          })
+          .rpc();
+
+        toast.success("Withdrawal successful!");
+      }
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      toast.error("Transaction failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [publicKey, connection, amount, collateralType, isDeposit]);
+
   return (
     <div className="hidden md:flex flex-1 bg-button-grad p-0.5 rounded-7 ">
       <div className="flex flex-col gap-2 w-full h-full bg-card-grad rounded-7 p-4">
@@ -124,8 +284,16 @@ const EntryCard = ({
               ? "bg-green-grad hover:bg-green-grad-hover border-printer-green"
               : "bg-red-grad hover:bg-red-grad-hover border-printer-red"
           }`}
+          onPress={handleTransaction}
+          disabled={!publicKey || isLoading}
         >
-          {isDeposit ? "Deposit" : "Withdraw"}
+          {!publicKey
+            ? "Connect Wallet"
+            : isLoading
+            ? "Processing..."
+            : isDeposit
+            ? "Deposit"
+            : "Withdraw"}
         </Button>
       </div>
     </div>

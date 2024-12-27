@@ -1,11 +1,16 @@
 // hooks/useWallet.ts
-import { useWallet as useSolanaWallet } from "@solana/wallet-adapter-react";
+import {
+  useWallet as useSolanaWallet,
+  useConnection as useSolanaConnection,
+} from "@solana/wallet-adapter-react";
 import { useCallback, useMemo, useEffect } from "react";
 import {
   Connection,
   PublicKey,
   Transaction,
   SystemProgram,
+  VersionedTransaction,
+  SendOptions,
 } from "@solana/web3.js";
 import {
   createTransferInstruction,
@@ -13,6 +18,9 @@ import {
 } from "@solana/spl-token";
 import { helperToast } from "@/lib/helperToast";
 import { WalletName } from "@solana/wallet-adapter-base";
+import { Program, AnchorProvider } from "@coral-xyz/anchor";
+import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
+import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 
 interface SendTransactionProps {
   to: string;
@@ -30,6 +38,8 @@ const TOKEN_MINTS: { [key in TokenType]: string } = {
   SOL: "native",
   USDC: process.env.NEXT_PUBLIC_USDC_MINT!,
 };
+
+const PROGRAM_ID = new PublicKey(idl.address);
 
 const registerUser = async (publicKey: string) => {
   try {
@@ -59,6 +69,7 @@ export function useWallet() {
     connected,
     publicKey,
     signTransaction,
+    signAllTransactions,
     disconnect,
     select,
     wallet,
@@ -66,9 +77,44 @@ export function useWallet() {
     connecting,
   } = useSolanaWallet();
 
+  const { connection } = useSolanaConnection();
+
   const address = useMemo(() => {
     return publicKey?.toBase58() || null;
   }, [publicKey]);
+
+  // Create Anchor Provider
+  const anchorProvider = useMemo(() => {
+    if (!publicKey || !signTransaction || !signAllTransactions) return null;
+
+    return new AnchorProvider(
+      connection,
+      {
+        publicKey,
+        signTransaction,
+        signAllTransactions,
+      },
+      {
+        commitment: "confirmed",
+        preflightCommitment: "confirmed",
+      }
+    );
+  }, [connection, publicKey, signTransaction, signAllTransactions]);
+
+  // Create Program instance
+  const program = useMemo(() => {
+    if (!anchorProvider) return null;
+    try {
+      // The correct order is (idl, programId, provider)
+      return new Program<SolanaLiquidityPool>(
+        idl as SolanaLiquidityPool,
+        anchorProvider
+      );
+    } catch (error) {
+      console.error("Failed to create program instance:", error);
+      return null;
+    }
+  }, [anchorProvider]);
 
   useEffect(() => {
     if (connected && address) {
@@ -156,16 +202,57 @@ export function useWallet() {
     [address, signTransaction]
   );
 
+  const handleRegularTransaction = useCallback(
+    async (
+      transaction: Transaction | VersionedTransaction,
+      connection: Connection,
+      options?: SendOptions
+    ): Promise<string> => {
+      try {
+        if (!publicKey || !signTransaction) {
+          throw new Error("Wallet not connected");
+        }
+
+        // Get recent blockhash and set it on the transaction
+        const latestBlockhash = await connection.getLatestBlockhash();
+        if (transaction instanceof Transaction) {
+          transaction.recentBlockhash = latestBlockhash.blockhash;
+          transaction.feePayer = publicKey;
+        }
+
+        // Sign transaction
+        const signedTx = await signTransaction(transaction);
+
+        // Send raw transaction
+        const signature = await connection.sendRawTransaction(
+          signedTx.serialize(),
+          options
+        );
+
+        // Confirm transaction
+        await connection.confirmTransaction({
+          signature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        });
+
+        return signature;
+      } catch (error) {
+        console.error("Transaction failed:", error);
+        throw error;
+      }
+    },
+    [publicKey, signTransaction]
+  );
+
   const connect = useCallback(
     (walletName?: WalletName) => {
       try {
         if (walletName) {
           // Connect to specific wallet
-
           select(walletName);
         } else if (wallet) {
           // Use existing wallet if already selected
-
           select(wallet.adapter.name);
         } else {
           console.error("No wallet specified");
@@ -187,7 +274,12 @@ export function useWallet() {
     connect,
     disconnect,
     sendTransaction: handleSendTransaction,
+    sendRegularTransaction: handleRegularTransaction,
     availableWallets: wallets,
     selectedWallet: wallet,
+    connection,
+    program,
+    provider: anchorProvider,
+    signTransaction,
   };
 }
