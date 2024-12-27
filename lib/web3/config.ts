@@ -43,6 +43,18 @@ export const web3Config: Web3Config = {
   },
 };
 
+export const contractAddresses = {
+  devnet: {
+    programId: "CkpZTxULEPgWHKkmWcNdvBR4SkijmUMY3sRYurGeTTvF",
+    poolStatePda: "6UHiASVd9j9EQyD1MBsXGdKzjxZq7RXfnWKvZrJ4zj8t",
+    solMint: "8tRkJRsg9uMZkjCga6jMEw1WGFoWdaBVoBh76XYhgmsN",
+    usdcMint: "FBTA7NQUfanvHpuxvN8FULx7yxgkT1c6yvkJ8pM9fCkx",
+    solVault: "7nxvGwEi49UDSEVdFKtr4F6MaeQkdTokTV3knvoRKMTq",
+    usdcVault: "Azt4PDK5YvuJPeCMXgXVVAJsSBjyK5okDoZFB6e6tkDr",
+    lpTokenMint: "HFoAJX7LBnsibqye7wGiJec3JDbZ6VaYZZEPFvNo3mhg",
+  },
+};
+
 // Helper functions
 export function getCurrentNetwork(): NetworkType {
   const isDevnet = process.env.NODE_ENV === "development";
