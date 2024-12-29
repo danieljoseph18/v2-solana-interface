@@ -519,7 +519,9 @@ export type SolanaLiquidityPool = {
           },
           {
             name: "usdcVault";
-            docs: ["USDC vault account"];
+            docs: [
+              "USDC vault account (USDC uses 6 decimals, so 1 USDC = 1_000_000)"
+            ];
             type: "pubkey";
           },
           {
@@ -529,17 +531,21 @@ export type SolanaLiquidityPool = {
           },
           {
             name: "solDeposited";
-            docs: ["How many SOL tokens are currently deposited in total."];
+            docs: [
+              "How many SOL tokens are currently deposited in total (9 decimals, 1 SOL = 1_000_000_000)"
+            ];
             type: "u64";
           },
           {
             name: "usdcDeposited";
-            docs: ["How many USDC tokens are currently deposited in total."];
+            docs: [
+              "How many USDC tokens are currently deposited in total (6 decimals, 1 USDC = 1_000_000)"
+            ];
             type: "u64";
           },
           {
             name: "tokensPerInterval";
-            docs: ["USDC earned per second per LP token"];
+            docs: ["USDC earned per second per LP token (6 decimals)"];
             type: "u64";
           },
           {
@@ -559,19 +565,23 @@ export type SolanaLiquidityPool = {
           },
           {
             name: "solUsdPrice";
-            docs: ["Current SOL/USD price from Chainlink"];
+            docs: [
+              "Current SOL/USD price from Chainlink (8 decimals from feed)"
+            ];
             type: "i128";
           },
           {
             name: "totalRewardsDeposited";
             docs: [
-              "How many USDC tokens the admin deposited for this reward period"
+              "How many USDC tokens the admin deposited for this reward period (6 decimals)"
             ];
             type: "u64";
           },
           {
             name: "totalRewardsClaimed";
-            docs: ["How many USDC have actually been claimed by users so far"];
+            docs: [
+              "How many USDC have actually been claimed by users so far (6 decimals)"
+            ];
             type: "u64";
           }
         ];

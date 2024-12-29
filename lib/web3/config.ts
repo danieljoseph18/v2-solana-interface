@@ -51,7 +51,7 @@ export const contractAddresses = {
     usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
     solVault: "39Nog6QGX5mFhJCdmar3qS8v9aAVGBctrUXhkgDMSrit",
     usdcVault: "A8hDMM1GwhTa3ut1odRU5xGdAx4F7goZsP4dSnnyiik2",
-    lpTokenMint: "9B6F9HRCb45JZjSgVJbSyf6QuQKq1CMz6PEBxSd7p1wp",
+    lpTokenMint: "3HY9RDdMRHysagQd2aF1tmD5Lb3pV5LxbuiAoSHSDmt8",
     chainlinkProgram: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
     chainlinkFeed: "HgTtcbcmp5BeThax5AU8vg4VwK79qAvAKKFMs8txMLW6",
     tokenProgram: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",

@@ -11,6 +11,11 @@ import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types"
 import { Program } from "@coral-xyz/anchor";
 import { contractAddresses } from "@/lib/web3/config";
 import { useConnection } from "@solana/wallet-adapter-react";
+import { fetchCollateralPrices } from "@/app/actions/fetchCollateralPrices";
+import { getLpTokenPrice } from "@/lib/web3/actions/getLpTokenPrice";
+import { getUserLpBalance } from "@/lib/web3/actions/getLpTokenBalance";
+import { getPendingRewards } from "@/lib/web3/actions/getPendingRewards";
+import { getCurrentRewardRate } from "@/lib/web3/actions/getCurrentRewardRate";
 
 interface StatItemProps {
   iconSrc: string;
@@ -46,14 +51,13 @@ const StatItem = ({
   </>
 );
 
-const EarnSection = () => {
-  const { address: publicKey } = useWallet();
+const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
+  const { address: publicKey, connection } = useWallet();
 
   const [activeTab, setActiveTab] = useState<TabType>("deposit");
   const [collateralType, setCollateralType] = useState<CollateralType>("SOL");
   const [amount, setAmount] = useState<string>("0");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isPoolInitialized, setIsPoolInitialized] = useState<boolean>(false);
   const [vaultData, setVaultData] = useState<{
     deposits: string;
     apr: string;
@@ -63,40 +67,78 @@ const EarnSection = () => {
     apr: "0",
     estimatedEarnings: "0",
   });
+  const [prices, setPrices] = useState<{
+    solPrice: number;
+    usdcPrice: number;
+  }>({
+    solPrice: 0,
+    usdcPrice: 0,
+  });
+  const [lpTokenPrice, setLpTokenPrice] = useState<number>(1);
+  const [balancesUsd, setBalancesUsd] = useState<{
+    solBalanceUsd: number;
+    usdcBalanceUsd: number;
+  }>({
+    solBalanceUsd: 0,
+    usdcBalanceUsd: 0,
+  });
+  const [lpBalance, setLpBalance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
   const isDeposit = activeTab === "deposit";
-
-  const { connection } = useConnection();
 
   const program = new Program(idl as SolanaLiquidityPool, {
     connection,
   });
 
   useEffect(() => {
-    const checkPool = async () => {
-      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
-
-      if (!poolAddress) return;
-
-      try {
-        const account = await connection.getAccountInfo(poolAddress);
-        setIsPoolInitialized(account !== null);
-
-        if (!account) {
-          console.log(
-            "Pool not initialized yet at address:",
-            poolAddress.toString()
-          );
-        }
-      } catch (error) {
-        console.error("Error checking pool:", error);
-      }
+    const fetchPrices = async () => {
+      const prices = await fetchCollateralPrices();
+      setPrices(prices);
     };
+    fetchPrices();
+  }, []);
 
-    checkPool();
-  }, [connection]);
+  useEffect(() => {
+    const fetchLpTokenPrice = async () => {
+      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+      const lpTokenPrice = await getLpTokenPrice(program, poolAddress);
+      setLpTokenPrice(lpTokenPrice);
+    };
+    fetchLpTokenPrice();
+  }, [program]);
 
+  useEffect(() => {
+    const fetchBalances = async () => {
+      if (!publicKey) return;
+      const balanceData = await getUserBalances(new PublicKey(publicKey));
+      const solBalanceUsd = parseInt(balanceData.solBalance) * prices.solPrice;
+      const usdcBalanceUsd =
+        parseInt(balanceData.usdcBalance) * prices.usdcPrice;
+      const balances = {
+        solBalanceUsd,
+        usdcBalanceUsd,
+      };
+      setBalancesUsd(balances);
+    };
+    fetchBalances();
+  }, [publicKey]);
+
+  useEffect(() => {
+    const fetchLpBalance = async () => {
+      if (!publicKey) return;
+      const lpBalance = await getUserLpBalance(
+        program,
+        new PublicKey(publicKey)
+      );
+      setLpBalance(lpBalance);
+    };
+    fetchLpBalance();
+  }, [program, publicKey]);
+
+  /**
+   * @dev Returns an estimate of their share of the pool. (NOT ACTUAL BALANCES)
+   */
   const getUserBalances = async (poolAddress: PublicKey) => {
     if (!isPoolInitialized || !publicKey) {
       return {
@@ -145,86 +187,6 @@ const EarnSection = () => {
     }
   };
 
-  const getCurrentRewardRate = async (poolAddress: PublicKey) => {
-    if (!isPoolInitialized) {
-      return {
-        rewardRate: "0",
-        rewardRateFormatted: "0",
-        rewardsDuration: "0",
-        isRewardsActive: false,
-      };
-    }
-
-    try {
-      const poolState = await program.account.poolState.fetch(poolAddress);
-      const currentTime = Math.floor(Date.now() / 1000);
-
-      return {
-        rewardRate: poolState.tokensPerInterval.toString(),
-        rewardRateFormatted: (
-          parseInt(poolState.tokensPerInterval.toString()) / 1e6
-        ).toFixed(6),
-        rewardsDuration: (
-          poolState.rewardEndTime.toNumber() -
-          poolState.rewardStartTime.toNumber()
-        ).toString(),
-        isRewardsActive: poolState.rewardEndTime.toNumber() > currentTime,
-      };
-    } catch (error) {
-      console.error("Error fetching reward rate:", error);
-      throw error;
-    }
-  };
-
-  const getPendingRewards = async (
-    poolAddress: PublicKey,
-    userAddress: PublicKey
-  ) => {
-    if (!isPoolInitialized) {
-      return {
-        pendingRewards: "0",
-        pendingRewardsFormatted: "0",
-        lastUpdateTime: "0",
-        rewardEndTime: "0",
-      };
-    }
-
-    try {
-      const poolState = await program.account.poolState.fetch(poolAddress);
-      const [userStateAccount] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("user-state"),
-          poolAddress.toBuffer(),
-          userAddress.toBuffer(),
-        ],
-        program.programId
-      );
-
-      const userState = await program.account.userState.fetch(userStateAccount);
-      const currentTime = Math.floor(Date.now() / 1000);
-      const endTime = Math.min(currentTime, poolState.rewardEndTime.toNumber());
-
-      // Calculate pending rewards
-      const timeElapsed = endTime - userState.lastClaimTimestamp.toNumber();
-      const rewardsPerToken =
-        poolState.tokensPerInterval.toNumber() * timeElapsed;
-      const userRewards =
-        (userState.lpTokenBalance.toNumber() * rewardsPerToken) / 1e6;
-      const totalPendingRewards =
-        userState.pendingRewards.toNumber() + userRewards;
-
-      return {
-        pendingRewards: totalPendingRewards.toString(),
-        pendingRewardsFormatted: (totalPendingRewards / 1e6).toFixed(6),
-        lastUpdateTime: userState.lastClaimTimestamp.toString(),
-        rewardEndTime: poolState.rewardEndTime.toString(),
-      };
-    } catch (error) {
-      console.error("Error calculating pending rewards:", error);
-      throw error;
-    }
-  };
-
   useEffect(() => {
     const fetchVaultData = async () => {
       const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
@@ -246,8 +208,13 @@ const EarnSection = () => {
 
         const [balances, rewardRate, pendingRewards] = await Promise.all([
           getUserBalances(poolAddress),
-          getCurrentRewardRate(poolAddress),
-          getPendingRewards(poolAddress, new PublicKey(publicKey)),
+          getCurrentRewardRate(program, poolAddress, isPoolInitialized),
+          getPendingRewards(
+            program,
+            poolAddress,
+            new PublicKey(publicKey),
+            isPoolInitialized
+          ),
         ]);
 
         // Calculate total deposits in USD
@@ -335,6 +302,10 @@ const EarnSection = () => {
         setCollateralType={setCollateralType}
         amount={amount}
         setAmount={setAmount}
+        prices={prices}
+        lpTokenPrice={lpTokenPrice}
+        lpBalance={lpBalance}
+        balancesUsd={balancesUsd}
         handleCardClick={() => setIsModalOpen(true)}
         setIsModalOpen={setIsModalOpen}
       />
@@ -349,6 +320,10 @@ const EarnSection = () => {
           amount={amount}
           setAmount={setAmount}
           isModalForm
+          prices={prices}
+          lpTokenPrice={lpTokenPrice}
+          balancesUsd={balancesUsd}
+          lpBalance={lpBalance}
           handleCardClick={() => setIsModalOpen(true)}
           setIsModalOpen={setIsModalOpen}
         />

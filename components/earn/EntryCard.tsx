@@ -14,7 +14,6 @@ import { toast } from "react-toastify";
 import { useWallet } from "@/hooks/useWallet";
 import { contractAddresses } from "@/lib/web3/config";
 import { getOrCreateUsdcAccount } from "@/lib/web3/actions/getOrCreateUsdcAccount";
-import { getOrCreateWrappedSolAccount } from "@/lib/web3/actions/getOrCreateWrappedSolAccount";
 import { createSyncNativeInstruction } from "@solana/spl-token";
 import getOrCreateAssociatedTokenAccount from "@/lib/web3/actions/getOrCreateTokenAccount";
 import { getOrCreateCustomSolAccount } from "@/lib/web3/actions/getOrCreateCustomSolAccount";
@@ -28,6 +27,10 @@ const EntryCard = ({
   amount,
   setAmount,
   isModalForm = false,
+  prices,
+  balancesUsd,
+  lpTokenPrice,
+  lpBalance,
   handleCardClick,
   setIsModalOpen,
 }: {
@@ -39,6 +42,16 @@ const EntryCard = ({
   amount: string;
   setAmount: (amount: string) => void;
   isModalForm?: boolean;
+  prices: {
+    solPrice: number;
+    usdcPrice: number;
+  };
+  balancesUsd: {
+    solBalanceUsd: number;
+    usdcBalanceUsd: number;
+  };
+  lpTokenPrice: number;
+  lpBalance: number;
   handleCardClick?: () => void;
   setIsModalOpen?: (isOpen: boolean) => void;
 }) => {
@@ -52,14 +65,29 @@ const EntryCard = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTransaction = useCallback(async () => {
-    if (!publicKey || !amount || !program || !signTransaction) return;
+    if (!publicKey || !amount || !program || !signTransaction || !prices)
+      return;
 
     setIsLoading(true);
+
     try {
-      const amountLamports = parseFloat(amount) * 1e9; // Convert to lamports
+      const amountNative = isDeposit
+        ? collateralType === "SOL"
+          ? parseFloat(amount) / prices.solPrice
+          : parseFloat(amount) / prices.usdcPrice
+        : parseFloat(amount) / lpTokenPrice;
+
+      const amountBaseUnits = isDeposit
+        ? collateralType === "SOL"
+          ? amountNative * 1e9
+          : amountNative * 1e6
+        : amountNative * 1e6;
 
       const userKey = new PublicKey(publicKey);
       const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+
+      // Get pool state PDA
+      const poolState = await program.account.poolState.fetch(poolAddress);
 
       // Get user token account (WSOL or USDC)
       const userTokenAccount =
@@ -76,7 +104,7 @@ const EntryCard = ({
             );
 
       // If depositing SOL, wrap it first
-      if (collateralType === "SOL") {
+      if (isDeposit && collateralType === "SOL") {
         const wrapSolTransaction = new Transaction();
 
         // Add instruction to transfer SOL to the wrapped SOL account
@@ -84,7 +112,7 @@ const EntryCard = ({
           SystemProgram.transfer({
             fromPubkey: userKey,
             toPubkey: userTokenAccount,
-            lamports: amountLamports,
+            lamports: amountBaseUnits,
           })
         );
 
@@ -107,11 +135,6 @@ const EntryCard = ({
       );
 
       console.log("userStateAccount", userStateAccount.toBase58());
-
-      // Get pool state PDA
-      const poolState = await program.account.poolState.fetch(poolAddress);
-
-      console.log("poolState", poolState);
 
       // Get LP token mint from pool state
       const lpTokenMint = poolState.lpTokenMint;
@@ -137,7 +160,7 @@ const EntryCard = ({
 
       if (isDeposit) {
         const tx = await program.methods
-          .deposit(new BN(parseFloat(amount) * 1e9))
+          .deposit(new BN(amountBaseUnits))
           .accountsStrict({
             user: userKey,
             poolState: poolAddress,
@@ -162,7 +185,7 @@ const EntryCard = ({
         toast.success("Deposit successful!");
       } else {
         const tx = await program.methods
-          .withdraw(new BN(parseFloat(amount) * 1e9))
+          .withdraw(new BN(amountBaseUnits))
           .accountsStrict({
             user: userKey,
             poolState: poolAddress,
@@ -190,6 +213,14 @@ const EntryCard = ({
       setIsLoading(false);
     }
   }, [publicKey, connection, amount, collateralType, isDeposit]);
+
+  const handleMaxClick = () => {
+    if (isDeposit) {
+      setAmount(balancesUsd.solBalanceUsd.toFixed(2));
+    } else {
+      setAmount(lpBalance.toFixed(2));
+    }
+  };
 
   return (
     <div className="hidden md:flex flex-1 bg-button-grad p-0.5 rounded-7 ">
@@ -255,7 +286,11 @@ const EntryCard = ({
                 alt="solana-wallet"
                 className="w-4"
               />
-              <p className="text-white font-medium text-xs">$100.00</p>
+              <p className="text-white font-medium text-xs">
+                {isDeposit
+                  ? `$${balancesUsd.solBalanceUsd.toFixed(2)}`
+                  : `${lpBalance.toFixed(2)}`}
+              </p>
             </div>
           </div>
         </div>
@@ -263,7 +298,9 @@ const EntryCard = ({
         <div className="flex w-full items-center h-[64px]">
           <div className="flex items-center justify-between bg-card-grad h-[64px] border-cardborder border-2 rounded-7 px-3 py-4 w-full">
             <div className="flex gap-1 items-center w-fit max-w-[30%]">
-              <p className="text-white font-bold text-sm md:text-lg">$</p>
+              <p className="text-white font-bold text-sm md:text-lg">
+                {isDeposit ? "$" : ""}
+              </p>
               <NumberInput
                 value={amount}
                 onValueChange={setAmount}
@@ -271,7 +308,10 @@ const EntryCard = ({
               />
             </div>
             <div className="flex items-center gap-2">
-              <Button className="bg-button-grad hover:bg-button-grad-hover !min-w-[38px] !w-[38px] hidden md:flex !h-[30px] !min-h-[30px] text-13 md:text-15 rounded-3 border-2 border-printer-orange">
+              <Button
+                className="bg-button-grad hover:bg-button-grad-hover !min-w-[38px] !w-[38px] hidden md:flex !h-[30px] !min-h-[30px] text-13 md:text-15 rounded-3 border-2 border-printer-orange"
+                onPress={handleMaxClick}
+              >
                 MAX
               </Button>
             </div>

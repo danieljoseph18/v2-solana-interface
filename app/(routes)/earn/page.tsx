@@ -4,23 +4,78 @@ import ModalV2 from "@/components/common/ModalV2";
 import EarnSection from "@/components/earn/EarnSection";
 import RewardSection from "@/components/earn/RewardSection";
 import useWindowSize from "@/hooks/useWindowSize";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DepositModal from "@/components/earn/TopUpModal";
 import EarnHero from "@/components/earn/EarnHero";
 import EntryButtons from "@/components/earn/EntryButtons";
+import { getPendingRewards } from "@/lib/web3/actions/getPendingRewards";
+import { useWallet } from "@/hooks/useWallet";
+import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
+import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
+import { Program } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+import { contractAddresses } from "@/lib/web3/config";
 
+/**
+ * @audit Need to bind "earnedToDate"
+ * To do this, query the subgraph that we set up.
+ */
 const EarnPage = () => {
   const [earnedToDate /*setEarnedToDate*/] = useState<{
     amount: string;
     usdValue: string;
   }>({ amount: "0", usdValue: "0" });
-  const [availableToClaim /*setAvailableToClaim*/] = useState<{
-    amount: string;
-    usdValue: string;
-  }>({ amount: "0", usdValue: "0" });
-  const [isAutoCompound, setIsAutoCompound] = useState<boolean>(false);
+  const [availableToClaim, setAvailableToClaim] = useState<number>(0);
+  const [isPositive, setIsPositive] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isPoolInitialized, setIsPoolInitialized] = useState<boolean>(false);
   const { width } = useWindowSize();
+  const { connection, address: publicKey } = useWallet();
+
+  const program = new Program(idl as SolanaLiquidityPool, {
+    connection,
+  });
+
+  useEffect(() => {
+    const checkPool = async () => {
+      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+
+      if (!poolAddress) return;
+
+      try {
+        const account = await connection.getAccountInfo(poolAddress);
+        setIsPoolInitialized(account !== null);
+
+        if (!account) {
+          console.log(
+            "Pool not initialized yet at address:",
+            poolAddress.toString()
+          );
+        }
+      } catch (error) {
+        console.error("Error checking pool:", error);
+      }
+    };
+
+    checkPool();
+  }, [connection]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!publicKey) return;
+
+      const data = await getPendingRewards(
+        program,
+        new PublicKey(contractAddresses.devnet.poolStatePda),
+        new PublicKey(publicKey),
+        isPoolInitialized
+      );
+
+      setAvailableToClaim(parseFloat(data.pendingRewardsFormatted));
+    };
+
+    fetchData();
+  }, [publicKey, isPoolInitialized]);
 
   return (
     <div className="pb-32">
@@ -31,23 +86,22 @@ const EarnPage = () => {
         secondSubTitle="Learn about what Print3r earnings vaults are, what the benefits are and how to get started."
         docLink="#"
       />
-      <EarnSection />
+      <EarnSection isPoolInitialized={isPoolInitialized} />
       <RewardSection
         earnedToDate={earnedToDate}
         availableToClaim={availableToClaim}
-        isAutoCompound={isAutoCompound}
-        onAutoCompoundToggle={() => setIsAutoCompound(!isAutoCompound)}
-        onClaimRewards={() => {}}
+        program={program}
+        publicKey={publicKey ? new PublicKey(publicKey) : null}
       />
       {width && width < 1024 && (
         <EntryButtons
           positiveText="Deposit"
           negativeText="Withdraw"
           title="Manage your vault"
-          isPositive={isAutoCompound}
-          setIsPositive={setIsAutoCompound}
           mobileVariant
           onClick={() => setIsModalOpen(true)}
+          isPositive={isPositive}
+          setIsPositive={setIsPositive}
           showIcons={false}
         />
       )}
