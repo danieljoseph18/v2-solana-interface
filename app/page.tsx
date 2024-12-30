@@ -7,112 +7,69 @@ import ProtocolStats from "@/components/home/ProtocolStats";
 import HomeFooter from "@/components/home/HomeFooter";
 import "animate.css/animate.compat.css";
 import LowerFooter from "@/components/home/LowerFooter";
+import FirstMover from "@/app/assets/home/first-mover.png";
+import MarketMaking from "@/app/assets/home/market-making.png";
+import RevenueSharing from "@/app/assets/home/revenue-sharing.png";
+import SummarySection from "@/components/home/SummarySection";
 
 const Home = () => {
   return (
-    <div className="bg-home-card-grad text-white relative">
+    <div className="bg-home-card-grad text-white relative font-poppins">
       <HomeHero />
+      <SummarySection />
       <div className="px-6 md:px-8 lg:px-16 xl:px-52">
         <FeatureSection
           title={
-            <h2 className="text-2xl md:text-[33px] font-semibold mb-4 font-poppins">
-              Trade{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                Any
-              </span>{" "}
-              Asset,{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                any
-              </span>{" "}
-              chain
+            <h2 className="text-2xl md:text-[33px] font-semibold mb-4">
+              Trade the markets YOU want to trade before anyone else!
             </h2>
           }
           description={
-            <p className="text-[19px] text-[#b7b8bf] font-poppins">
+            <p className="text-[19px] text-home-gray">
               Long or short any Web3 asset on any chain, with chain agnostic
-              markets - no bridging ever <br /> needed.
+              markets - no bridging ever needed.
             </p>
           }
-          imageSrc="/img/home/trade-anything.png"
-          imageAlt="Trade Any Asset"
+          imageSrc={FirstMover.src}
+          imageAlt="First Mover"
+          reverse={true}
           ctaName="Trade Now"
           ctaLink="/trade"
         />
         <FeatureSection
           title={
-            <h2 className="text-2xl md:text-[33px] font-semibold mb-4 font-poppins">
-              Make the markets{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                YOU
-              </span>{" "}
-              want
+            <h2 className="text-2xl md:text-[33px] font-semibold mb-4">
+              Become a Market Maker & Earn Trading Fees
             </h2>
           }
           description={
-            <p className="text-[19px] text-[#b7b8bf] font-poppins">
-              Create new markets for any asset on any chain in just a few clicks
-              and earn 10% of all trading fees <br /> for life!
+            <p className="text-[19px] text-home-gray">
+              Stake SOL or USDC in the PRINT3R earning vaults to mint LP tokens
+              and start earning 50% of ALL trading fees!
             </p>
           }
-          imageSrc="/img/home/tradeable-anywhere.png"
-          imageAlt="Make Markets"
-          reverse={true}
-          ctaName="Create Market"
-          ctaLink="/create"
-        />
-        <FeatureSection
-          title={
-            <h2 className="text-2xl md:text-[33px] font-semibold mb-4 font-poppins">
-              Stake{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                ETH
-              </span>{" "}
-              or{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                USDC
-              </span>{" "}
-              to earn!
-            </h2>
-          }
-          description={
-            <p className="text-[19px] text-[#b7b8bf] font-poppins">
-              Stake SOL or USDC and start earning 50% of trading fees!
-            </p>
-          }
-          imageSrc="/img/home/stake-to-earn.png"
-          imageAlt="Stake to Earn"
+          imageSrc={MarketMaking.src}
+          imageAlt="Market Making"
           ctaName="Earn Rewards"
           ctaLink="/earn"
         />
         <FeatureSection
           title={
-            <h2 className="text-2xl md:text-[33px] font-semibold mb-4 font-poppins">
-              Earn{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                XP
-              </span>{" "}
-              for{" "}
-              <span className="bg-printer-orange-gradient text-gradient">
-                rewards
-              </span>
-              !
+            <h2 className="text-2xl md:text-[33px] font-semibold mb-4">
+              Bonus Protocol Revenue for All DAO Members.
             </h2>
           }
           description={
-            <p className="text-[19px] text-[#b7b8bf] font-poppins">
-              The more you trade, supply liquidity, or refer users, the more XP
-              you earn and the more rewards{" "}
-              <sup className="bg-printer-orange-gradient text-gradient text-xs">
-                (and airdrops)
-              </sup>{" "}
-              you get!
+            <p className="text-[19px] text-home-gray">
+              Join our community on DAOs.fun to enjoy exclusive holder benefits
+              and bonus revenue sharing.
             </p>
           }
-          imageSrc="/img/home/earn-xp.png"
-          imageAlt="Earn XP"
+          imageSrc={RevenueSharing.src}
+          imageAlt="Bonus Protocol Revenue"
           reverse={true}
-          ctaName="Earn XP"
-          ctaLink="/airdrop"
+          ctaName="Join DAOs.fun"
+          ctaLink="/earn"
         />
         <ScrollAnimation animateIn="fadeIn">
           <ProtocolStats />

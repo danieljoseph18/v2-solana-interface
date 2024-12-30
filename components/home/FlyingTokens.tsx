@@ -1,14 +1,15 @@
 "use client";
 
 import React from "react";
-import WSVG from "@/app/assets/home/w.svg";
-import BaycSVG from "@/app/assets/home/bayc.svg";
-import ArbSVG from "@/app/assets/home/arb.svg";
-import WifSVG from "@/app/assets/home/wif.svg";
-import PepeSVG from "@/app/assets/home/pepe.svg";
-import PudgySVG from "@/app/assets/home/pudgy.svg";
-import EthSVG from "@/app/assets/home/eth.svg";
-import SolanaSVG from "@/app/assets/home/solana.svg";
+import Ai16z from "@/app/assets/home/ai16z-logo.png";
+import Drugs from "@/app/assets/home/drugs-logo.png";
+import Girlie from "@/app/assets/home/girlie-logo.png";
+import Haiyez from "@/app/assets/home/haiyez-logo.png";
+import L8Cap from "@/app/assets/home/l8cap-logo.png";
+import Monopoly from "@/app/assets/home/monopoly-logo.png";
+import Topkek from "@/app/assets/home/topkek-logo.png";
+import XCombinator from "@/app/assets/home/xcombinator-logo.png";
+
 import HomeToken from "./HomeToken";
 import useWindowSize from "@/hooks/useWindowSize";
 
@@ -18,28 +19,21 @@ const FlyingTokens = () => {
   const isMobile = width && width < 768;
 
   const flyingTokens = [
-    { token: PepeSVG, size: 50, top: 0.2, left: 0.1 },
-
-    { token: WSVG, size: 80, top: -0.05, left: 0.3 },
-
-    { token: ArbSVG, size: 70, top: 0.1, left: 0.85 },
-
-    { token: EthSVG, size: 150, top: 0.5, left: 0.3 },
-
-    { token: PudgySVG, size: 80, top: 0.4, left: 0.85 },
-
-    { token: BaycSVG, size: 150, top: 0.8, left: 0.05 },
-
-    { token: WifSVG, size: 110, top: 0.8, left: 0.7 },
-
-    { token: SolanaSVG, size: 200, top: 0.6, left: 1 },
+    { token: Haiyez, size: 50, top: 0.2, left: 0.1 },
+    { token: Monopoly, size: 80, top: -0.05, left: 0.3 },
+    { token: Girlie, size: 70, top: 0.1, left: 0.85 },
+    { token: Ai16z, size: 150, top: 0.5, left: 0.3 },
+    { token: L8Cap, size: 80, top: 0.4, left: 0.85 },
+    { token: Drugs, size: 150, top: 0.8, left: 0.05 },
+    { token: XCombinator, size: 110, top: 0.8, left: 0.7 },
+    { token: Topkek, size: 200, top: 0.6, left: 1 },
   ];
 
   const flyingTokensMobile = [
-    { token: EthSVG, size: 120, top: 0.1, left: -0.1 },
-    { token: ArbSVG, size: 50, top: 0.15, left: 0.95 },
-    { token: PudgySVG, size: 50, top: 0.8, left: -0.05 },
-    { token: WifSVG, size: 100, top: 0.8, left: 0.95 },
+    { token: Drugs, size: 120, top: 0.1, left: -0.1 },
+    { token: Girlie, size: 50, top: 0.15, left: 0.95 },
+    { token: Ai16z, size: 50, top: 0.8, left: -0.05 },
+    { token: Topkek, size: 100, top: 0.8, left: 0.95 },
   ];
 
   return (

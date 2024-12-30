@@ -33,8 +33,14 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({
           reverse ? "md:flex-row-reverse" : ""
         } items-center py-16 justify-between w-full gap-8`}
       >
-        <div className="w-full md:w-1/2 mt-8 md:mb-0">
-          <Image src={imageSrc} alt={imageAlt} width={500} height={300} />
+        <div className="w-full md:w-1/2 2xl:w-1/3 mt-8 md:mb-0">
+          <Image
+            src={imageSrc}
+            alt={imageAlt}
+            width={1500}
+            height={500}
+            className="w-full"
+          />
         </div>
         <div className="w-full md:w-1/2 md:max-w-[460px]">
           <div>{title}</div>

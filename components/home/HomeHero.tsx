@@ -20,13 +20,12 @@ const Typewriter = ({ speed = 150 }: { speed?: number }) => {
       <br key="2" />,
       " on ",
       <span key="3" className="bg-printer-orange-gradient text-gradient">
-        any{" "}
+        daos.fun{" "}
       </span>,
-      "Chain ",
       <br key="4" />,
       " up to ",
       <span key="5" className="bg-printer-orange-gradient text-gradient">
-        1000x
+        50x
       </span>,
     ],
     []
@@ -120,8 +119,8 @@ const HomeHero = () => {
 
       <div className="flex justify-center items-center w-full">
         <p className="px-20 mt-8 font-normal text-xs md:text-lg text-[#E5E6ED] max-w-[540px] text-center !z-[2] relative animate__animated animate__fadeIn">
-          The first permissionless leverage markets where you can long or short
-          anything, up to 1000x on Base & 190+ other chains.
+          Instant Leverage markets for everything on Daos.fun, trade the next
+          big dao with up to 50x right now!
         </p>
       </div>
 

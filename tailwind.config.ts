@@ -120,6 +120,7 @@ const config: Config = {
         "accordion-gray": "#2A2D40",
         "dashboard-gray": "#8E9BAE",
         "sexy-gray": "#696969",
+        "home-gray": "#E5E6ED",
         cardborder: "#282F39",
         cardblack: "#07080A",
         menu: "#181C23",
