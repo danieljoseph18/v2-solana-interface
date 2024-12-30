@@ -18,6 +18,7 @@ import { getCurrentRewardRate } from "@/lib/web3/actions/getCurrentRewardRate";
 import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 import UpwardsBars from "@/app/assets/earn/upwards-bars.svg";
 import EarningDiamond from "@/app/assets/earn/earning-diamond.svg";
+import Image from "next/image";
 
 interface StatItemProps {
   iconSrc: string;
@@ -36,7 +37,7 @@ const StatItem = ({
 }: StatItemProps) => (
   <>
     <div className="flex items-center gap-4 px-4 py-2">
-      <img src={iconSrc} alt={altText} />
+      <Image src={iconSrc} alt={altText} width={35} height={35} />
       <div className="flex flex-col gap-2">
         <p className="text-xs text-gray-text">{label}</p>
         <p className="text-white text-base font-bold">
