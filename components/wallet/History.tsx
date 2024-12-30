@@ -5,7 +5,7 @@ import { FiArrowDownLeft, FiArrowUpRight } from "react-icons/fi";
 import { Button } from "@nextui-org/react";
 import LoadingAnimation from "@/app/assets/animations/LoadingAnimation";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
-import NoChartData from "@/app/assets/trade/no-chart-data.png";
+import NoChartData from "@/app/assets/wallet/no-chart-data.png";
 
 const History = ({
   handleHistoryBackClick,
