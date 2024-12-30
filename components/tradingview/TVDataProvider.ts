@@ -111,14 +111,14 @@ export class TVDataProvider implements IDatafeedChartApi {
 
     try {
       const symbolInfo: LibrarySymbolInfo = {
-        ticker: `GeckoTerminal:${tokenSymbol}/USD`,
+        ticker: `PRINT3R:${tokenSymbol}/USD`,
         name: `${tokenSymbol}/USD`,
         description: `${tokenSymbol}/USD`,
         type: "crypto",
         session: "24x7",
         timezone: "Etc/UTC",
-        exchange: "GeckoTerminal",
-        listed_exchange: "GeckoTerminal",
+        exchange: "PRINT3R",
+        listed_exchange: "PRINT3R",
         format: "price",
         minmov: 1,
         pricescale:

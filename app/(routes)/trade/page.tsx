@@ -70,7 +70,6 @@ const TradePage = () => {
   const [isTablet, setIsTablet] = useState(false);
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [currentMarketOnly, setCurrentMarketOnly] = useState(false);
-  const [availableLiquidity, setAvailableLiquidity] = useState(0);
   const [refreshVolume, setRefreshVolume] = useState(0);
   const [marketTokenPrices, setMarketTokenPrices] = useState<{
     solPrice: number;
@@ -222,21 +221,6 @@ const TradePage = () => {
     }
   }, [address]);
 
-  const getAvailableLiquidity = async () => {
-    const BACKEND_URL =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-
-    const response = await fetch(`${BACKEND_URL}/liquidity`);
-    const data: {
-      availableLiquidity: string;
-      totalLiquidity: string;
-      utilizationRate: string;
-      maxUtilizationRate: string;
-    } = await response.json();
-
-    setAvailableLiquidity(parseFloat(data.availableLiquidity));
-  };
-
   // Fetch all assets
   useEffect(() => {
     const fetchAllAssets = async () => {
@@ -265,8 +249,16 @@ const TradePage = () => {
   }, [asset]);
 
   useEffect(() => {
-    getAvailableLiquidity();
-  }, []);
+    if (!asset) return;
+    setMarketStats({
+      borrowRateLong: asset.borrowingRate || 0,
+      borrowRateShort: asset.borrowingRate || 0,
+      fundingRate: asset.fundingRate || 0,
+      fundingRateVelocity: asset.fundingRateVelocity || 0,
+      openInterestLong: asset.longOpenInterest || 0,
+      openInterestShort: asset.shortOpenInterest || 0,
+    });
+  }, [asset]);
 
   // @audit - Can maybe set up a WS in backend to stream this
   const updatePriceForAsset = useCallback(async () => {
@@ -412,6 +404,7 @@ const TradePage = () => {
       setAllAssets={setAllAssets}
     >
       <SSEListener
+        publicKey={address}
         onUpdate={() => {
           // Instead of directly fetching, increment the counter
           setSSEUpdateCounter((prev) => prev + 1);
@@ -441,9 +434,7 @@ const TradePage = () => {
                 assetForPrice={asset.symbol}
                 setChartPrice={setChartPrice}
                 symbol={getChartSymbol(asset)}
-                priceDecimals={
-                  asset.lastPrice ? getPriceDecimals(asset.lastPrice) : 7
-                }
+                priceDecimals={getPriceDecimals(markPrice) || 7}
                 period={"1" as ResolutionString}
                 onSelectToken={setAsset}
                 savedShouldShowPositionLines={showPositionLines}
@@ -504,7 +495,9 @@ const TradePage = () => {
                   priceDecimals={priceDecimals}
                   triggerRefetchPositions={() => {}}
                   marketStats={marketStats}
-                  availableLiquidity={availableLiquidity}
+                  availableLiquidity={
+                    asset ? Number(asset.availableLiquidity) : 0
+                  }
                   triggerRefreshVolume={() =>
                     setRefreshVolume((prev) => prev + 1)
                   }
@@ -516,7 +509,9 @@ const TradePage = () => {
                 entryPrice={markPrice ?? 0.0}
                 priceDecimals={priceDecimals}
                 marketStats={marketStats}
-                availableLiquidity={availableLiquidity}
+                availableLiquidity={
+                  asset ? Number(asset.availableLiquidity) : 0
+                }
               />
             </div>
           )}
@@ -565,7 +560,9 @@ const TradePage = () => {
                   closeTradeModal(); //Close the modal after execution
                 }}
                 marketStats={marketStats}
-                availableLiquidity={availableLiquidity}
+                availableLiquidity={
+                  asset ? Number(asset.availableLiquidity) : 0
+                }
                 triggerRefreshVolume={() =>
                   setRefreshVolume((prev) => prev + 1)
                 }

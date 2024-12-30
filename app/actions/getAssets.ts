@@ -23,15 +23,15 @@ export const getAssets = async (): Promise<Asset[]> => {
       poolAddress: string;
       maxLeverage: string;
       maintainanceMargin: string;
-      takerFee: string;
-      makerFee: string;
+      borrowingRate: string;
       fundingRate: string;
-      status: string;
-      createdAt: string;
-      updatedAt: string;
-      lastPrice: string;
+      fundingRateVelocity: string;
+      lastUpdatedTimestamp: number;
+      longOpenInterest: string;
+      shortOpenInterest: string;
+      availableLiquidity: string;
       volume24h: string;
-      openInterest: string;
+      lastPrice: string;
     }[] = await response.json();
 
     const assets: Asset[] = data.map((asset) => ({
@@ -41,15 +41,15 @@ export const getAssets = async (): Promise<Asset[]> => {
       poolAddress: asset.poolAddress,
       maxLeverage: Number(asset.maxLeverage),
       maintainanceMargin: Number(asset.maintainanceMargin),
-      takerFee: Number(asset.takerFee),
-      makerFee: Number(asset.makerFee),
+      borrowingRate: Number(asset.borrowingRate),
       fundingRate: Number(asset.fundingRate),
-      status: asset.status as MarketStatus,
-      createdAt: asset.createdAt,
-      updatedAt: asset.updatedAt,
-      lastPrice: Number(asset.lastPrice),
+      fundingRateVelocity: Number(asset.fundingRateVelocity),
+      lastUpdatedTimestamp: asset.lastUpdatedTimestamp,
+      longOpenInterest: Number(asset.longOpenInterest),
+      shortOpenInterest: Number(asset.shortOpenInterest),
+      availableLiquidity: Number(asset.availableLiquidity),
       volume24h: Number(asset.volume24h),
-      openInterest: Number(asset.openInterest),
+      lastPrice: Number(asset.lastPrice),
     }));
 
     return assets;

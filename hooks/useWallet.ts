@@ -28,18 +28,13 @@ interface SendTransactionProps {
   token: TokenType;
 }
 
-const SOLANA_RPC_URL =
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-const connection = new Connection(SOLANA_RPC_URL);
 
 const TOKEN_MINTS: { [key in TokenType]: string } = {
   SOL: "native",
   USDC: process.env.NEXT_PUBLIC_USDC_MINT!,
 };
-
-const PROGRAM_ID = new PublicKey(idl.address);
 
 const registerUser = async (publicKey: string) => {
   try {

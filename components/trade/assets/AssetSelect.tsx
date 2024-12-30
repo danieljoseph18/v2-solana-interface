@@ -22,13 +22,15 @@ const AssetSelect = () => {
         poolAddress: "F3N4RdnY3AtUSuqQcGo49EkgPd1Duuoo1XFEnKssMgwF",
         maxLeverage: 20,
         maintainanceMargin: 0.01,
-        takerFee: 0.0005,
-        makerFee: 0.0005,
-        status: "ACTIVE" as MarketStatus,
+        borrowingRate: 0.0001,
         fundingRate: 0.0001,
-        lastPrice: 100,
+        fundingRateVelocity: 0.0001,
+        lastUpdatedTimestamp: 1719859200,
+        longOpenInterest: 1000000,
+        shortOpenInterest: 1000000,
+        availableLiquidity: 1000000,
         volume24h: 1000000,
-        openInterest: 1000000,
+        lastPrice: 1000000,
       });
     }
   }, [asset, setAsset]);

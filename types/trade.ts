@@ -16,6 +16,7 @@ interface OrderRequest {
   size: string;
   leverage: string;
   token: TokenType;
+  maxSlippage: string;
   stopLossPrice?: string;
   takeProfitPrice?: string;
 }

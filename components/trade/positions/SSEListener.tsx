@@ -4,36 +4,43 @@ import { useEffect } from "react";
 
 const SSEListener = ({
   onUpdate,
+  publicKey,
   timeout = 0,
 }: {
   onUpdate: () => void;
+  publicKey: string | null;
   timeout?: number;
 }) => {
   useEffect(() => {
     const BACKEND_URL =
       process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
-    if (!BACKEND_URL) {
+    if (!BACKEND_URL || !publicKey) {
       return;
     }
 
-    const eventSource = new EventSource(`${BACKEND_URL}/events/positions`);
+    const eventSource = new EventSource(
+      `${BACKEND_URL}/events/positions?userId=${publicKey}`
+    );
 
     eventSource.onmessage = (event) => {
-      // This fires whenever the backend emits an event
-      // Call getAllPositions or trigger a state update here
-      console.log("SSE event received:", event.data);
-      if (timeout > 0) {
-        setTimeout(onUpdate, timeout);
-      } else {
-        onUpdate();
+      const data = JSON.parse(event.data);
+
+      // Only trigger update if the event is for this user
+      if (data.userId === publicKey) {
+        console.log("SSE event received for user:", data);
+        if (timeout > 0) {
+          setTimeout(onUpdate, timeout);
+        } else {
+          onUpdate();
+        }
       }
     };
 
     return () => {
       eventSource.close();
     };
-  }, [onUpdate]);
+  }, [onUpdate, publicKey]);
 
   return null;
 };
