@@ -3,7 +3,7 @@ import {
   useWallet as useSolanaWallet,
   useConnection as useSolanaConnection,
 } from "@solana/wallet-adapter-react";
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import {
   Connection,
   PublicKey,
@@ -53,13 +53,18 @@ const registerUser = async (publicKey: string) => {
     if (!response.ok) {
       throw new Error("Failed to register user");
     }
+
+    return await response.json();
   } catch (error) {
     console.error("Error registering user:", error);
     helperToast.error("Failed to register user");
+    throw error;
   }
 };
 
 export function useWallet() {
+  const [isRegistered, setIsRegistered] = useState(false);
+
   const {
     connected,
     publicKey,
@@ -112,10 +117,39 @@ export function useWallet() {
   }, [anchorProvider]);
 
   useEffect(() => {
-    if (connected && address) {
-      registerUser(address);
+    let isSubscribed = true;
+
+    const initializeUser = async () => {
+      // Only proceed if we have a connection and haven't registered yet
+      if (connected && address && !isRegistered) {
+        try {
+          await registerUser(address);
+          if (isSubscribed) {
+            setIsRegistered(true);
+          }
+        } catch (error) {
+          // Error is already logged in registerUser
+          if (isSubscribed) {
+            setIsRegistered(false);
+          }
+        }
+      }
+    };
+
+    initializeUser();
+
+    // Cleanup function
+    return () => {
+      isSubscribed = false;
+    };
+  }, [connected, address, isRegistered]);
+
+  // Reset registration state when wallet disconnects
+  useEffect(() => {
+    if (!connected) {
+      setIsRegistered(false);
     }
-  }, [connected, address]);
+  }, [connected]);
 
   const handleSendTransaction = useCallback(
     async ({ to, value, token }: SendTransactionProps): Promise<string> => {
