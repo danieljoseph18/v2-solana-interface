@@ -43,7 +43,6 @@ type EntryButtonProps = {
   availableLiquidity: number;
   triggerRefetchPositions: () => void;
   resetInputs: () => void;
-  triggerRefreshVolume: () => void;
   updateMarketStats: () => void;
 };
 
@@ -73,7 +72,6 @@ const EntryButton: React.FC<EntryButtonProps> = ({
   availableLiquidity,
   triggerRefetchPositions,
   resetInputs,
-  triggerRefreshVolume,
   updateMarketStats,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();

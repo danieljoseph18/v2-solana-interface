@@ -96,8 +96,6 @@ const AccountOverlay = () => {
         setShowHistoryView={handleHistoryClick}
         closeAccountOverlay={closeAccountOverlay}
         prices={prices}
-        shouldRefresh={shouldRefresh}
-        setShouldRefresh={setShouldRefresh}
       />
     );
   } else if (showLoginView) {

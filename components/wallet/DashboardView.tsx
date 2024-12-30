@@ -32,16 +32,12 @@ const DashboardView = ({
   setShowHistoryView,
   closeAccountOverlay,
   prices,
-  shouldRefresh,
-  setShouldRefresh,
 }: {
   setShowDepositView: () => void;
   setShowWithdrawView: () => void;
   setShowHistoryView: () => void;
   closeAccountOverlay: () => void;
   prices: { [key: string]: number };
-  shouldRefresh: boolean;
-  setShouldRefresh: (value: boolean) => void;
 }) => {
   const [totalValue, setTotalValue] = useState(0);
   const [balances, setBalances] = useState<{
@@ -126,7 +122,9 @@ const DashboardView = ({
             <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
               <FaArrowRight
                 className="text-white"
-                onClick={closeAccountOverlay}
+                onClick={() => {
+                  closeAccountOverlay();
+                }}
               />
             </div>
           </div>
@@ -136,7 +134,7 @@ const DashboardView = ({
             My Balance
           </h2>
           <p className="text-4xl font-medium mb-4">
-            US${formatFloatWithCommas(totalValue)}
+            US${isNaN(totalValue) ? 0 : formatFloatWithCommas(totalValue)}
           </p>
           <AccountGrowthChart
             key={chartKey}

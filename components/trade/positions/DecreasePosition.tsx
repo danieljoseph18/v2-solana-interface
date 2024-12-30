@@ -203,11 +203,7 @@ const DecreasePosition = ({
     if (activeType === "Take Profit" && hasTakeProfit) {
       return true;
     }
-    if (
-      decreaseOption !== "100" &&
-      customDecreasePercentage !== "100" &&
-      sizesAfter.collateralAfter < 2
-    ) {
+    if (decreaseOption !== "100" && customDecreasePercentage !== "100") {
       return true;
     }
 
@@ -231,7 +227,6 @@ const DecreasePosition = ({
     hasTakeProfit,
     decreaseOption,
     customDecreasePercentage,
-    sizesAfter.collateralAfter,
     closingFees,
     positionFee,
     pnl,

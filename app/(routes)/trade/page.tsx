@@ -70,14 +70,6 @@ const TradePage = () => {
   const [isTablet, setIsTablet] = useState(false);
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [currentMarketOnly, setCurrentMarketOnly] = useState(false);
-  const [refreshVolume, setRefreshVolume] = useState(0);
-  const [marketTokenPrices, setMarketTokenPrices] = useState<{
-    solPrice: number;
-    usdcPrice: number;
-  }>({
-    solPrice: 0,
-    usdcPrice: 0,
-  });
   const [marketStats, setMarketStats] = useState<{
     borrowRateLong: number;
     borrowRateShort: number;
@@ -498,9 +490,6 @@ const TradePage = () => {
                   availableLiquidity={
                     asset ? Number(asset.availableLiquidity) : 0
                   }
-                  triggerRefreshVolume={() =>
-                    setRefreshVolume((prev) => prev + 1)
-                  }
                   updateMarketStats={() => {}}
                 />
               </div>
@@ -562,9 +551,6 @@ const TradePage = () => {
                 marketStats={marketStats}
                 availableLiquidity={
                   asset ? Number(asset.availableLiquidity) : 0
-                }
-                triggerRefreshVolume={() =>
-                  setRefreshVolume((prev) => prev + 1)
                 }
                 updateMarketStats={() => {}}
               />
