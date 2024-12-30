@@ -61,7 +61,7 @@ export const contractAddresses = {
 
 // Helper functions
 export function getCurrentNetwork(): NetworkType {
-  const isDevnet = process.env.NODE_ENV === "development";
+  const isDevnet = process.env.NEXT_PUBLIC_IS_DEVNET;
   return isDevnet ? "devnet" : "mainnet";
 }
 
