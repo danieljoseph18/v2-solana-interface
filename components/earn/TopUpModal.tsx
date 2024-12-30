@@ -9,6 +9,8 @@ import { COLLATERAL_OPTIONS } from "@/lib/constants";
 import NumberKeypad from "../common/NumberKeypad";
 import SubmitSwiper from "../common/SubmitSwiper";
 import { Checkbox, Link } from "@nextui-org/react";
+import Image from "next/image";
+import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 
 const QuickTopupButton = ({
   label,
@@ -64,11 +66,7 @@ const TopUpModal = ({
         </div>
         {activeTab === "withdraw" && (
           <div className="flex items-center gap-2">
-            <img
-              src="/img/earn/solana-wallet.svg"
-              alt="solana-wallet"
-              className="w-4"
-            />
+            <Image src={SolanaWallet} alt="solana-wallet" className="w-4" />
             <p className="text-white font-medium text-xs">$100.00</p>
           </div>
         )}

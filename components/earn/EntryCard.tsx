@@ -17,6 +17,8 @@ import { getOrCreateUsdcAccount } from "@/lib/web3/actions/getOrCreateUsdcAccoun
 import { createSyncNativeInstruction } from "@solana/spl-token";
 import getOrCreateAssociatedTokenAccount from "@/lib/web3/actions/getOrCreateTokenAccount";
 import { getOrCreateCustomSolAccount } from "@/lib/web3/actions/getOrCreateCustomSolAccount";
+import Image from "next/image";
+import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 
 const EntryCard = ({
   isDeposit,
@@ -281,11 +283,7 @@ const EntryCard = ({
           <div className="flex w-full items-center justify-between">
             <p className="text-gray-text text-sm">Amount</p>
             <div className="flex items-center gap-2">
-              <img
-                src="/img/earn/solana-wallet.svg"
-                alt="solana-wallet"
-                className="w-4"
-              />
+              <Image src={SolanaWallet} alt="solana-wallet" className="w-4" />
               <p className="text-white font-medium text-xs">
                 {isDeposit
                   ? `$${balancesUsd.solBalanceUsd.toFixed(2)}`

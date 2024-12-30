@@ -1,10 +1,11 @@
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { FiArrowDownLeft, FiArrowUpRight } from "react-icons/fi";
 import { Button } from "@nextui-org/react";
 import LoadingAnimation from "@/app/assets/animations/LoadingAnimation";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
+import NoChartData from "@/app/assets/wallet/no-chart-data.png";
 
 const History = ({
   handleHistoryBackClick,
@@ -70,7 +71,7 @@ const History = ({
         ) : history.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-12">
             <Image
-              src="/img/trade/no-chart-data.png"
+              src={NoChartData}
               alt="No Historical Transfers"
               width={100}
               height={100}

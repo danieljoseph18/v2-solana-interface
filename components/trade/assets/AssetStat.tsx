@@ -1,5 +1,7 @@
 import React from "react";
 import Image from "next/image";
+import IncreaseStat from "@/app/assets/trade/increase-stat.png";
+import DecreaseStat from "@/app/assets/trade/decrease-stat.png";
 
 type AssetStatParams = {
   metric: string;
@@ -20,7 +22,7 @@ const AssetStat: React.FC<AssetStatParams> = ({
       <div className="flex flex-row gap-3">
         {tracksDelta && (
           <Image
-            src={`/img/trade/${isPositive ? "increase" : "decrease"}-stat.png`}
+            src={isPositive ? IncreaseStat : DecreaseStat}
             width={15}
             height={19.81}
             alt="Directional Arrow"

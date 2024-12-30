@@ -10,12 +10,14 @@ import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 import { Program } from "@coral-xyz/anchor";
 import { contractAddresses } from "@/lib/web3/config";
-import { useConnection } from "@solana/wallet-adapter-react";
 import { fetchCollateralPrices } from "@/app/actions/fetchCollateralPrices";
 import { getLpTokenPrice } from "@/lib/web3/actions/getLpTokenPrice";
 import { getUserLpBalance } from "@/lib/web3/actions/getLpTokenBalance";
 import { getPendingRewards } from "@/lib/web3/actions/getPendingRewards";
 import { getCurrentRewardRate } from "@/lib/web3/actions/getCurrentRewardRate";
+import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
+import UpwardsBars from "@/app/assets/earn/upwards-bars.svg";
+import EarningDiamond from "@/app/assets/earn/earning-diamond.svg";
 
 interface StatItemProps {
   iconSrc: string;
@@ -271,19 +273,19 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
           ) : (
             <>
               <StatItem
-                iconSrc="/img/earn/solana-wallet.svg"
+                iconSrc={SolanaWallet}
                 label="My Deposits"
                 value={`$${vaultData.deposits}`}
                 altText="solana-wallet"
               />
               <StatItem
-                iconSrc="/img/earn/upwards-bars.svg"
+                iconSrc={UpwardsBars}
                 label="Current APR"
                 value={`${vaultData.apr}%`}
                 altText="Increasing bar graph"
               />
               <StatItem
-                iconSrc="/img/earn/earning-diamond.svg"
+                iconSrc={EarningDiamond}
                 label="Estimated 30d Earnings"
                 value={`$${vaultData.estimatedEarnings}`}
                 altText="Earning diamond"
