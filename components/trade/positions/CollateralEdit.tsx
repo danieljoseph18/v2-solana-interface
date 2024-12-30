@@ -28,15 +28,7 @@ const CollateralEdit = ({
   position: Position;
   markPrice: number;
 }) => {
-  const { address } = useWallet();
-
-  const [balances, setBalances] = useState<{
-    solBalance: number;
-    usdcBalance: number;
-  }>({
-    solBalance: 0,
-    usdcBalance: 0,
-  });
+  const { address, balances } = useWallet();
 
   const [collateral, setCollateral] = useState("");
 
@@ -118,18 +110,6 @@ const CollateralEdit = ({
     setCollateral("");
     setSelectedOption("0.3");
   };
-
-  useEffect(() => {
-    const fetchBalances = async () => {
-      if (!address) return;
-      const [solBalance, usdcBalance] = await Promise.all([
-        getBalance(address, "SOL"),
-        getBalance(address, "USDC"),
-      ]);
-      setBalances({ solBalance, usdcBalance });
-    };
-    fetchBalances();
-  }, [address]);
 
   const handleCollateralEdit = async () => {
     if (!address) return;

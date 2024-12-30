@@ -8,7 +8,6 @@ import AccountGrowthChart from "./AccountGrowthChart";
 import { helperToast } from "@/lib/helperToast";
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
 import { useWallet } from "@/hooks/useWallet";
-import { getBalance } from "@/app/actions/margin";
 
 interface TokenInfo {
   symbol: string;
@@ -40,12 +39,7 @@ const DashboardView = ({
   prices: { [key: string]: number };
 }) => {
   const [totalValue, setTotalValue] = useState(0);
-  const [balances, setBalances] = useState<{
-    solBalance: number;
-    usdcBalance: number;
-  }>({ solBalance: 0, usdcBalance: 0 });
-
-  const { address, disconnect } = useWallet();
+  const { disconnect, balances } = useWallet();
 
   const actions: {
     name: string;
@@ -87,18 +81,6 @@ const DashboardView = ({
     closeAccountOverlay();
     helperToast.info("Wallet Disconnected");
   };
-
-  useEffect(() => {
-    const fetchBalances = async () => {
-      if (!address) return;
-      const [solBalance, usdcBalance] = await Promise.all([
-        getBalance(address, "SOL"),
-        getBalance(address, "USDC"),
-      ]);
-      setBalances({ solBalance, usdcBalance });
-    };
-    fetchBalances();
-  }, [address]);
 
   useEffect(() => {
     const solBalance = balances.solBalance;

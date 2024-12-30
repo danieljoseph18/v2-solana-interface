@@ -15,7 +15,6 @@ import {
   getImageUrlFromTokenSymbol,
 } from "@/lib/utils/getTokenImage";
 import InputField from "@/components/common/InputField";
-import { getBalance } from "@/app/actions/margin";
 import { useWallet } from "@/hooks/useWallet";
 
 interface SizeInputProps {
@@ -58,7 +57,7 @@ const SizeInput: React.FC<SizeInputProps> = ({
 }) => {
   const { asset } = useAsset();
 
-  const { address } = useWallet();
+  const { balances } = useWallet();
 
   const [total, setTotal] = useState(0);
 
@@ -67,8 +66,6 @@ const SizeInput: React.FC<SizeInputProps> = ({
   const [collateralType, setCollateralType] = useState<TokenType>("SOL");
 
   const [limitPrice, setLimitPrice] = useState<string>("");
-
-  const [balance, setBalance] = useState<string>("0");
 
   const [collateralPrice, setCollateralPrice] = useState(0);
 
@@ -179,15 +176,6 @@ const SizeInput: React.FC<SizeInputProps> = ({
   }, [activeType]);
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (!address) return;
-      const balance = await getBalance(address, collateralType);
-      setBalance(balance.toString());
-    };
-    fetchBalance();
-  }, [address, collateralType]);
-
-  useEffect(() => {
     const collateralInNumber = parseFloat(collateral) || 0;
     setUsdValue(collateralInNumber * collateralPrice);
     setEquivalentAsset(
@@ -226,7 +214,11 @@ const SizeInput: React.FC<SizeInputProps> = ({
   };
 
   const handleMaxClick = () => {
-    setCollateral(balance);
+    setCollateral(
+      collateralType === "SOL"
+        ? balances.solBalance.toString()
+        : balances.usdcBalance.toString()
+    );
   };
 
   // When Mark price is clicked, set the limit price to the mark price
@@ -284,7 +276,9 @@ const SizeInput: React.FC<SizeInputProps> = ({
           <p className="font-normal text-xs trade-second-step">
             Balance :{" "}
             <span className="font-medium">
-              {balance ? parseFloat(balance).toFixed(4) : 0}
+              {collateralType === "SOL"
+                ? balances.solBalance.toFixed(4)
+                : balances.usdcBalance.toFixed(4)}
             </span>
           </p>
         }
