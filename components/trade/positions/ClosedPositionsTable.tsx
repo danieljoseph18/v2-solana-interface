@@ -60,8 +60,8 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
         <tbody className="border-b border-cardborder bg-card-grad text-white text-sm">
           {sortedPositions.map((position, index) => {
             const priceDecimals = getPriceDecimals(position.closingPrice!);
-            const pnlPercentage =
-              (position.realizedPnl! / position.margin) * 100;
+            const pnl = position.realizedPnl ? position.realizedPnl : 0;
+            const pnlPercentage = (pnl / position.margin) * 100;
 
             return (
               <tr
@@ -115,7 +115,7 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div
                     className={`flex flex-col ${
-                      position.realizedPnl! >= 0
+                      pnl >= 0 && position.status !== "LIQUIDATED"
                         ? "text-printer-green"
                         : "text-printer-red"
                     }`}
@@ -123,9 +123,7 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
                     <span>
                       {position.status === "LIQUIDATED"
                         ? `-$${position.margin.toFixed(2)}`
-                        : `${position.realizedPnl! >= 0 ? "$" : "-$"}${Math.abs(
-                            position.realizedPnl!
-                          ).toFixed(2)}`}
+                        : `${pnl >= 0 ? "$" : "-$"}${Math.abs(pnl).toFixed(2)}`}
                     </span>
                     <span>{`${
                       position.status === "LIQUIDATED"

@@ -38,7 +38,6 @@ interface SizeInputProps {
     openInterestShort: number;
   };
   availableLiquidity: number;
-  triggerRefreshVolume: () => void;
   updateMarketStats: () => void;
 }
 
@@ -55,7 +54,6 @@ const SizeInput: React.FC<SizeInputProps> = ({
   triggerRefetchPositions,
   marketStats,
   availableLiquidity,
-  triggerRefreshVolume,
   updateMarketStats,
 }) => {
   const { asset } = useAsset();
@@ -495,7 +493,6 @@ const SizeInput: React.FC<SizeInputProps> = ({
           availableLiquidity={availableLiquidity}
           triggerRefetchPositions={triggerRefetchPositions}
           resetInputs={resetInputs}
-          triggerRefreshVolume={triggerRefreshVolume}
           updateMarketStats={updateMarketStats}
         />
       </>
