@@ -10,7 +10,7 @@ import NumberKeypad from "../common/NumberKeypad";
 import SubmitSwiper from "../common/SubmitSwiper";
 import { Checkbox, Link } from "@nextui-org/react";
 import Image from "next/image";
-import SolanaWallet from "@/app/assets/images/earn/solana-wallet.svg";
+import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 
 const QuickTopupButton = ({
   label,

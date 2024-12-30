@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import IncreaseStat from "@/app/assets/images/trade/increase-stat.png";
-import DecreaseStat from "@/app/assets/images/trade/decrease-stat.png";
+import IncreaseStat from "@/app/assets/trade/increase-stat.png";
+import DecreaseStat from "@/app/assets/trade/decrease-stat.png";
 
 type AssetStatParams = {
   metric: string;

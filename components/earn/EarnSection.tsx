@@ -15,9 +15,9 @@ import { getLpTokenPrice } from "@/lib/web3/actions/getLpTokenPrice";
 import { getUserLpBalance } from "@/lib/web3/actions/getLpTokenBalance";
 import { getPendingRewards } from "@/lib/web3/actions/getPendingRewards";
 import { getCurrentRewardRate } from "@/lib/web3/actions/getCurrentRewardRate";
-import SolanaWallet from "@/app/assets/images/earn/solana-wallet.svg";
-import UpwardsBars from "@/app/assets/images/earn/upwards-bars.svg";
-import EarningDiamond from "@/app/assets/images/earn/earning-diamond.svg";
+import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
+import UpwardsBars from "@/app/assets/earn/upwards-bars.svg";
+import EarningDiamond from "@/app/assets/earn/earning-diamond.svg";
 
 interface StatItemProps {
   iconSrc: string;

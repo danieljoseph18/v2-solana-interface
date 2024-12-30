@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useAccountOverlay } from "@/contexts/AccountContext";
 import { useWallet } from "@solana/wallet-adapter-react";
-import WalletIcon from "@/app/assets/images/nav/wallet-icon.png";
+import WalletIcon from "@/app/assets/nav/wallet-icon.png";
 
 const ConnectWallet = ({ styles }: { styles: string }) => {
   const { connected } = useWallet();

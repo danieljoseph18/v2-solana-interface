@@ -18,7 +18,7 @@ import { createSyncNativeInstruction } from "@solana/spl-token";
 import getOrCreateAssociatedTokenAccount from "@/lib/web3/actions/getOrCreateTokenAccount";
 import { getOrCreateCustomSolAccount } from "@/lib/web3/actions/getOrCreateCustomSolAccount";
 import Image from "next/image";
-import SolanaWallet from "@/app/assets/images/earn/solana-wallet.svg";
+import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 
 const EntryCard = ({
   isDeposit,
