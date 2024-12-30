@@ -211,10 +211,9 @@ const EntryButton: React.FC<EntryButtonProps> = ({
     }
 
     try {
-      /**
-       * @audit Add a parameter for preferred margin type.
-       * Whatever the user selects, we should use that margin type preferentially.
-       */
+      console.log("Selected slippage: ", state.selectedOption);
+      console.log("Custom slippage: ", state.customValue);
+
       const orderRequest: OrderRequest = {
         marketId,
         userId: address,
@@ -224,6 +223,10 @@ const EntryButton: React.FC<EntryButtonProps> = ({
         stopLossPrice: stopLossSet ? stopLossPrice.toString() : undefined,
         takeProfitPrice: takeProfitSet ? takeProfitPrice.toString() : undefined,
         token: collateralToken as TokenType,
+        maxSlippage:
+          state.selectedOption === "Custom"
+            ? state.customValue
+            : state.selectedOption,
       };
 
       console.log("orderRequest", orderRequest);
@@ -281,6 +284,10 @@ const EntryButton: React.FC<EntryButtonProps> = ({
         price: limitPrice.toString(),
         token: collateralToken as TokenType,
         type: "LIMIT" as OrderType,
+        maxSlippage:
+          state.selectedOption === "Custom"
+            ? state.customValue
+            : state.selectedOption,
       };
 
       onClose();

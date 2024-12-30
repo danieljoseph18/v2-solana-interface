@@ -11,11 +11,13 @@ interface Asset {
   poolAddress: string;
   maxLeverage: number;
   maintainanceMargin: number;
-  takerFee: number;
-  makerFee: number;
-  status: MarketStatus;
+  borrowingRate: number;
   fundingRate: number;
-  lastPrice?: number;
-  volume24h?: number;
-  openInterest?: number;
+  fundingRateVelocity: number;
+  lastUpdatedTimestamp: number;
+  longOpenInterest: number;
+  shortOpenInterest: number;
+  availableLiquidity: number;
+  volume24h: number;
+  lastPrice: number;
 }
