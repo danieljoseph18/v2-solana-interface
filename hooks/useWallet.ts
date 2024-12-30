@@ -3,7 +3,7 @@ import {
   useWallet as useSolanaWallet,
   useConnection as useSolanaConnection,
 } from "@solana/wallet-adapter-react";
-import { useCallback, useMemo, useEffect, useState } from "react";
+import { useCallback, useMemo, useEffect, useState, useRef } from "react";
 import {
   Connection,
   PublicKey,
@@ -21,11 +21,17 @@ import { WalletName } from "@solana/wallet-adapter-base";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
+import { getBalance } from "@/app/actions/margin";
 
 interface SendTransactionProps {
   to: string;
   value: string;
   token: TokenType;
+}
+
+interface Balances {
+  solBalance: number;
+  usdcBalance: number;
 }
 
 const BACKEND_URL =
@@ -64,6 +70,11 @@ const registerUser = async (publicKey: string) => {
 
 export function useWallet() {
   const [isRegistered, setIsRegistered] = useState(false);
+  const [balances, setBalances] = useState<Balances>({
+    solBalance: 0,
+    usdcBalance: 0,
+  });
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const {
     connected,
@@ -150,6 +161,59 @@ export function useWallet() {
       setIsRegistered(false);
     }
   }, [connected]);
+
+  useEffect(() => {
+    const fetchBalances = async () => {
+      if (!address) return;
+      const [solBalance, usdcBalance] = await Promise.all([
+        getBalance(address, "SOL"),
+        getBalance(address, "USDC"),
+      ]);
+      setBalances({ solBalance, usdcBalance });
+    };
+    fetchBalances();
+  }, [address]);
+
+  // Add SSE listener setup
+  useEffect(() => {
+    if (!address || !BACKEND_URL) return;
+
+    // Clean up any existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    // Create new EventSource connection for balances
+    const eventSource = new EventSource(
+      `${BACKEND_URL}/events/balances?userId=${address}`
+    );
+    eventSourceRef.current = eventSource;
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as {
+          userId: string;
+          timestamp: string;
+        };
+        // When we receive an update, refresh the balances
+        if (data.userId === address) {
+          getBalance(address, "SOL").then((solBalance) =>
+            getBalance(address, "USDC").then((usdcBalance) =>
+              setBalances({ solBalance, usdcBalance })
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Error processing SSE message:", error);
+      }
+    };
+
+    // Cleanup function
+    return () => {
+      eventSource.close();
+      eventSourceRef.current = null;
+    };
+  }, [address]);
 
   const handleSendTransaction = useCallback(
     async ({ to, value, token }: SendTransactionProps): Promise<string> => {
@@ -310,5 +374,6 @@ export function useWallet() {
     program,
     provider: anchorProvider,
     signTransaction,
+    balances,
   };
 }

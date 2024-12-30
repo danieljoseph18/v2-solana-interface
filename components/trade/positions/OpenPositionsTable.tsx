@@ -119,7 +119,7 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({
         pnlPercentage={parseFloat(profitLoss.pnlPercentage)}
         entryPrice={position.entryPrice}
         currentPrice={markPrice}
-        assetLogo={getImageUrlFromTokenSymbol(position.marketId)}
+        assetLogo={getImageUrlFromTokenSymbol(position.symbol)}
         isLong={position.isLong}
         leverage={leverage}
         onClose={() => setIsModalOpen(false)}
