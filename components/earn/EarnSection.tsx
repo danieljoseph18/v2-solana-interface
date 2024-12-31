@@ -131,13 +131,13 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
     const fetchLpBalance = async () => {
       if (!publicKey) return;
       const lpBalance = await getUserLpBalance(
-        program,
+        connection,
         new PublicKey(publicKey)
       );
       setLpBalance(lpBalance);
     };
     fetchLpBalance();
-  }, [program, publicKey]);
+  }, [connection, publicKey]);
 
   /**
    * @dev Returns an estimate of their share of the pool. (NOT ACTUAL BALANCES)

@@ -1,5 +1,3 @@
-// config/web3.ts
-
 export type NetworkType = "devnet" | "mainnet";
 
 interface NetworkConfig {
@@ -49,13 +47,19 @@ export const contractAddresses = {
     poolStatePda: "9bB1TCESgoTRUNFT7xfz5myL5XG7n3upBtvx7cGypnwo",
     solMint: "So11111111111111111111111111111111111111112",
     usdcMint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-    solVault: "39Nog6QGX5mFhJCdmar3qS8v9aAVGBctrUXhkgDMSrit",
-    usdcVault: "A8hDMM1GwhTa3ut1odRU5xGdAx4F7goZsP4dSnnyiik2",
-    lpTokenMint: "3HY9RDdMRHysagQd2aF1tmD5Lb3pV5LxbuiAoSHSDmt8",
+    solVault: "ESecGS3Hg7uGw8SpKszWa2ra14asp4N8UD47iZNXhMc3",
+    usdcVault: "BdavWxBcpGDFb7YnpB7uP2mBzrs1cQoE2R7cLdSMeyFS",
+    lpTokenMint: "GiTXHPAPwYaKjwAaBbhGKmmnWD3k7BFC56hnG5sHYjZs",
     chainlinkProgram: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
-    chainlinkFeed: "HgTtcbcmp5BeThax5AU8vg4VwK79qAvAKKFMs8txMLW6",
+    chainlinkFeed: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR",
     tokenProgram: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
     systemProgram: "11111111111111111111111111111111",
+  },
+  mainnet: {
+    chainlinkProgram: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
+    chainlinkFeed: "CH31Xns5z3M1cTAbKW34jcxPPciazARpijcHj9rxtemt",
+    solMint: "So11111111111111111111111111111111111111112", // Mainnet SOL
+    usdcMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Mainnet USDC
   },
 };
 

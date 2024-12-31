@@ -1,42 +1,31 @@
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import { SolanaLiquidityPool } from "../idl/solana_liquidity_pool.types";
+import { getAccount } from "@solana/spl-token";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { contractAddresses } from "../config";
 
 export const getUserLpBalance = async (
-  program: Program<SolanaLiquidityPool>,
+  connection: Connection,
   userPublicKey: PublicKey
 ): Promise<number> => {
   try {
-    // Derive the user's PDA (same as in your contract)
-    const [userStateAddress] = PublicKey.findProgramAddressSync(
-      [Buffer.from("user-state"), userPublicKey.toBuffer()],
-      program.programId
+    const lpTokenMint = new PublicKey(contractAddresses.devnet.lpTokenMint);
+    // Find the user's associated token account for LP tokens
+    const userLPTokenAccount = await getAssociatedTokenAddress(
+      lpTokenMint,
+      userPublicKey
     );
 
-    // Fetch the user's state account
-    const userState = await program.account.userState.fetch(userStateAddress);
+    // Get the token account info
+    const tokenAccount = await getAccount(connection, userLPTokenAccount);
 
-    return Number(userState.lpTokenBalance);
-  } catch (error: any) {
-    if (error.message?.includes("Account does not exist")) {
-      // Return zero balances for new users
-      return 0;
-    }
-    console.error("Error fetching LP token balance:", error);
-    throw error;
-  }
-};
+    // Convert to human-readable format (optional)
+    const formattedBalance = Number(tokenAccount.amount) / 1_000_000; // 6 decimals
 
-// Example usage:
-const getLpBalance = async (
-  program: Program<SolanaLiquidityPool>,
-  userPublicKey: PublicKey
-) => {
-  try {
-    const balance = await getUserLpBalance(program, userPublicKey);
-
-    console.log("LP Token Balance:", balance);
+    return formattedBalance;
   } catch (error) {
-    console.error("Failed to get LP balance:", error);
+    console.error("Error fetching user LP token balance:", error);
+    throw error;
   }
 };

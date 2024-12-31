@@ -73,17 +73,25 @@ const EntryCard = ({
     setIsLoading(true);
 
     try {
+      console.log("prices", prices);
+
       const amountNative = isDeposit
         ? collateralType === "SOL"
           ? parseFloat(amount) / prices.solPrice
           : parseFloat(amount) / prices.usdcPrice
         : parseFloat(amount) / lpTokenPrice;
 
-      const amountBaseUnits = isDeposit
-        ? collateralType === "SOL"
-          ? amountNative * 1e9
+      console.log("amountNative", amountNative);
+
+      const amountBaseUnits = Math.round(
+        isDeposit
+          ? collateralType === "SOL"
+            ? amountNative * 1e9
+            : amountNative * 1e6
           : amountNative * 1e6
-        : amountNative * 1e6;
+      );
+
+      console.log("Amount base units: ", amountBaseUnits);
 
       const userKey = new PublicKey(publicKey);
       const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
@@ -91,19 +99,30 @@ const EntryCard = ({
       // Get pool state PDA
       const poolState = await program.account.poolState.fetch(poolAddress);
 
-      // Get user token account (WSOL or USDC)
-      const userTokenAccount =
-        collateralType === "SOL"
-          ? await getOrCreateCustomSolAccount(
-              userKey,
-              connection,
-              sendRegularTransaction
-            )
-          : await getOrCreateUsdcAccount(
-              userKey,
-              connection,
-              sendRegularTransaction
-            );
+      console.log("Calling function with owner: ", publicKey);
+
+      // Only create token account if we're withdrawing
+      const userTokenAccount = !isDeposit
+        ? await getOrCreateAssociatedTokenAccount(
+            connection,
+            userKey,
+            collateralType === "SOL"
+              ? new PublicKey(contractAddresses.devnet.solMint)
+              : new PublicKey(contractAddresses.devnet.usdcMint),
+            userKey,
+            signTransaction
+          )
+        : collateralType === "SOL"
+        ? await getOrCreateCustomSolAccount(
+            userKey,
+            connection,
+            sendRegularTransaction
+          )
+        : await getOrCreateUsdcAccount(
+            userKey,
+            connection,
+            sendRegularTransaction
+          );
 
       // If depositing SOL, wrap it first
       if (isDeposit && collateralType === "SOL") {
