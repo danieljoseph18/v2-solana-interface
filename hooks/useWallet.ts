@@ -15,6 +15,7 @@ import {
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import { helperToast } from "@/lib/helperToast";
 import { WalletName } from "@solana/wallet-adapter-base";
@@ -22,6 +23,7 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 import { getBalance } from "@/app/actions/margin";
+import { getTokenMint } from "@/lib/web3/config";
 
 interface SendTransactionProps {
   to: string;
@@ -36,11 +38,6 @@ interface Balances {
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-
-const TOKEN_MINTS: { [key in TokenType]: string } = {
-  SOL: "native",
-  USDC: process.env.NEXT_PUBLIC_USDC_MINT!,
-};
 
 const registerUser = async (publicKey: string) => {
   try {
@@ -241,8 +238,8 @@ export function useWallet() {
           );
         } else {
           // SPL Token transfer
-          const mintAddress = TOKEN_MINTS[token];
-          if (!mintAddress || mintAddress === "native") {
+          const mintAddress = getTokenMint(token);
+          if (!mintAddress) {
             throw new Error("Invalid token mint address");
           }
 
@@ -256,6 +253,25 @@ export function useWallet() {
             new PublicKey(to)
           );
 
+          // Check if destination token account exists
+          const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
+
+          // Create transaction
+          transaction = new Transaction();
+
+          // If destination token account doesn't exist, create it
+          if (!toAccountInfo) {
+            transaction.add(
+              createAssociatedTokenAccountInstruction(
+                new PublicKey(address), // payer
+                toTokenAccount, // associated token account
+                new PublicKey(to), // owner
+                mint // mint
+              )
+            );
+          }
+
+          // Add transfer instruction
           transaction.add(
             createTransferInstruction(
               fromTokenAccount,

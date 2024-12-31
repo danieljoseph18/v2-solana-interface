@@ -20,6 +20,9 @@ import { getOrCreateCustomSolAccount } from "@/lib/web3/actions/getOrCreateCusto
 import Image from "next/image";
 import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 
+/**
+ * @audit Need to add checks that contract has sufficient USDC / SOL to cover the withdrawal
+ */
 const EntryCard = ({
   isDeposit,
   activeTab,
@@ -35,6 +38,7 @@ const EntryCard = ({
   lpBalance,
   handleCardClick,
   setIsModalOpen,
+  refetchBalances,
 }: {
   isDeposit: boolean;
   activeTab: TabType;
@@ -56,6 +60,7 @@ const EntryCard = ({
   lpBalance: number;
   handleCardClick?: () => void;
   setIsModalOpen?: (isOpen: boolean) => void;
+  refetchBalances?: () => void;
 }) => {
   const {
     address: publicKey,
@@ -73,15 +78,11 @@ const EntryCard = ({
     setIsLoading(true);
 
     try {
-      console.log("prices", prices);
-
       const amountNative = isDeposit
         ? collateralType === "SOL"
           ? parseFloat(amount) / prices.solPrice
           : parseFloat(amount) / prices.usdcPrice
         : parseFloat(amount) / lpTokenPrice;
-
-      console.log("amountNative", amountNative);
 
       const amountBaseUnits = Math.round(
         isDeposit
@@ -91,15 +92,11 @@ const EntryCard = ({
           : amountNative * 1e6
       );
 
-      console.log("Amount base units: ", amountBaseUnits);
-
       const userKey = new PublicKey(publicKey);
       const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
 
       // Get pool state PDA
       const poolState = await program.account.poolState.fetch(poolAddress);
-
-      console.log("Calling function with owner: ", publicKey);
 
       // Only create token account if we're withdrawing
       const userTokenAccount = !isDeposit
@@ -146,8 +143,6 @@ const EntryCard = ({
           connection
         );
         await connection.confirmTransaction(signature, "confirmed");
-
-        console.log("SOL wrapped successfully:", signature);
       }
 
       const [userStateAccount] = PublicKey.findProgramAddressSync(
@@ -155,12 +150,8 @@ const EntryCard = ({
         program.programId
       );
 
-      console.log("userStateAccount", userStateAccount.toBase58());
-
       // Get LP token mint from pool state
       const lpTokenMint = poolState.lpTokenMint;
-
-      console.log("lpTokenMint", lpTokenMint.toBase58());
 
       const userLpTokenAccount = await getOrCreateAssociatedTokenAccount(
         connection,
@@ -170,14 +161,10 @@ const EntryCard = ({
         signTransaction
       );
 
-      console.log("userLpTokenAccount", userLpTokenAccount.toBase58());
-
       // Get vault account based on collateral type
       const vaultAccount = new PublicKey(
         collateralType === "SOL" ? poolState.solVault : poolState.usdcVault
       );
-
-      console.log("vaultAccount", vaultAccount.toBase58());
 
       if (isDeposit) {
         const tx = await program.methods
@@ -203,6 +190,8 @@ const EntryCard = ({
           })
           .rpc();
 
+        refetchBalances?.();
+
         toast.success("Deposit successful!");
       } else {
         const tx = await program.methods
@@ -224,6 +213,8 @@ const EntryCard = ({
             tokenProgram: new PublicKey(contractAddresses.devnet.tokenProgram),
           })
           .rpc();
+
+        refetchBalances?.();
 
         toast.success("Withdrawal successful!");
       }
@@ -305,7 +296,11 @@ const EntryCard = ({
               <Image src={SolanaWallet} alt="solana-wallet" className="w-4" />
               <p className="text-white font-medium text-xs">
                 {isDeposit
-                  ? `$${balancesUsd.solBalanceUsd.toFixed(2)}`
+                  ? `$${
+                      collateralType === "SOL"
+                        ? balancesUsd.solBalanceUsd.toFixed(2)
+                        : balancesUsd.usdcBalanceUsd.toFixed(2)
+                    }`
                   : `${lpBalance.toFixed(2)}`}
               </p>
             </div>

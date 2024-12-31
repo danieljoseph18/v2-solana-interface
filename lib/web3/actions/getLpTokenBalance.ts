@@ -1,8 +1,6 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { Program } from "@coral-xyz/anchor";
-import { SolanaLiquidityPool } from "../idl/solana_liquidity_pool.types";
-import { getAccount } from "@solana/spl-token";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
+import { getAccount } from "@solana/spl-token";
 import { contractAddresses } from "../config";
 
 export const getUserLpBalance = async (

@@ -19,6 +19,7 @@ import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 import UpwardsBars from "@/app/assets/earn/upwards-bars.svg";
 import EarningDiamond from "@/app/assets/earn/earning-diamond.svg";
 import Image from "next/image";
+import { getUserBalances } from "@/lib/web3/actions/getUserBalances";
 
 interface StatItemProps {
   iconSrc: string;
@@ -94,6 +95,38 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
     connection,
   });
 
+  const refreshBalances = async () => {
+    await Promise.all([fetchBalances(), fetchLpBalance()]);
+  };
+
+  const fetchBalances = async () => {
+    if (!publicKey || !prices.solPrice || !prices.usdcPrice || !connection)
+      return;
+    const balanceData = await getUserBalances(
+      connection,
+      new PublicKey(publicKey)
+    );
+    console.log("balanceData", balanceData);
+    const solBalanceUsd = parseInt(balanceData.solBalance) * prices.solPrice;
+    console.log("solBalanceUsd", solBalanceUsd);
+    const usdcBalanceUsd = parseInt(balanceData.usdcBalance) * prices.usdcPrice;
+    console.log("usdcBalanceUsd", usdcBalanceUsd);
+    const balances = {
+      solBalanceUsd,
+      usdcBalanceUsd,
+    };
+    setBalancesUsd(balances);
+  };
+
+  const fetchLpBalance = async () => {
+    if (!publicKey) return;
+    const lpBalance = await getUserLpBalance(
+      connection,
+      new PublicKey(publicKey)
+    );
+    setLpBalance(lpBalance);
+  };
+
   useEffect(() => {
     const fetchPrices = async () => {
       const prices = await fetchCollateralPrices();
@@ -112,83 +145,12 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
   }, [program]);
 
   useEffect(() => {
-    const fetchBalances = async () => {
-      if (!publicKey) return;
-      const balanceData = await getUserBalances(new PublicKey(publicKey));
-      const solBalanceUsd = parseInt(balanceData.solBalance) * prices.solPrice;
-      const usdcBalanceUsd =
-        parseInt(balanceData.usdcBalance) * prices.usdcPrice;
-      const balances = {
-        solBalanceUsd,
-        usdcBalanceUsd,
-      };
-      setBalancesUsd(balances);
-    };
     fetchBalances();
-  }, [publicKey]);
+  }, [publicKey, prices.solPrice, prices.usdcPrice, connection]);
 
   useEffect(() => {
-    const fetchLpBalance = async () => {
-      if (!publicKey) return;
-      const lpBalance = await getUserLpBalance(
-        connection,
-        new PublicKey(publicKey)
-      );
-      setLpBalance(lpBalance);
-    };
     fetchLpBalance();
   }, [connection, publicKey]);
-
-  /**
-   * @dev Returns an estimate of their share of the pool. (NOT ACTUAL BALANCES)
-   */
-  const getUserBalances = async (poolAddress: PublicKey) => {
-    if (!isPoolInitialized || !publicKey) {
-      return {
-        solBalance: "0",
-        usdcBalance: "0",
-        solFormatted: "0",
-        usdcFormatted: "0",
-      };
-    }
-
-    try {
-      const [userStateAccount] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("user-state"),
-          poolAddress.toBuffer(),
-          new PublicKey(publicKey).toBuffer(),
-        ],
-        program.programId
-      );
-
-      const userState = await program.account.userState.fetch(userStateAccount);
-      const poolState = await program.account.poolState.fetch(poolAddress);
-
-      // Calculate user's share of the pool based on LP tokens
-      const totalLpSupply = await program.account.poolState.fetch(poolAddress);
-      const userShare =
-        userState.lpTokenBalance.toNumber() /
-        totalLpSupply.solDeposited.toNumber();
-
-      const solBalance = (
-        poolState.solDeposited.toNumber() * userShare
-      ).toString();
-      const usdcBalance = (
-        poolState.usdcDeposited.toNumber() * userShare
-      ).toString();
-
-      return {
-        solBalance,
-        usdcBalance,
-        solFormatted: (parseInt(solBalance) / 1e9).toFixed(9),
-        usdcFormatted: (parseInt(usdcBalance) / 1e6).toFixed(6),
-      };
-    } catch (error) {
-      console.error("Error fetching user balances:", error);
-      throw error;
-    }
-  };
 
   useEffect(() => {
     const fetchVaultData = async () => {
@@ -210,7 +172,7 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
         }
 
         const [balances, rewardRate, pendingRewards] = await Promise.all([
-          getUserBalances(poolAddress),
+          getUserBalances(connection, new PublicKey(publicKey)),
           getCurrentRewardRate(program, poolAddress, isPoolInitialized),
           getPendingRewards(
             program,
@@ -311,6 +273,7 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
         balancesUsd={balancesUsd}
         handleCardClick={() => setIsModalOpen(true)}
         setIsModalOpen={setIsModalOpen}
+        refetchBalances={refreshBalances}
       />
 
       <ModalV2 isOpen={isModalOpen} setIsModalOpen={setIsModalOpen}>
@@ -329,6 +292,7 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
           lpBalance={lpBalance}
           handleCardClick={() => setIsModalOpen(true)}
           setIsModalOpen={setIsModalOpen}
+          refetchBalances={refreshBalances}
         />
       </ModalV2>
     </div>
