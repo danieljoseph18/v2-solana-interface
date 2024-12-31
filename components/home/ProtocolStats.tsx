@@ -9,13 +9,13 @@ const ProtocolStats = () => {
   const [statsData, setStatsData] = useState<{
     totalVolume: number;
     dailyVolume: number;
-    createdMarkets: number;
+    dailyFees: number;
     allTimeLpFees: number;
     dailyVolumeChange: number;
   }>({
     totalVolume: 0,
     dailyVolume: 0,
-    createdMarkets: 0,
+    dailyFees: 0,
     allTimeLpFees: 0,
     dailyVolumeChange: 0,
   });
@@ -60,7 +60,7 @@ const ProtocolStats = () => {
       dataKey: "totalVolume",
     },
     {
-      title: "Total Markets Created",
+      title: "Daily LP Rewards",
       value: (data: number) => (
         <CountUp
           end={data}
@@ -68,10 +68,10 @@ const ProtocolStats = () => {
           formattingFn={(value) => nFormatter(value, 0, "", true)}
         />
       ),
-      dataKey: "createdMarkets",
+      dataKey: "dailyFees",
     },
     {
-      title: "All time LP fees",
+      title: "All time LP Rewards",
       value: (data: number) => (
         <CountUp
           end={data}

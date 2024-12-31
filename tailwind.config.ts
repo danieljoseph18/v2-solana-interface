@@ -53,7 +53,6 @@ const config: Config = {
         "tour-popup": "linear-gradient(180deg, #2E3146 0%, #20222F 100%)",
         "home-blue-trail":
           "linear-gradient(180deg, #2775CA 0%, rgba(39, 117, 202, 0) 100%)",
-        "home-main": 'url("app/assets/home/home-main-bg.png")',
         "referral-bg": 'url("app/assets/referrals/referral-bg.png")',
         "green-button": "linear-gradient(180deg, #30E0A1 0%, #118159 100%)",
         "green-button-hover": "linear-gradient(0deg, #30E0A1 0%, #118159 100%)",
@@ -87,6 +86,8 @@ const config: Config = {
         "bg-home-card-grad": "url('/img/home/home-bg-gradient.png')",
         "printer-orange-gradient":
           "linear-gradient(to bottom, #F05722 0%, #F05722 65%, #F18522 100%)",
+        "summary-section-radial":
+          "radial-gradient(50% 50% at 50% 50%, rgba(21, 21, 61, 0.89) 0%, #070708 100%)",
       },
       colors: {
         "tour-divider": "#1A1B24",

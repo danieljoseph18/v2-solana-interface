@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@nextui-org/react";
+import { Button, Link } from "@nextui-org/react";
 import { BsChevronUp } from "react-icons/bs";
 import { FaSearch } from "react-icons/fa";
 
@@ -685,12 +685,24 @@ const TermsAndConditions = () => {
             official channels.
           </p>
           <ul className="list-disc pl-6 space-y-2">
-            <li>MetaMask</li>
-            <li>Twitter</li>
-            <li>Substack</li>
-            <li>Github</li>
-            <li>Telegram</li>
-            <li>Discord</li>
+            <li>
+              <Link
+                href="https://x.com/PRINT3R"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Twitter
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="https://t.me/print3rXYZ"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Telegram
+              </Link>
+            </li>
           </ul>
         </section>
 
