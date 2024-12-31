@@ -5,7 +5,7 @@ import NavLogo from "@/app/assets/home/nav-logo.png";
 
 const HomeFooter = () => {
   return (
-    <footer className="text-white py-8 font-poppins w-full pb-20 md:pb-0 bg-transparent">
+    <footer className="text-white py-8 font-poppins w-full pb-20 bg-transparent">
       <div className="w-full">
         <div className="flex flex-col md:flex-row justify-between items-start w-full">
           <div className="flex flex-col gap-4 mb-6 md:mb-0 w-full items-start">
@@ -82,6 +82,22 @@ const HomeFooter = () => {
                     href="/faqs"
                   >
                     FAQs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className="font-poppins font-medium text-15 text-[#ADADAD] hover:text-white"
+                    href="/terms-of-service"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className="font-poppins font-medium text-15 text-[#ADADAD] hover:text-white"
+                    href="/privacy-policy"
+                  >
+                    Privacy Policy
                   </Link>
                 </li>
               </ul>

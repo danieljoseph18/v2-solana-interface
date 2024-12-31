@@ -6,7 +6,6 @@ import FeatureSection from "@/components/home/FeatureSection";
 import ProtocolStats from "@/components/home/ProtocolStats";
 import HomeFooter from "@/components/home/HomeFooter";
 import "animate.css/animate.compat.css";
-import LowerFooter from "@/components/home/LowerFooter";
 import FirstMover from "@/app/assets/home/first-mover.png";
 import MarketMaking from "@/app/assets/home/market-making.png";
 import RevenueSharing from "@/app/assets/home/revenue-sharing.png";
@@ -77,7 +76,6 @@ const Home = () => {
       </div>
       <div className="px-8 md:px-16">
         <HomeFooter />
-        <LowerFooter />
       </div>
     </div>
   );

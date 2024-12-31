@@ -177,9 +177,6 @@ const TradePage = () => {
         setClosedPositions(newClosedPositions);
       }
 
-      /**
-       * @audit Need to add SL/TPS
-       */
       if (orderData.length > 0) {
         const mappedOrders: Order[] = orderData.map((order) => {
           return {
@@ -194,7 +191,7 @@ const TradePage = () => {
             marginToken: order.token,
             requiredMargin: Number(order.requiredMargin),
             status: order.status,
-            orderType: "Limit", // Defaulted (add SL/TP)
+            orderType: "Limit",
             createdAt: order.createdAt,
             updatedAt: order.updatedAt,
           };
@@ -252,7 +249,6 @@ const TradePage = () => {
     });
   }, [asset]);
 
-  // @audit - Can maybe set up a WS in backend to stream this
   const updatePriceForAsset = useCallback(async () => {
     if (asset && asset.symbol) {
       const BACKEND_URL =
@@ -404,7 +400,7 @@ const TradePage = () => {
         timeout={1_000}
       />
       <div
-        className={`flex flex-col gap-4 relative lg:gap-0 lg:mt-0 lg:px-0 lg:flex-row w-full md:max-h-[90vh] bottom-0 left-0 right-0 bg-[#07080A] 3xl:border-b border-cardborder 3xl:border-x`}
+        className={`flex flex-col gap-4 relative lg:gap-0 lg:mt-0 lg:px-0 lg:flex-row w-full md:max-h-[90vh] bottom-0 left-0 right-0 bg-[#07080A] 3xl:border-b border-cardborder 3xl:border-x overflow-x-hidden`}
       >
         <div
           className={` flex flex-col lg:gap-0 lg:w-[70%] lg:overflow-y-auto lg:sticky lg:max-h-[90vh] lg:left-0 lg:top-0 lg:h-fit no-scrollbar lg:pb-20  lg:border-r-2 border-r-cardborder  `}

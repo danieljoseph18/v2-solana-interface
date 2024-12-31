@@ -60,7 +60,7 @@ function FooterBanner() {
           ) : null}
         </div>
 
-        <p className="text-base-gray ">©2024 Odin Labs. All Rights Reserved</p>
+        <p className="text-base-gray ">©2025 Odin Labs. All Rights Reserved</p>
       </div>
     </div>
   );
