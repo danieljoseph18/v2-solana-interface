@@ -1,1 +1,1 @@
-export const COLLATERAL_OPTIONS = ["SOL", "USDC", "USDT", "BTC"];
+export const COLLATERAL_OPTIONS = ["SOL", "USDC"];
