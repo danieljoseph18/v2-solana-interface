@@ -18,7 +18,7 @@ export const getUserLpBalance = async (
     // Get the token account info
     const tokenAccount = await getAccount(connection, userLPTokenAccount);
 
-    // Convert to human-readable format (optional)
+    // Convert to human-readable format
     const formattedBalance = Number(tokenAccount.amount) / 1_000_000; // 6 decimals
 
     return formattedBalance;

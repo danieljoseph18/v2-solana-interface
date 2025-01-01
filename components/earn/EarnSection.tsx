@@ -13,13 +13,14 @@ import { contractAddresses } from "@/lib/web3/config";
 import { fetchCollateralPrices } from "@/app/actions/fetchCollateralPrices";
 import { getLpTokenPrice } from "@/lib/web3/actions/getLpTokenPrice";
 import { getUserLpBalance } from "@/lib/web3/actions/getLpTokenBalance";
-import { getPendingRewards } from "@/lib/web3/actions/getPendingRewards";
-import { getCurrentRewardRate } from "@/lib/web3/actions/getCurrentRewardRate";
 import SolanaWallet from "@/app/assets/earn/solana-wallet.svg";
 import UpwardsBars from "@/app/assets/earn/upwards-bars.svg";
 import EarningDiamond from "@/app/assets/earn/earning-diamond.svg";
 import Image from "next/image";
 import { getUserBalances } from "@/lib/web3/actions/getUserBalances";
+import { getApr } from "@/lib/web3/actions/getApr";
+import { getLpTokenSupply } from "@/lib/web3/actions/getLpTokenSupply";
+import { formatFloatWithCommas } from "@/lib/web3/formatters";
 
 interface StatItemProps {
   iconSrc: string;
@@ -106,11 +107,11 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
       connection,
       new PublicKey(publicKey)
     );
-    console.log("balanceData", balanceData);
+
     const solBalanceUsd = parseInt(balanceData.solBalance) * prices.solPrice;
-    console.log("solBalanceUsd", solBalanceUsd);
+
     const usdcBalanceUsd = parseInt(balanceData.usdcBalance) * prices.usdcPrice;
-    console.log("usdcBalanceUsd", usdcBalanceUsd);
+
     const balances = {
       solBalanceUsd,
       usdcBalanceUsd,
@@ -154,8 +155,6 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
 
   useEffect(() => {
     const fetchVaultData = async () => {
-      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
-
       if (!publicKey) return;
 
       try {
@@ -171,43 +170,27 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
           return;
         }
 
-        const [balances, rewardRate, pendingRewards] = await Promise.all([
-          getUserBalances(connection, new PublicKey(publicKey)),
-          getCurrentRewardRate(program, poolAddress, isPoolInitialized),
-          getPendingRewards(
-            program,
-            poolAddress,
-            new PublicKey(publicKey),
-            isPoolInitialized
-          ),
+        const deposits = lpBalance * lpTokenPrice;
+
+        const aprs = await getApr(program);
+
+        const monthlyRewards = aprs.rewardRatePerSecond * 30 * 24 * 60 * 60;
+
+        // 30d earnings = monthlyRewards * percentage of supply owned
+
+        const [lpTokenBalance, lpTokenSupply] = await Promise.all([
+          getUserLpBalance(connection, new PublicKey(publicKey)),
+          getLpTokenSupply(connection),
         ]);
 
-        // Calculate total deposits in USD
-        const poolState = await program.account.poolState.fetch(poolAddress);
-        const solPrice = poolState.solUsdPrice.toNumber() / 1e8; // Chainlink price has 8 decimals
-        const solValueInUSD = parseFloat(balances.solFormatted) * solPrice;
-        const usdcValue = parseFloat(balances.usdcFormatted);
-        const totalDepositsUSD = solValueInUSD + usdcValue;
+        const percentageOfSupply = lpTokenBalance / lpTokenSupply;
 
-        // Calculate APR (reward rate per second to APR)
-        const rewardRatePerSecond = parseFloat(rewardRate.rewardRateFormatted);
-        const annualRewards = rewardRatePerSecond * 365 * 24 * 60 * 60;
-        const apr =
-          rewardRate.isRewardsActive && totalDepositsUSD > 0
-            ? ((annualRewards / totalDepositsUSD) * 100).toFixed(2)
-            : "0";
-
-        // Calculate estimated earnings (30 days)
-        const dailyRewards = rewardRatePerSecond * 24 * 60 * 60;
-        const monthlyRewards = dailyRewards * 30;
-        const estimatedEarnings = rewardRate.isRewardsActive
-          ? monthlyRewards.toFixed(2)
-          : "0";
+        const estimatedEarnings = monthlyRewards * percentageOfSupply;
 
         setVaultData({
-          deposits: totalDepositsUSD.toFixed(2),
-          apr,
-          estimatedEarnings,
+          deposits: deposits.toFixed(2),
+          apr: aprs.formattedApr,
+          estimatedEarnings: estimatedEarnings.toFixed(2),
         });
 
         setLoading(false);
@@ -218,7 +201,7 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
     };
 
     fetchVaultData();
-  }, [publicKey, isPoolInitialized]);
+  }, [publicKey, isPoolInitialized, lpBalance, lpTokenPrice]);
 
   return (
     <div className="w-full p-6 flex gap-4">
@@ -244,13 +227,15 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
               <StatItem
                 iconSrc={UpwardsBars}
                 label="Current APR"
-                value={`${vaultData.apr}%`}
+                value={`${vaultData.apr}`}
                 altText="Increasing bar graph"
               />
               <StatItem
                 iconSrc={EarningDiamond}
                 label="Estimated 30d Earnings"
-                value={`$${vaultData.estimatedEarnings}`}
+                value={`$${formatFloatWithCommas(
+                  parseFloat(vaultData.estimatedEarnings)
+                )}`}
                 altText="Earning diamond"
               />
             </>

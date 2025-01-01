@@ -145,10 +145,36 @@ const EntryCard = ({
         await connection.confirmTransaction(signature, "confirmed");
       }
 
-      const [userStateAccount] = PublicKey.findProgramAddressSync(
+      // Declare userStateAccount before the try-catch block
+      let userStateAccount: PublicKey;
+      [userStateAccount] = PublicKey.findProgramAddressSync(
         [Buffer.from("user-state"), new PublicKey(publicKey).toBuffer()],
         program.programId
       );
+
+      console.log("User state account:", userStateAccount.toString());
+
+      // Check if user state already exists
+      try {
+        const userState = await program.account.userState.fetch(
+          userStateAccount
+        );
+        console.log("Existing user state found:", userState);
+      } catch (error) {
+        // If account doesn't exist, initialize it
+        console.log("Initializing new user state...");
+        const tx = await program.methods
+          .initializeUser()
+          .accountsStrict({
+            user: userKey,
+            userState: userStateAccount,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+
+        await connection.confirmTransaction(tx, "confirmed");
+        console.log("User state initialized successfully");
+      }
 
       // Get LP token mint from pool state
       const lpTokenMint = poolState.lpTokenMint;
@@ -167,6 +193,7 @@ const EntryCard = ({
       );
 
       if (isDeposit) {
+        console.log("Attempting to deposit");
         const tx = await program.methods
           .deposit(new BN(amountBaseUnits))
           .accountsStrict({
