@@ -1,29 +1,38 @@
 import { Button } from "@nextui-org/react";
 import HorizontalDivider from "../common/HorizontalDivider";
 import { claimRewards } from "@/lib/web3/actions/claimRewards";
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 
 interface RewardSectionProps {
-  program: Program<SolanaLiquidityPool>;
+  program: Program<SolanaLiquidityPool> | null;
+  connection: Connection;
   publicKey: PublicKey | null;
   earnedToDate: {
     amount: string;
     usdValue: string;
   };
   availableToClaim: number;
+  signTransaction: (transaction: Transaction) => Promise<Transaction>;
 }
 
 const RewardSection = ({
   program,
+  connection,
   publicKey,
   earnedToDate,
   availableToClaim,
+  signTransaction,
 }: RewardSectionProps) => {
   const handleClaimRewards = async () => {
-    if (!publicKey) return;
-    const result = await claimRewards(program, publicKey);
+    if (!publicKey || !program) return;
+    const result = await claimRewards(
+      program,
+      connection,
+      publicKey,
+      signTransaction
+    );
     console.log(result);
   };
 

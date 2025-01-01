@@ -30,6 +30,14 @@ export type SolanaLiquidityPool = {
         {
           name: "poolState";
           writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101];
+              }
+            ];
+          };
         },
         {
           name: "adminTokenAccount";
@@ -41,9 +49,11 @@ export type SolanaLiquidityPool = {
         },
         {
           name: "chainlinkProgram";
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny";
         },
         {
           name: "chainlinkFeed";
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR";
         },
         {
           name: "tokenProgram";
@@ -89,9 +99,11 @@ export type SolanaLiquidityPool = {
         },
         {
           name: "chainlinkProgram";
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny";
         },
         {
           name: "chainlinkFeed";
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR";
         },
         {
           name: "tokenProgram";
@@ -154,6 +166,9 @@ export type SolanaLiquidityPool = {
         {
           name: "tokenProgram";
           address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+        },
+        {
+          name: "lpTokenMint";
         }
       ];
       args: [];
@@ -176,6 +191,51 @@ export type SolanaLiquidityPool = {
               {
                 kind: "const";
                 value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101];
+              }
+            ];
+          };
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "closeUserState";
+      docs: ["Close the user state (user only)"];
+      discriminator: [127, 206, 172, 187, 146, 179, 215, 194];
+      accounts: [
+        {
+          name: "user";
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "poolState";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101];
+              }
+            ];
+          };
+        },
+        {
+          name: "userState";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [117, 115, 101, 114, 45, 115, 116, 97, 116, 101];
+              },
+              {
+                kind: "account";
+                path: "user";
               }
             ];
           };
@@ -251,9 +311,11 @@ export type SolanaLiquidityPool = {
         },
         {
           name: "chainlinkProgram";
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny";
         },
         {
           name: "chainlinkFeed";
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR";
         },
         {
           name: "tokenProgram";
@@ -329,6 +391,39 @@ export type SolanaLiquidityPool = {
         {
           name: "rent";
           address: "SysvarRent111111111111111111111111111111111";
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "initializeUser";
+      docs: ["Initialize user state"];
+      discriminator: [111, 17, 185, 250, 60, 122, 38, 254];
+      accounts: [
+        {
+          name: "user";
+          writable: true;
+          signer: true;
+        },
+        {
+          name: "userState";
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [117, 115, 101, 114, 45, 115, 116, 97, 116, 101];
+              },
+              {
+                kind: "account";
+                path: "user";
+              }
+            ];
+          };
+        },
+        {
+          name: "systemProgram";
+          address: "11111111111111111111111111111111";
         }
       ];
       args: [];
@@ -427,26 +522,26 @@ export type SolanaLiquidityPool = {
         },
         {
           name: "userLpTokenAccount";
-          docs: [
-            "User's LP token account (where they hold the LP tokens to burn)"
-          ];
+          docs: ["User's LP token account to burn from"];
           writable: true;
         },
         {
           name: "vaultAccount";
-          docs: ["Vault for SOL or USDC"];
+          docs: ["Vault for either SOL (wrapped) or USDC"];
           writable: true;
         },
         {
           name: "userTokenAccount";
-          docs: ["User's token account to receive the withdrawn tokens"];
+          docs: ["User's token account to receive withdrawn tokens"];
           writable: true;
         },
         {
           name: "chainlinkProgram";
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny";
         },
         {
           name: "chainlinkFeed";
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR";
         },
         {
           name: "tokenProgram";
@@ -469,6 +564,12 @@ export type SolanaLiquidityPool = {
     {
       name: "userState";
       discriminator: [72, 177, 85, 249, 76, 167, 186, 126];
+    }
+  ];
+  events: [
+    {
+      name: "rewardsClaimed";
+      discriminator: [75, 98, 88, 18, 219, 112, 88, 121];
     }
   ];
   errors: [
@@ -496,6 +597,26 @@ export type SolanaLiquidityPool = {
       code: 6004;
       name: "invalidTokenMint";
       msg: "Invalid token mint provided.";
+    },
+    {
+      code: 6005;
+      name: "invalidOwner";
+      msg: "Invalid owner.";
+    },
+    {
+      code: 6006;
+      name: "rewardsNotStarted";
+      msg: "Rewards have not started yet.";
+    },
+    {
+      code: 6007;
+      name: "noLpTokens";
+      msg: "No LP tokens found.";
+    },
+    {
+      code: 6008;
+      name: "insufficientRewardBalance";
+      msg: "Insufficient reward balance.";
     }
   ];
   types: [
@@ -583,6 +704,38 @@ export type SolanaLiquidityPool = {
               "How many USDC have actually been claimed by users so far (6 decimals)"
             ];
             type: "u64";
+          },
+          {
+            name: "cumulativeRewardPerToken";
+            type: "u128";
+          },
+          {
+            name: "lastDistributionTime";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "rewardsClaimed";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "user";
+            type: "pubkey";
+          },
+          {
+            name: "amount";
+            type: "u64";
+          },
+          {
+            name: "timestamp";
+            type: "i64";
+          },
+          {
+            name: "totalClaimed";
+            type: "u64";
           }
         ];
       };
@@ -616,6 +769,11 @@ export type SolanaLiquidityPool = {
             name: "pendingRewards";
             docs: ["Accumulated USDC rewards that have not yet been claimed"];
             type: "u64";
+          },
+          {
+            name: "previousCumulatedRewardPerToken";
+            docs: ["Previous cumulative reward per token"];
+            type: "u128";
           }
         ];
       };

@@ -1,11 +1,15 @@
 import { Program } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import getOrCreateAssociatedTokenAccount from "./getOrCreateTokenAccount";
+import { contractAddresses } from "../config";
 
 export const claimRewards = async (
   program: Program<SolanaLiquidityPool>,
-  userPublicKey: PublicKey
+  connection: Connection,
+  userPublicKey: PublicKey,
+  signTransaction: (transaction: Transaction) => Promise<Transaction>
 ): Promise<{ signature: string; claimedAmount: number }> => {
   try {
     // 1. Derive necessary PDAs and get token accounts
@@ -23,9 +27,12 @@ export const claimRewards = async (
     const poolData = await program.account.poolState.fetch(poolState);
 
     // Get user's USDC token account (where rewards will be sent)
-    const userUsdcAccount = await getAssociatedTokenAddress(
-      poolData.usdcVault, // USDC mint
-      userPublicKey
+    const userUsdcAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      userPublicKey,
+      new PublicKey(contractAddresses.devnet.usdcMint), // USDC mint
+      userPublicKey,
+      signTransaction
     );
 
     // 2. Submit the transaction
@@ -36,10 +43,13 @@ export const claimRewards = async (
         poolState: poolState,
         userState: userState,
         usdcRewardVault: poolData.usdcRewardVault,
+        lpTokenMint: poolData.lpTokenMint,
         userUsdcAccount: userUsdcAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
+
+    await connection.confirmTransaction(tx, "confirmed");
 
     // 3. Get the updated user state to return claimed amount
     const updatedUserState = await program.account.userState.fetch(userState);
@@ -63,21 +73,5 @@ export const claimRewards = async (
     }
     console.error("Error claiming rewards:", error);
     throw error;
-  }
-};
-
-// Example usage:
-const claim = async (program: Program<SolanaLiquidityPool>, key: PublicKey) => {
-  try {
-    const result = await claimRewards(program, key);
-
-    console.log(`Successfully claimed ${result.claimedAmount} USDC`);
-    console.log(`Transaction signature: ${result.signature}`);
-  } catch (error: any) {
-    if (error.message === "No rewards available to claim") {
-      console.log("You don't have any rewards to claim at this time.");
-    } else {
-      console.error("Failed to claim rewards:", error);
-    }
   }
 };

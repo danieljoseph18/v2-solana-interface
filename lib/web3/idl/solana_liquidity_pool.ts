@@ -24,6 +24,14 @@ export const idl = {
         {
           name: "pool_state",
           writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
         },
         {
           name: "admin_token_account",
@@ -35,9 +43,11 @@ export const idl = {
         },
         {
           name: "chainlink_program",
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
         },
         {
           name: "chainlink_feed",
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR",
         },
         {
           name: "token_program",
@@ -83,9 +93,11 @@ export const idl = {
         },
         {
           name: "chainlink_program",
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
         },
         {
           name: "chainlink_feed",
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR",
         },
         {
           name: "token_program",
@@ -149,6 +161,9 @@ export const idl = {
           name: "token_program",
           address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         },
+        {
+          name: "lp_token_mint",
+        },
       ],
       args: [],
     },
@@ -170,6 +185,51 @@ export const idl = {
               {
                 kind: "const",
                 value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
+        },
+        {
+          name: "system_program",
+          address: "11111111111111111111111111111111",
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "close_user_state",
+      docs: ["Close the user state (user only)"],
+      discriminator: [127, 206, 172, 187, 146, 179, 215, 194],
+      accounts: [
+        {
+          name: "user",
+          writable: true,
+          signer: true,
+        },
+        {
+          name: "pool_state",
+          writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [112, 111, 111, 108, 45, 115, 116, 97, 116, 101],
+              },
+            ],
+          },
+        },
+        {
+          name: "user_state",
+          writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [117, 115, 101, 114, 45, 115, 116, 97, 116, 101],
+              },
+              {
+                kind: "account",
+                path: "user",
               },
             ],
           },
@@ -245,9 +305,11 @@ export const idl = {
         },
         {
           name: "chainlink_program",
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
         },
         {
           name: "chainlink_feed",
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR",
         },
         {
           name: "token_program",
@@ -323,6 +385,39 @@ export const idl = {
         {
           name: "rent",
           address: "SysvarRent111111111111111111111111111111111",
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "initialize_user",
+      docs: ["Initialize user state"],
+      discriminator: [111, 17, 185, 250, 60, 122, 38, 254],
+      accounts: [
+        {
+          name: "user",
+          writable: true,
+          signer: true,
+        },
+        {
+          name: "user_state",
+          writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [117, 115, 101, 114, 45, 115, 116, 97, 116, 101],
+              },
+              {
+                kind: "account",
+                path: "user",
+              },
+            ],
+          },
+        },
+        {
+          name: "system_program",
+          address: "11111111111111111111111111111111",
         },
       ],
       args: [],
@@ -421,26 +516,26 @@ export const idl = {
         },
         {
           name: "user_lp_token_account",
-          docs: [
-            "User's LP token account (where they hold the LP tokens to burn)",
-          ],
+          docs: ["User's LP token account to burn from"],
           writable: true,
         },
         {
           name: "vault_account",
-          docs: ["Vault for SOL or USDC"],
+          docs: ["Vault for either SOL (wrapped) or USDC"],
           writable: true,
         },
         {
           name: "user_token_account",
-          docs: ["User's token account to receive the withdrawn tokens"],
+          docs: ["User's token account to receive withdrawn tokens"],
           writable: true,
         },
         {
           name: "chainlink_program",
+          address: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
         },
         {
           name: "chainlink_feed",
+          address: "99B2bTijsU6f1GCT73HmdR7HCFFjGMBcPZY6jZ96ynrR",
         },
         {
           name: "token_program",
@@ -463,6 +558,12 @@ export const idl = {
     {
       name: "UserState",
       discriminator: [72, 177, 85, 249, 76, 167, 186, 126],
+    },
+  ],
+  events: [
+    {
+      name: "RewardsClaimed",
+      discriminator: [75, 98, 88, 18, 219, 112, 88, 121],
     },
   ],
   errors: [
@@ -490,6 +591,26 @@ export const idl = {
       code: 6004,
       name: "InvalidTokenMint",
       msg: "Invalid token mint provided.",
+    },
+    {
+      code: 6005,
+      name: "InvalidOwner",
+      msg: "Invalid owner.",
+    },
+    {
+      code: 6006,
+      name: "RewardsNotStarted",
+      msg: "Rewards have not started yet.",
+    },
+    {
+      code: 6007,
+      name: "NoLPTokens",
+      msg: "No LP tokens found.",
+    },
+    {
+      code: 6008,
+      name: "InsufficientRewardBalance",
+      msg: "Insufficient reward balance.",
     },
   ],
   types: [
@@ -578,6 +699,38 @@ export const idl = {
             ],
             type: "u64",
           },
+          {
+            name: "cumulative_reward_per_token",
+            type: "u128",
+          },
+          {
+            name: "last_distribution_time",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "RewardsClaimed",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "user",
+            type: "pubkey",
+          },
+          {
+            name: "amount",
+            type: "u64",
+          },
+          {
+            name: "timestamp",
+            type: "i64",
+          },
+          {
+            name: "total_claimed",
+            type: "u64",
+          },
         ],
       },
     },
@@ -610,6 +763,11 @@ export const idl = {
             name: "pending_rewards",
             docs: ["Accumulated USDC rewards that have not yet been claimed"],
             type: "u64",
+          },
+          {
+            name: "previous_cumulated_reward_per_token",
+            docs: ["Previous cumulative reward per token"],
+            type: "u128",
           },
         ],
       },
