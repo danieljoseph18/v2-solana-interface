@@ -44,39 +44,41 @@ export const contractAddresses = {
     systemProgram: "11111111111111111111111111111111",
   },
   mainnet: {
-    chainlinkProgram: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
-    chainlinkFeed: "CH31Xns5z3M1cTAbKW34jcxPPciazARpijcHj9rxtemt",
+    programId: "3JhuFvHHTxCGeJviVMv4SYUWQ1qAb9tFNy7ZU8dxBhpq",
+    poolStatePda: "9bB1TCESgoTRUNFT7xfz5myL5XG7n3upBtvx7cGypnwo",
     solMint: "So11111111111111111111111111111111111111112", // Mainnet SOL
     usdcMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Mainnet USDC
+    solVault: "ESecGS3Hg7uGw8SpKszWa2ra14asp4N8UD47iZNXhMc3",
+    usdcVault: "FVjaqKgaAKM2H85MDjKujeYF9XR2em8GhSFYv5FntfgK",
+    lpTokenMint: "Cm15ZRE46tDAbB3gQfB7beyABbsfG1VQn1gj4z9nb1sv",
+    chainlinkProgram: "HEvSKofvBgfaexv23kMabbYqxasxU3mQ4ibBMEmJWHny",
+    chainlinkFeed: "CH31Xns5z3M1cTAbKW34jcxPPciazARpijcHj9rxtemt",
+    tokenProgram: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    systemProgram: "11111111111111111111111111111111",
   },
 };
 
 // Helper functions
-export function getCurrentNetwork(): NetworkType {
-  const isDevnet = process.env.NEXT_PUBLIC_IS_DEVNET;
-  return isDevnet ? "devnet" : "mainnet";
-}
 
 export function getNetworkConfig(): NetworkConfig {
   return web3Config.networks[getCurrentNetwork()];
 }
+
+export const getCurrentNetwork = (): NetworkType => {
+  const isDevnet = process.env.NEXT_PUBLIC_IS_DEVNET;
+  return isDevnet ? "devnet" : "mainnet";
+};
 
 export function getRpcUrl(): string {
   return getNetworkConfig().rpcUrl;
 }
 
 export function getTokenMint(token: "USDC" | "SOL"): string {
-  const isDevnet = process.env.NEXT_PUBLIC_IS_DEVNET;
-
-  if (isDevnet) {
-    return token === "USDC"
-      ? contractAddresses.devnet.usdcMint
-      : contractAddresses.devnet.solMint;
-  }
+  const network = getCurrentNetwork();
 
   return token === "USDC"
-    ? contractAddresses.mainnet.usdcMint
-    : contractAddresses.mainnet.solMint;
+    ? contractAddresses[network].usdcMint
+    : contractAddresses[network].solMint;
 }
 
 export function getAdminWallet(): string {

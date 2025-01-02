@@ -9,7 +9,7 @@ import { PublicKey } from "@solana/web3.js";
 import { idl } from "@/lib/web3/idl/solana_liquidity_pool";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 import { Program } from "@coral-xyz/anchor";
-import { contractAddresses } from "@/lib/web3/config";
+import { contractAddresses, getCurrentNetwork } from "@/lib/web3/config";
 import { fetchCollateralPrices } from "@/app/actions/fetchCollateralPrices";
 import { getLpTokenPrice } from "@/lib/web3/actions/getLpTokenPrice";
 import { getUserLpBalance } from "@/lib/web3/actions/getLpTokenBalance";
@@ -138,7 +138,10 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
 
   useEffect(() => {
     const fetchLpTokenPrice = async () => {
-      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+      const network = getCurrentNetwork();
+      const poolAddress = new PublicKey(
+        contractAddresses[network].poolStatePda
+      );
       const lpTokenPrice = await getLpTokenPrice(program, poolAddress);
       setLpTokenPrice(lpTokenPrice);
     };
@@ -256,7 +259,6 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
         lpTokenPrice={lpTokenPrice}
         lpBalance={lpBalance}
         balancesUsd={balancesUsd}
-        handleCardClick={() => setIsModalOpen(true)}
         setIsModalOpen={setIsModalOpen}
         refetchBalances={refreshBalances}
       />
@@ -275,7 +277,6 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
           lpTokenPrice={lpTokenPrice}
           balancesUsd={balancesUsd}
           lpBalance={lpBalance}
-          handleCardClick={() => setIsModalOpen(true)}
           setIsModalOpen={setIsModalOpen}
           refetchBalances={refreshBalances}
         />

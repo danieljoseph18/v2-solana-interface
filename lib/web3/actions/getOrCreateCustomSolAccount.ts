@@ -4,17 +4,19 @@ import {
 } from "@solana/spl-token";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { Transaction, PublicKey, Connection } from "@solana/web3.js";
-import { contractAddresses } from "../config";
+import { contractAddresses, getCurrentNetwork } from "../config";
 
 export const getOrCreateCustomSolAccount = async (
   wallet: PublicKey,
   connection: Connection,
   sendTransaction: SignerWalletAdapter["sendTransaction"]
 ): Promise<PublicKey> => {
+  const network = getCurrentNetwork();
+
   console.log("Inside get or create custom sol account");
   try {
     // Use your custom SOL mint instead of NATIVE_MINT
-    const customSolMint = new PublicKey(contractAddresses.devnet.solMint);
+    const customSolMint = new PublicKey(contractAddresses[network].solMint);
 
     // Find the ATA address for custom SOL token
     const associatedTokenAddress = await getAssociatedTokenAddress(

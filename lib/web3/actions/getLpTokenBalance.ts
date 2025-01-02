@@ -1,14 +1,16 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { getAccount } from "@solana/spl-token";
-import { contractAddresses } from "../config";
+import { contractAddresses, getCurrentNetwork } from "../config";
 
 export const getUserLpBalance = async (
   connection: Connection,
   userPublicKey: PublicKey
 ): Promise<number> => {
+  const network = getCurrentNetwork();
+
   try {
-    const lpTokenMint = new PublicKey(contractAddresses.devnet.lpTokenMint);
+    const lpTokenMint = new PublicKey(contractAddresses[network].lpTokenMint);
     // Find the user's associated token account for LP tokens
     const userLPTokenAccount = await getAssociatedTokenAddress(
       lpTokenMint,

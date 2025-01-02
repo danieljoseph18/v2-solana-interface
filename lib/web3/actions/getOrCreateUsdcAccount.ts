@@ -1,22 +1,22 @@
 import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import { contractAddresses } from "../config";
+import { contractAddresses, getCurrentNetwork } from "../config";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { AnchorProvider } from "@coral-xyz/anchor";
 import { SignerWalletAdapter } from "@solana/wallet-adapter-base";
-
-// USDC mint addresses
-const USDC_MINT = new PublicKey(contractAddresses.devnet.usdcMint);
 
 export const getOrCreateUsdcAccount = async (
   wallet: PublicKey,
   connection: Connection,
   sendTransaction: SignerWalletAdapter["sendTransaction"]
 ): Promise<PublicKey> => {
+  const network = getCurrentNetwork();
+
+  const usdcMint = new PublicKey(contractAddresses[network].usdcMint);
+
   try {
     // Find the ATA address for USDC
     const associatedTokenAddress = await getAssociatedTokenAddress(
-      USDC_MINT,
+      usdcMint,
       wallet
     );
 
@@ -33,14 +33,13 @@ export const getOrCreateUsdcAccount = async (
         wallet, // payer
         associatedTokenAddress, // ata
         wallet, // owner
-        USDC_MINT // mint
+        usdcMint // mint
       );
 
       transaction.add(createAtaIx);
 
       // Send and confirm transaction
       const signature = await sendTransaction(transaction, connection);
-      console.log("Created USDC ATA:", signature);
 
       return associatedTokenAddress;
     }

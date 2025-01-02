@@ -14,7 +14,7 @@ import {
 } from "@/lib/web3/actions/getRewards";
 import { useWallet } from "@/hooks/useWallet";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import { contractAddresses } from "@/lib/web3/config";
+import { contractAddresses, getCurrentNetwork } from "@/lib/web3/config";
 
 /**
  * @audit Need to bind "earnedToDate"
@@ -39,7 +39,10 @@ const EarnPage = () => {
 
   useEffect(() => {
     const checkPool = async () => {
-      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+      const network = getCurrentNetwork();
+      const poolAddress = new PublicKey(
+        contractAddresses[network].poolStatePda
+      );
 
       if (!poolAddress) return;
 
