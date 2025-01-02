@@ -12,7 +12,7 @@ import { BN } from "@coral-xyz/anchor";
 import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { toast } from "react-toastify";
 import { useWallet } from "@/hooks/useWallet";
-import { contractAddresses } from "@/lib/web3/config";
+import { contractAddresses, getCurrentNetwork } from "@/lib/web3/config";
 import { getOrCreateUsdcAccount } from "@/lib/web3/actions/getOrCreateUsdcAccount";
 import { createSyncNativeInstruction } from "@solana/spl-token";
 import getOrCreateAssociatedTokenAccount from "@/lib/web3/actions/getOrCreateTokenAccount";
@@ -36,7 +36,6 @@ const EntryCard = ({
   balancesUsd,
   lpTokenPrice,
   lpBalance,
-  handleCardClick,
   setIsModalOpen,
   refetchBalances,
 }: {
@@ -58,7 +57,6 @@ const EntryCard = ({
   };
   lpTokenPrice: number;
   lpBalance: number;
-  handleCardClick?: () => void;
   setIsModalOpen?: (isOpen: boolean) => void;
   refetchBalances?: () => void;
 }) => {
@@ -77,6 +75,8 @@ const EntryCard = ({
 
     setIsLoading(true);
 
+    const network = getCurrentNetwork();
+
     try {
       const amountNative = isDeposit
         ? collateralType === "SOL"
@@ -93,7 +93,10 @@ const EntryCard = ({
       );
 
       const userKey = new PublicKey(publicKey);
-      const poolAddress = new PublicKey(contractAddresses.devnet.poolStatePda);
+      const network = getCurrentNetwork();
+      const poolAddress = new PublicKey(
+        contractAddresses[network].poolStatePda
+      );
 
       // Get pool state PDA
       const poolState = await program.account.poolState.fetch(poolAddress);
@@ -104,8 +107,8 @@ const EntryCard = ({
             connection,
             userKey,
             collateralType === "SOL"
-              ? new PublicKey(contractAddresses.devnet.solMint)
-              : new PublicKey(contractAddresses.devnet.usdcMint),
+              ? new PublicKey(contractAddresses[network].solMint)
+              : new PublicKey(contractAddresses[network].usdcMint),
             userKey,
             signTransaction
           )
@@ -205,14 +208,16 @@ const EntryCard = ({
             lpTokenMint,
             userLpTokenAccount: userLpTokenAccount,
             chainlinkProgram: new PublicKey(
-              contractAddresses.devnet.chainlinkProgram
+              contractAddresses[network].chainlinkProgram
             ),
             chainlinkFeed: new PublicKey(
-              contractAddresses.devnet.chainlinkFeed
+              contractAddresses[network].chainlinkFeed
             ),
-            tokenProgram: new PublicKey(contractAddresses.devnet.tokenProgram),
+            tokenProgram: new PublicKey(
+              contractAddresses[network].tokenProgram
+            ),
             systemProgram: new PublicKey(
-              contractAddresses.devnet.systemProgram
+              contractAddresses[network].systemProgram
             ),
           })
           .rpc();
@@ -232,12 +237,14 @@ const EntryCard = ({
             vaultAccount,
             userTokenAccount,
             chainlinkProgram: new PublicKey(
-              contractAddresses.devnet.chainlinkProgram
+              contractAddresses[network].chainlinkProgram
             ),
             chainlinkFeed: new PublicKey(
-              contractAddresses.devnet.chainlinkFeed
+              contractAddresses[network].chainlinkFeed
             ),
-            tokenProgram: new PublicKey(contractAddresses.devnet.tokenProgram),
+            tokenProgram: new PublicKey(
+              contractAddresses[network].tokenProgram
+            ),
           })
           .rpc();
 
@@ -277,15 +284,6 @@ const EntryCard = ({
             <p className="text-gray-text text-sm">
               {isDeposit ? "Deposit" : "Withdraw"}
             </p>
-            {isDeposit && !isModalForm && (
-              <button
-                className="flex items-center gap-1 text-printer-orange text-sm font-bold hover:opacity-80 cursor-pointer"
-                onClick={handleCardClick}
-              >
-                <BsCreditCardFill />
-                <p>Deposit with Card</p>
-              </button>
-            )}
           </div>
         </div>
 

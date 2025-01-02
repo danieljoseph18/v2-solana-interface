@@ -1,12 +1,14 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getMint } from "@solana/spl-token";
-import { contractAddresses } from "../config";
+import { contractAddresses, getCurrentNetwork } from "../config";
 
 export const getLpTokenSupply = async (
   connection: Connection
 ): Promise<number> => {
+  const network = getCurrentNetwork();
+
   try {
-    const lpTokenMint = new PublicKey(contractAddresses.devnet.lpTokenMint);
+    const lpTokenMint = new PublicKey(contractAddresses[network].lpTokenMint);
 
     // Get the mint info
     const mintInfo = await getMint(connection, lpTokenMint);

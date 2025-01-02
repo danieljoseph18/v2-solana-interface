@@ -3,7 +3,7 @@ import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { SolanaLiquidityPool } from "@/lib/web3/idl/solana_liquidity_pool.types";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import getOrCreateAssociatedTokenAccount from "./getOrCreateTokenAccount";
-import { contractAddresses } from "../config";
+import { contractAddresses, getCurrentNetwork } from "../config";
 
 export const claimRewards = async (
   program: Program<SolanaLiquidityPool>,
@@ -11,6 +11,7 @@ export const claimRewards = async (
   userPublicKey: PublicKey,
   signTransaction: (transaction: Transaction) => Promise<Transaction>
 ): Promise<{ signature: string; claimedAmount: number }> => {
+  const network = getCurrentNetwork();
   try {
     // 1. Derive necessary PDAs and get token accounts
     const [poolState] = PublicKey.findProgramAddressSync(
@@ -30,7 +31,7 @@ export const claimRewards = async (
     const userUsdcAccount = await getOrCreateAssociatedTokenAccount(
       connection,
       userPublicKey,
-      new PublicKey(contractAddresses.devnet.usdcMint), // USDC mint
+      new PublicKey(contractAddresses[network].usdcMint), // USDC mint
       userPublicKey,
       signTransaction
     );
