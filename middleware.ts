@@ -24,9 +24,16 @@ const BLOCKED_COUNTRIES = [
   "RU", // Russia
 ];
 
-// Only match earn and trade routes
+// @dev - Add all page routes here
 export const config = {
-  matcher: ["/earn", "/trade"],
+  matcher: [
+    "/earn",
+    "/trade",
+    "/",
+    "/blocked",
+    "terms-of-service",
+    "privacy-policy",
+  ],
 };
 
 export default function middleware(req: NextRequest) {
