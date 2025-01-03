@@ -24,19 +24,22 @@ const BLOCKED_COUNTRIES = [
 ];
 
 const middleware = async (req: NextRequest) => {
-  const res = NextResponse.next();
-
   // Skip check if already on blocked page or homepage
-  if (req.nextUrl.pathname !== "/blocked" && req.nextUrl.pathname !== "/") {
-    const country =
-      (req as any).geo?.country || req.headers.get("x-vercel-ip-country");
-
-    if (BLOCKED_COUNTRIES.includes(country ?? "")) {
-      return NextResponse.redirect(new URL("/blocked", req.url));
-    }
+  if (req.nextUrl.pathname === "/blocked" || req.nextUrl.pathname === "/") {
+    return NextResponse.next();
   }
 
-  return res;
+  console.log("Pathname: ", req.nextUrl.pathname);
+
+  const country =
+    (req as any).geo?.country || req.headers.get("x-vercel-ip-country");
+
+  if (BLOCKED_COUNTRIES.includes(country ?? "")) {
+    // Use rewrite instead of redirect to preserve the JavaScript routing
+    return NextResponse.rewrite(new URL("/blocked", req.url));
+  }
+
+  return NextResponse.next();
 };
 
 export default middleware;

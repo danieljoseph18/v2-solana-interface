@@ -16,7 +16,7 @@ const BlockedPage = () => {
         <h1 className="text-2xl font-bold text-printer-orange underline">
           Access Restricted
         </h1>
-        <p className="text-gray-300">
+        <p className="text-printer-gray">
           We apologize, but our service is not available in your region due to
           regulatory requirements.
         </p>
