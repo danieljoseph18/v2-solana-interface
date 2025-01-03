@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import AssetBanner from "@/components/trade/assets/AssetBanner";
 import Positions from "@/components/trade/positions/Positions";
 import TabNavigation from "@/components/trade/positions/TabNavigation";
@@ -55,35 +61,21 @@ const TradePage = () => {
   const [isScriptReady, setIsScriptReady] = useState(false);
   const [asset, setAsset] = useState<Asset | null>(null);
   const [allAssets, setAllAssets] = useState<Asset[]>([]);
-  const [isLong, setIsLong] = useState(true);
-  const [activeType, setActiveType] = useState("Market");
   const [openPositions, setOpenPositions] = useState<Position[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [closedPositions, setClosedPositions] = useState<Position[]>([]);
-  const [chartLines, setChartLines] = useState<ChartLine[]>([]);
-  // Pass into size input
-  const [collateral, setCollateral] = useState<string>("");
-  const [leverage, setLeverage] = useState(1.1);
   const [priceDecimals, setPriceDecimals] = useState(7);
   const [showPositionLines, setShowPositionLines] = useState(true);
   const [isTableLoading, setIsTableLoading] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [currentMarketOnly, setCurrentMarketOnly] = useState(false);
-  const [marketStats, setMarketStats] = useState<{
-    borrowRateLong: number;
-    borrowRateShort: number;
-    fundingRate: number;
-    fundingRateVelocity: number;
-    openInterestLong: number;
-    openInterestShort: number;
-  }>({
-    borrowRateLong: 0,
-    borrowRateShort: 0,
-    fundingRate: 0,
-    fundingRateVelocity: 0,
-    openInterestLong: 0,
-    openInterestShort: 0,
+  const [sseUpdateCounter, setSSEUpdateCounter] = useState(0);
+  const [tradeState, setTradeState] = useState({
+    isLong: true,
+    activeType: "Market",
+    collateral: "",
+    leverage: 1.1,
   });
 
   const tvDataProviderRef = useRef<TVDataProvider | null>(null);
@@ -94,12 +86,21 @@ const TradePage = () => {
 
   const positionsRef = useRef({ openPositions, orders, closedPositions });
 
+  const BACKEND_URL = useMemo(
+    () => process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
+    []
+  );
+
   useEffect(() => {
     positionsRef.current = { openPositions, orders, closedPositions };
   }, [openPositions, orders, closedPositions]);
 
+  const updateTradeState = (updates: Partial<typeof tradeState>) => {
+    setTradeState((prev) => ({ ...prev, ...updates }));
+  };
+
   const openTradeModal = (newIsLong: boolean) => {
-    setIsLong(newIsLong);
+    updateTradeState({ isLong: newIsLong });
     setIsTradeModalOpen(true);
   };
 
@@ -113,9 +114,6 @@ const TradePage = () => {
     }
 
     setIsTableLoading(true);
-
-    const BACKEND_URL =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
     try {
       // Fetch positions and orders in parallel
@@ -237,37 +235,27 @@ const TradePage = () => {
     setMarkPrice(0);
   }, [asset]);
 
-  useEffect(() => {
-    if (!asset) return;
-    setMarketStats({
-      borrowRateLong: asset.borrowingRate || 0,
-      borrowRateShort: asset.borrowingRate || 0,
-      fundingRate: asset.fundingRate || 0,
-      fundingRateVelocity: asset.fundingRateVelocity || 0,
-      openInterestLong: asset.longOpenInterest || 0,
-      openInterestShort: asset.shortOpenInterest || 0,
-    });
-  }, [asset]);
-
   const updatePriceForAsset = useCallback(async () => {
-    if (asset && asset.symbol) {
-      const BACKEND_URL =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+    if (!asset?.symbol) return;
 
-      try {
-        const response = await fetch(`${BACKEND_URL}/price/market/${asset.id}`);
+    const controller = new AbortController();
 
-        if (response.ok) {
-          const priceResponse: string = await response.json();
-          setMarkPrice(Number(priceResponse));
-        } else {
-          console.error(`Failed to fetch data for ${asset.symbol}`);
-        }
-      } catch (error) {
-        console.error(`Error fetching data for ${asset.symbol}:`, error);
+    try {
+      const response = await fetch(`${BACKEND_URL}/price/market/${asset.id}`, {
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        const priceResponse: string = await response.json();
+        setMarkPrice(Number(priceResponse));
       }
+    } catch (error: any) {
+      if (error.name === "AbortError") return;
+      console.error(`Error fetching data for ${asset.symbol}:`, error);
     }
-  }, [asset]);
+
+    return () => controller.abort();
+  }, [asset, BACKEND_URL]);
 
   useEffect(() => {
     setIsTablet(width !== undefined && width <= 768);
@@ -296,86 +284,91 @@ const TradePage = () => {
     }
   }, [isScriptReady]);
 
-  useEffect(() => {
-    const getChartLines = (positions: Position[], orders: Order[]) => {
-      if (!asset) return;
+  const chartLines = useMemo(() => {
+    if (!asset) return;
 
-      const lines: ChartLine[] = [];
+    const lines: ChartLine[] = [];
 
-      positions.forEach((position) => {
-        const entryLine: ChartLine = {
-          price: position.entryPrice,
-          title: `Opened ${position.symbol} - ${
+    openPositions.forEach((position) => {
+      const entryLine: ChartLine = {
+        price: position.entryPrice,
+        title: `Opened ${position.symbol} - ${
+          position.isLong ? "Long" : "Short"
+        }`,
+        type: "entry",
+        symbol: position.symbol,
+      };
+      const liquidationLine: ChartLine = {
+        price: estimateLiquidationPrice(position),
+        title: `Liquidation ${position.symbol} - ${
+          position.isLong ? "Long" : "Short"
+        }`,
+        type: "liquidation",
+        symbol: position.symbol,
+      };
+      lines.push(entryLine);
+      lines.push(liquidationLine);
+
+      // Add Stop Loss line if it exists
+      if (position.stopLossPrice) {
+        const stopLossLine: ChartLine = {
+          price: position.stopLossPrice,
+          title: `Stop Loss ${position.symbol} - ${
             position.isLong ? "Long" : "Short"
           }`,
-          type: "entry",
+          type: "Stop Loss",
           symbol: position.symbol,
         };
-        const liquidationLine: ChartLine = {
-          price: estimateLiquidationPrice(position),
-          title: `Liquidation ${position.symbol} - ${
+        lines.push(stopLossLine);
+      }
+
+      // Add Take Profit line if it exists
+      if (position.takeProfitPrice) {
+        const takeProfitLine: ChartLine = {
+          price: position.takeProfitPrice,
+          title: `Take Profit ${position.symbol} - ${
             position.isLong ? "Long" : "Short"
           }`,
-          type: "liquidation",
+          type: "Take Profit",
           symbol: position.symbol,
         };
-        lines.push(entryLine);
-        lines.push(liquidationLine);
+        lines.push(takeProfitLine);
+      }
+    });
 
-        // Add Stop Loss line if it exists
-        if (position.stopLossPrice) {
-          const stopLossLine: ChartLine = {
-            price: position.stopLossPrice,
-            title: `Stop Loss ${position.symbol} - ${
-              position.isLong ? "Long" : "Short"
-            }`,
-            type: "Stop Loss",
-            symbol: position.symbol,
-          };
-          lines.push(stopLossLine);
-        }
+    orders.forEach((order) => {
+      const orderLine: ChartLine = {
+        price: order.triggerPrice,
+        // Covers Buy / Sell Limits, Stop Losses and Take Profits
+        title: `${order.symbol} ${order.orderType} - ${
+          order.isLong ? "Long" : "Short"
+        }`,
+        type: order.orderType,
+        symbol: order.symbol,
+      };
+      lines.push(orderLine);
+    });
 
-        // Add Take Profit line if it exists
-        if (position.takeProfitPrice) {
-          const takeProfitLine: ChartLine = {
-            price: position.takeProfitPrice,
-            title: `Take Profit ${position.symbol} - ${
-              position.isLong ? "Long" : "Short"
-            }`,
-            type: "Take Profit",
-            symbol: position.symbol,
-          };
-          lines.push(takeProfitLine);
-        }
-      });
+    const filteredLines = lines.filter((line) => {
+      return line.symbol === asset?.symbol;
+    });
 
-      orders.forEach((order) => {
-        const orderLine: ChartLine = {
-          price: order.triggerPrice,
-          // Covers Buy / Sell Limits, Stop Losses and Take Profits
-          title: `${order.symbol} ${order.orderType} - ${
-            order.isLong ? "Long" : "Short"
-          }`,
-          type: order.orderType,
-          symbol: order.symbol,
-        };
-        lines.push(orderLine);
-      });
-
-      const filteredLines = lines.filter((line) => {
-        return line.symbol === asset?.symbol;
-      });
-
-      setChartLines(filteredLines);
-    };
-
-    getChartLines(openPositions, orders);
+    return filteredLines;
   }, [openPositions, orders, asset]);
 
-  const isMarkPriceReady = markPrice !== 0;
+  const marketStats = useMemo(
+    () => ({
+      borrowRateLong: asset?.borrowingRate || 0,
+      borrowRateShort: asset?.borrowingRate || 0,
+      fundingRate: asset?.fundingRate || 0,
+      fundingRateVelocity: asset?.fundingRateVelocity || 0,
+      openInterestLong: asset?.longOpenInterest || 0,
+      openInterestShort: asset?.shortOpenInterest || 0,
+    }),
+    [asset]
+  );
 
-  // Add a new state to track SSE updates
-  const [sseUpdateCounter, setSSEUpdateCounter] = useState(0);
+  const isMarkPriceReady = markPrice !== 0;
 
   // Use an effect to handle the actual data fetching
   useEffect(() => {
@@ -426,7 +419,7 @@ const TradePage = () => {
                 period={"1" as ResolutionString}
                 onSelectToken={setAsset}
                 savedShouldShowPositionLines={showPositionLines}
-                chartLines={chartLines}
+                chartLines={chartLines || []}
               />
             ) : (
               <Loader />
@@ -458,28 +451,31 @@ const TradePage = () => {
           {!isTablet && (
             <div className="flex flex-col w-full h-auto">
               <div className="flex flex-col w-full gap-4 bg-card-grad border-cardborder border-2 lg:!border-l-0 p-4">
-                <TradeButtons isLong={isLong} setIsLong={setIsLong} />
+                <TradeButtons
+                  isLong={tradeState.isLong}
+                  setIsLong={(isLong) => updateTradeState({ isLong: isLong })}
+                />
                 <TypeButtons
-                  activeType={activeType}
-                  setActiveType={setActiveType}
+                  activeType={tradeState.activeType}
+                  setActiveType={(activeType) =>
+                    updateTradeState({ activeType: activeType })
+                  }
                   isEntry={true}
                 />
                 <SizeInput
-                  isLong={isLong}
-                  activeType={activeType}
-                  leverage={leverage}
-                  setLeverage={setLeverage}
-                  collateral={collateral}
-                  setCollateral={setCollateral}
+                  isLong={tradeState.isLong}
+                  activeType={tradeState.activeType}
+                  leverage={tradeState.leverage}
+                  setLeverage={() => updateTradeState({ leverage: 1.1 })}
+                  collateral={tradeState.collateral}
+                  setCollateral={() => updateTradeState({ collateral: "1" })}
                   markPrice={markPrice}
-                  liqPrice={
-                    preCalculateLiquidationPrice(
-                      markPrice,
-                      Number(collateral),
-                      Number(collateral) * leverage,
-                      isLong
-                    ) || 0
-                  }
+                  liqPrice={preCalculateLiquidationPrice(
+                    markPrice,
+                    Number(tradeState.collateral),
+                    Number(tradeState.collateral) * tradeState.leverage,
+                    tradeState.isLong
+                  )}
                   priceDecimals={priceDecimals}
                   triggerRefetchPositions={() => {}}
                   marketStats={marketStats}
@@ -490,7 +486,7 @@ const TradePage = () => {
                 />
               </div>
               <MarketStats
-                isLong={isLong}
+                isLong={tradeState.isLong}
                 entryPrice={markPrice ?? 0.0}
                 priceDecimals={priceDecimals}
                 marketStats={marketStats}
@@ -505,8 +501,8 @@ const TradePage = () => {
       {isTablet && (
         <div className="fixed bottom-[4.6rem] md:bottom-[7.3rem] z-50 left-0 right-0 bg-card-grad border-y-2 border-cardborder p-4">
           <TradeButtons
-            isLong={isLong}
-            setIsLong={setIsLong}
+            isLong={tradeState.isLong}
+            setIsLong={(isLong) => updateTradeState({ isLong: isLong })}
             openTradeModal={openTradeModal}
           />
         </div>
@@ -520,26 +516,26 @@ const TradePage = () => {
                 <ModalClose onClose={closeTradeModal} />
               </div>
               <TypeButtons
-                activeType={activeType}
-                setActiveType={setActiveType}
+                activeType={tradeState.activeType}
+                setActiveType={(activeType) =>
+                  updateTradeState({ activeType: activeType })
+                }
                 isEntry={true}
               />
               <SizeInput
-                isLong={isLong}
-                activeType={activeType}
-                leverage={leverage}
-                setLeverage={setLeverage}
-                collateral={collateral}
-                setCollateral={setCollateral}
+                isLong={tradeState.isLong}
+                activeType={tradeState.activeType}
+                leverage={tradeState.leverage}
+                setLeverage={() => updateTradeState({ leverage: 1.1 })}
+                collateral={tradeState.collateral}
+                setCollateral={() => updateTradeState({ collateral: "1" })}
                 markPrice={markPrice}
-                liqPrice={
-                  preCalculateLiquidationPrice(
-                    markPrice,
-                    Number(collateral),
-                    Number(collateral) * leverage,
-                    isLong
-                  ) || 0
-                }
+                liqPrice={preCalculateLiquidationPrice(
+                  markPrice,
+                  Number(tradeState.collateral),
+                  Number(tradeState.collateral) * tradeState.leverage,
+                  tradeState.isLong
+                )}
                 priceDecimals={priceDecimals}
                 triggerRefetchPositions={() => {
                   closeTradeModal(); //Close the modal after execution

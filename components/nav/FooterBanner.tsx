@@ -12,6 +12,8 @@ function FooterBanner() {
   // operational, reduced-service, undergoing-maintenance
   const status = process.env.NEXT_PUBLIC_APP_STATUS || "operational";
 
+  const year = new Date().getFullYear();
+
   return (
     <div className="bg-black border-t-2 border-t-cardborder px-2 md:px-8 pt-4 md:pb-4 pb-28  font-medium text-sm md:fixed bottom-0 left-0 right-0 z-50">
       <div className=" flex flex-col gap-8 lg:flex-row justify-between items-center">
@@ -60,7 +62,9 @@ function FooterBanner() {
           ) : null}
         </div>
 
-        <p className="text-base-gray ">©2025 Odin Labs. All Rights Reserved</p>
+        <p className="text-base-gray ">
+          ©{year} Odin Labs. All Rights Reserved
+        </p>
       </div>
     </div>
   );

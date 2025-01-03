@@ -4,7 +4,7 @@ import ModalV2 from "@/components/common/ModalV2";
 import EarnSection from "@/components/earn/EarnSection";
 import RewardSection from "@/components/earn/RewardSection";
 import useWindowSize from "@/hooks/useWindowSize";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import DepositModal from "@/components/earn/TopUpModal";
 import EarnHero from "@/components/earn/EarnHero";
 import EntryButtons from "@/components/earn/EntryButtons";
@@ -16,16 +16,11 @@ import { useWallet } from "@/hooks/useWallet";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { contractAddresses, getCurrentNetwork } from "@/lib/web3/config";
 
-/**
- * @audit Need to bind "earnedToDate"
- * To do this, query the subgraph that we set up.
- */
 const EarnPage = () => {
-  const [earnedToDate, setEarnedToDate] = useState<{
-    amount: string;
-    usdValue: string;
-  }>({ amount: "0", usdValue: "0" });
-  const [availableToClaim, setAvailableToClaim] = useState<number>(0);
+  const [rewards, setRewards] = useState({
+    earnedToDate: { amount: "0", usdValue: "0" },
+    availableToClaim: 0,
+  });
   const [isPositive, setIsPositive] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isPoolInitialized, setIsPoolInitialized] = useState<boolean>(false);
@@ -37,51 +32,51 @@ const EarnPage = () => {
     signTransaction,
   } = useWallet();
 
-  useEffect(() => {
-    const checkPool = async () => {
-      const network = getCurrentNetwork();
-      const poolAddress = new PublicKey(
-        contractAddresses[network].poolStatePda
-      );
+  const checkPool = useCallback(async () => {
+    const network = getCurrentNetwork();
+    const poolAddress = new PublicKey(contractAddresses[network].poolStatePda);
 
-      if (!poolAddress) return;
+    if (!poolAddress) return;
 
-      try {
-        const account = await connection.getAccountInfo(poolAddress);
-        setIsPoolInitialized(account !== null);
+    try {
+      const account = await connection.getAccountInfo(poolAddress);
+      setIsPoolInitialized(account !== null);
 
-        if (!account) {
-          console.log(
-            "Pool not initialized yet at address:",
-            poolAddress.toString()
-          );
-        }
-      } catch (error) {
-        console.error("Error checking pool:", error);
+      if (!account) {
+        console.log(
+          "Pool not initialized yet at address:",
+          poolAddress.toString()
+        );
       }
-    };
-
-    checkPool();
+    } catch (error) {
+      console.error("Error checking pool:", error);
+    }
   }, [connection]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!publicKey || !program) return;
+  const fetchData = useCallback(async () => {
+    if (!publicKey || !program) return;
 
-      const [allTimeRewards, claimableRewards] = await Promise.all([
-        getAllTimeRewards(program, new PublicKey(publicKey)),
-        getClaimableRewards(program, new PublicKey(publicKey)),
-      ]);
+    const [allTimeRewards, claimableRewards] = await Promise.all([
+      getAllTimeRewards(program, new PublicKey(publicKey)),
+      getClaimableRewards(program, new PublicKey(publicKey)),
+    ]);
 
-      setAvailableToClaim(parseFloat(claimableRewards.formattedAmount));
-      setEarnedToDate({
+    setRewards({
+      earnedToDate: {
         amount: allTimeRewards.totalRewardsFormatted,
         usdValue: allTimeRewards.totalRewardsFormatted,
-      });
-    };
+      },
+      availableToClaim: parseFloat(claimableRewards.formattedAmount),
+    });
+  }, [publicKey, program]);
 
+  useEffect(() => {
+    checkPool();
+  }, [checkPool]);
+
+  useEffect(() => {
     fetchData();
-  }, [publicKey, isPoolInitialized, program]);
+  }, [fetchData]);
 
   return (
     <div className="pb-32">
@@ -94,8 +89,8 @@ const EarnPage = () => {
       />
       <EarnSection isPoolInitialized={isPoolInitialized} />
       <RewardSection
-        earnedToDate={earnedToDate}
-        availableToClaim={availableToClaim}
+        earnedToDate={rewards.earnedToDate}
+        availableToClaim={rewards.availableToClaim}
         program={program}
         connection={connection}
         publicKey={publicKey ? new PublicKey(publicKey) : null}
