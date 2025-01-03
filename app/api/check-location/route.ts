@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     const userCountry = {
-      country_code3: data.country_code3,
+      country_code2: data.country_code2,
       country_name: data.country_name,
     };
 

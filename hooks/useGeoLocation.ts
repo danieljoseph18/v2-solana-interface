@@ -20,7 +20,7 @@ export const useGeoLocation = () => {
         });
 
         const { userCountry } = await locationResponse.json();
-        setCountry(userCountry.country_code3);
+        setCountry(userCountry.country_code2);
       } catch (error) {
         console.error("Error fetching country:", error);
       }

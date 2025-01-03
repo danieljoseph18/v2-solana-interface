@@ -14,11 +14,15 @@ const HomeToken = ({
 }) => {
   const blurredSize = size + 8 + "px";
 
+  // Use deterministic values based on size if top/left not provided
+  const defaultTop = ((size % 90) / 90) * 100;
+  const defaultLeft = (((size * 2) % 90) / 90) * 100;
+
   const positionStyle: React.CSSProperties = {
     position: "absolute",
-    top: `${((top || Math.random()) * 90).toFixed(0)}%`,
-    left: `${((left || Math.random()) * 90).toFixed(0)}%`,
-    animation: `float ${Math.random() * 3 + 2}s ease-in-out infinite`,
+    top: `${(top !== undefined ? top * 100 : defaultTop).toFixed(0)}%`,
+    left: `${(left !== undefined ? left * 100 : defaultLeft).toFixed(0)}%`,
+    animation: `float ${3 + (size % 2)}s ease-in-out infinite`,
   };
 
   const containerStyle: React.CSSProperties = {
