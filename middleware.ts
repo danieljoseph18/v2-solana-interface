@@ -45,16 +45,17 @@ const BLOCKED_COUNTRIES = [
   "RU", // Russia
 ];
 
-export function middleware(request: NextRequest) {
-  const geo = (request as any).geo;
+const middleware = async (req: NextRequest) => {
+  const res = NextResponse.next();
 
-  if (BLOCKED_COUNTRIES.includes(geo?.country || "")) {
-    return NextResponse.redirect(new URL("/blocked", request.url));
+  const country =
+    (req as any).geo?.country || req.headers.get("x-vercel-ip-country");
+
+  if (BLOCKED_COUNTRIES.includes(country ?? "")) {
+    return NextResponse.redirect(new URL("/blocked", req.url));
   }
 
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: "/((?!api|_next/static|_next/image|blocked|favicon.ico).*)",
+  return res;
 };
+
+export default middleware;
