@@ -6,14 +6,21 @@ export const useGeoLocation = () => {
   useEffect(() => {
     async function fetchCountry() {
       try {
-        const response = await fetch("http://ip-api.com/json");
-        const data: {
-          countryCode: string;
-        } = await response.json();
+        // First get the IP address from ipify
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
+        const { ip: ipAddress } = await ipResponse.json();
 
-        console.log("data: ", data);
+        // Then check location using your backend
+        const locationResponse = await fetch(`/api/check-location`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ip_address: ipAddress }),
+        });
 
-        setCountry(data.countryCode);
+        const { userCountry } = await locationResponse.json();
+        setCountry(userCountry.country_code3);
       } catch (error) {
         console.error("Error fetching country:", error);
       }
