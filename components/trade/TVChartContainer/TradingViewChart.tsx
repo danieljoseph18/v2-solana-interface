@@ -14,7 +14,6 @@ import {
   IPositionLineAdapter,
 } from "@/public/static/charting_library";
 import useTVDatafeed from "@/components/tradingview/useTVDatafeed";
-import useWindowSize from "@/hooks/useWindowSize";
 import { SaveLoadAdapter } from "@/components/tradingview/SaveLoadAdapter";
 import { TV_SAVE_LOAD_CHARTS_KEY } from "@/config/tvStorage";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -23,7 +22,6 @@ import {
   disabledFeatures,
 } from "./trading-view-settings";
 import Loader from "./Loader";
-import { FaQuestionCircle } from "react-icons/fa";
 import { useTimeoutFn } from "react-use";
 
 export type ChartLine = {

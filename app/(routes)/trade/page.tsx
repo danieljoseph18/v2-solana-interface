@@ -8,7 +8,7 @@ import useWindowSize from "@/hooks/useWindowSize";
 import { AssetProvider } from "@/components/trade/assets/AssetContext";
 import { ResolutionString } from "@/public/static/charting_library/charting_library";
 import Script from "next/script";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import TradeButtons from "@/components/trade/interaction/TradeButtons";
 import TypeButtons from "@/components/trade/interaction/TypeButtons";
@@ -30,6 +30,8 @@ import {
   preCalculateLiquidationPrice,
 } from "@/lib/web3/position/estimateLiquidationPrice";
 import { useWallet } from "@/hooks/useWallet";
+import { useGeoLocation } from "@/hooks/useGeoLocation";
+import { BLOCKED_COUNTRIES } from "@/config/countries";
 
 const TradingViewChart = dynamic(
   () =>
@@ -44,6 +46,10 @@ const TradePage = () => {
   const { width } = useWindowSize();
 
   const { address } = useWallet();
+
+  const country = useGeoLocation();
+
+  const router = useRouter();
 
   const pathname = usePathname();
 
@@ -268,6 +274,12 @@ const TradePage = () => {
       }
     }
   }, [asset]);
+
+  useEffect(() => {
+    if (country && BLOCKED_COUNTRIES.includes(country)) {
+      router.push("/blocked");
+    }
+  }, [country]);
 
   useEffect(() => {
     setIsTablet(width !== undefined && width <= 768);

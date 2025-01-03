@@ -13,6 +13,9 @@ import { useWallet } from "@/hooks/useWallet";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { contractAddresses, getCurrentNetwork } from "@/lib/web3/config";
 import EarnBanner from "@/components/earn/EarnBanner";
+import { useRouter } from "next/navigation";
+import { BLOCKED_COUNTRIES } from "@/config/countries";
+import { useGeoLocation } from "@/hooks/useGeoLocation";
 
 const EarnPage = () => {
   const [rewards, setRewards] = useState({
@@ -22,6 +25,7 @@ const EarnPage = () => {
   const [isPositive, setIsPositive] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isPoolInitialized, setIsPoolInitialized] = useState<boolean>(false);
+
   const { width } = useWindowSize();
   const {
     program,
@@ -29,6 +33,8 @@ const EarnPage = () => {
     address: publicKey,
     signTransaction,
   } = useWallet();
+  const country = useGeoLocation();
+  const router = useRouter();
 
   const checkPool = useCallback(async () => {
     const network = getCurrentNetwork();
@@ -75,6 +81,12 @@ const EarnPage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (country && BLOCKED_COUNTRIES.includes(country)) {
+      router.push("/blocked");
+    }
+  }, [country]);
 
   return (
     <div className="pb-32">
