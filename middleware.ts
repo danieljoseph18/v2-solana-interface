@@ -23,6 +23,11 @@ const BLOCKED_COUNTRIES = [
   "RU", // Russia
 ];
 
+// Only match earn and trade routes
+export const config = {
+  matcher: ["/earn", "/trade"],
+};
+
 const middleware = async (req: NextRequest) => {
   // Skip check if already on blocked page or homepage
   if (req.nextUrl.pathname === "/blocked" || req.nextUrl.pathname === "/") {
