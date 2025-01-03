@@ -31,8 +31,8 @@ export const config = {
     "/trade",
     "/",
     "/blocked",
-    "terms-of-service",
-    "privacy-policy",
+    "/terms-of-service",
+    "/privacy-policy",
   ],
 };
 
