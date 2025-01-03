@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import HorizontalDivider from "../common/HorizontalDivider";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import EntryCard from "./EntryCard";
 import ModalV2 from "../common/ModalV2";
 import { TabType, CollateralType } from "@/types/earn";
@@ -21,6 +20,9 @@ import { getUserBalances } from "@/lib/web3/actions/getUserBalances";
 import { getApr } from "@/lib/web3/actions/getApr";
 import { getLpTokenSupply } from "@/lib/web3/actions/getLpTokenSupply";
 import { formatFloatWithCommas } from "@/lib/web3/formatters";
+import { FaRegQuestionCircle } from "react-icons/fa";
+import CustomTooltip from "../common/CustomTooltip";
+import EntryModal from "./EntryModal";
 
 interface StatItemProps {
   iconSrc: string;
@@ -28,6 +30,7 @@ interface StatItemProps {
   value: string;
   subValue?: string;
   altText: string;
+  tooltip: string;
 }
 
 const StatItem = ({
@@ -36,33 +39,41 @@ const StatItem = ({
   value,
   subValue,
   altText,
+  tooltip,
 }: StatItemProps) => (
   <>
-    <div className="flex items-center gap-4 px-4 py-2">
+    <div className="flex items-center gap-4 p-4 bg-input-grad border-2 border-cardborder rounded-7">
       <Image src={iconSrc} alt={altText} width={35} height={35} />
-      <div className="flex flex-col gap-2">
-        <p className="text-xs text-gray-text">{label}</p>
-        <p className="text-white text-base font-bold">
-          {value}
-          {subValue && (
-            <span className="text-xs text-gray-text font-medium">
-              {subValue}
-            </span>
-          )}
-        </p>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1">
+          <p className="text-xs text-gray-text">{label}</p>
+          <CustomTooltip content={tooltip}>
+            <FaRegQuestionCircle className="text-xs text-white" />
+          </CustomTooltip>
+        </div>
+        <p className="text-white text-base font-bold">{value}</p>
+        {subValue && (
+          <p className="text-xs text-printer-green font-medium">{subValue}</p>
+        )}
       </div>
     </div>
-    <HorizontalDivider />
   </>
 );
 
-const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
+const EarnSection = ({
+  isPoolInitialized,
+  isModalOpen,
+  setIsModalOpen,
+}: {
+  isPoolInitialized: boolean;
+  isModalOpen: boolean;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+}) => {
   const { address: publicKey, connection } = useWallet();
 
   const [activeTab, setActiveTab] = useState<TabType>("deposit");
   const [collateralType, setCollateralType] = useState<CollateralType>("SOL");
   const [amount, setAmount] = useState<string>("0");
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [vaultData, setVaultData] = useState<{
     deposits: string;
     apr: string;
@@ -209,12 +220,10 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
   return (
     <div className="w-full p-6 flex gap-4">
       {/* Earning Stats */}
-      <div className="w-full md:w-[60%] bg-button-grad p-0.5 rounded-7 ">
-        <div className="flex flex-col gap-2 w-full h-full bg-card-grad rounded-7 justify-around">
-          <div className="px-4 py-2">
-            <p className="text-white text-base font-bold">My Earning Vault</p>
-          </div>
-          <HorizontalDivider />
+      <div className="w-full md:w-[60%] p-0.5 rounded-7 ">
+        <div className="flex flex-col gap-2 w-full h-full rounded-7 justify-around">
+          <p className="text-white text-base font-bold">My Deposits</p>
+
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <LoadingSpinner />
@@ -223,15 +232,20 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
             <>
               <StatItem
                 iconSrc={SolanaWallet}
-                label="My Deposits"
+                label="Deposits"
                 value={`$${vaultData.deposits}`}
                 altText="solana-wallet"
+                tooltip="The current USD value of your deposits."
               />
               <StatItem
                 iconSrc={UpwardsBars}
                 label="Current APR"
                 value={`${vaultData.apr}`}
                 altText="Increasing bar graph"
+                tooltip="The total amount of interest you earn on your deposits over a year at the current rate of rewards."
+                subValue={`+${formatFloatWithCommas(
+                  parseFloat(vaultData.apr) / 365
+                )}% - Daily`}
               />
               <StatItem
                 iconSrc={EarningDiamond}
@@ -239,7 +253,11 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
                 value={`$${formatFloatWithCommas(
                   parseFloat(vaultData.estimatedEarnings)
                 )}`}
+                subValue={`+$${formatFloatWithCommas(
+                  parseFloat(vaultData.estimatedEarnings) / 30
+                )} - Daily`}
                 altText="Earning diamond"
+                tooltip="The USD Value of the interest you are earning on your deposits over a month at the current rate of rewards."
               />
             </>
           )}
@@ -259,12 +277,16 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
         lpTokenPrice={lpTokenPrice}
         lpBalance={lpBalance}
         balancesUsd={balancesUsd}
-        setIsModalOpen={setIsModalOpen}
         refetchBalances={refreshBalances}
       />
 
-      <ModalV2 isOpen={isModalOpen} setIsModalOpen={setIsModalOpen}>
-        <EntryCard
+      <ModalV2
+        isOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        size="full"
+        fullScreenOnMobile={true}
+      >
+        <EntryModal
           isDeposit={isDeposit}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -272,11 +294,10 @@ const EarnSection = ({ isPoolInitialized }: { isPoolInitialized: boolean }) => {
           setCollateralType={setCollateralType}
           amount={amount}
           setAmount={setAmount}
-          isModalForm
           prices={prices}
           lpTokenPrice={lpTokenPrice}
-          balancesUsd={balancesUsd}
           lpBalance={lpBalance}
+          balancesUsd={balancesUsd}
           setIsModalOpen={setIsModalOpen}
           refetchBalances={refreshBalances}
         />
