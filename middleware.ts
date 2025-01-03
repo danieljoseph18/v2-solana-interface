@@ -46,11 +46,14 @@ const BLOCKED_COUNTRIES = [
 ];
 
 const middleware = async (req: NextRequest) => {
-  const res = NextResponse.next();
+  // Check if the request is for static files (_next/static)
+  if (req.nextUrl.pathname.startsWith("/_next/static")) {
+    return NextResponse.next();
+  }
 
   // Skip check if already on blocked page
   if (req.nextUrl.pathname === "/blocked") {
-    return res;
+    return NextResponse.next();
   }
 
   const country =
@@ -60,7 +63,22 @@ const middleware = async (req: NextRequest) => {
     return NextResponse.redirect(new URL("/blocked", req.url));
   }
 
-  return res;
+  return NextResponse.next();
+};
+
+// Add config to specify which paths the middleware runs on
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * 1. /api/ routes
+     * 2. /_next/ (Next.js internals)
+     * 3. /_static (static files)
+     * 4. /_vercel (Vercel internals)
+     * 5. /favicon.ico, /sitemap.xml (static files)
+     */
+    "/((?!api|_next|_static|_vercel|favicon.ico|sitemap.xml).*)",
+  ],
 };
 
 export default middleware;
