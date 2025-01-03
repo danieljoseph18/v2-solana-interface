@@ -1,5 +1,9 @@
 import Image from "next/image";
 import NavLogo from "@/app/assets/nav/nav-logo.png";
+
+// Add export const dynamic = 'force-static'
+export const dynamic = "force-static";
+
 const BlockedPage = () => {
   return (
     <div className="min-h-screen bg-home-card-grad flex items-center justify-center px-4">
@@ -8,8 +12,9 @@ const BlockedPage = () => {
           src={NavLogo}
           className="w-32 sm:w-36 md:w-44 h-auto"
           alt="PRINT Logo"
-          // width={128}
-          // height={128}
+          width={176}
+          height={176}
+          priority
         />
         <h1 className="text-2xl font-bold text-printer-orange underline">
           Access Restricted
