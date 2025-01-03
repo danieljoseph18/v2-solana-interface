@@ -30,7 +30,7 @@ const NavBar: React.FC = () => {
         <NavLinksV2 className="hidden lg:flex" />
         <div className="flex space-x-4 items-center">
           <button
-            className="bg-input-grad border-cardborder border-2 rounded-3 px-3 h-10 flex items-center justify-between gap-2"
+            className="bg-input-grad border-cardborder border-2 !rounded-3 px-3 h-10 flex items-center justify-between gap-2"
             onClick={() => {}}
           >
             <div className="flex flex-row items-center gap-2">

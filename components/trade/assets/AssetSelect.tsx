@@ -3,6 +3,7 @@ import AssetSelectPopup from "./AssetSelectPopup";
 import { useAsset } from "./AssetContext";
 import { BsChevronDown } from "react-icons/bs";
 import { getImageForToken } from "@/lib/utils/getTokenImage";
+import Image from "next/image";
 
 const AssetSelect = () => {
   const [showPopup, setShowPopup] = useState(false);
@@ -43,7 +44,7 @@ const AssetSelect = () => {
       >
         {asset ? (
           <div className="flex gap-4 items-center ">
-            <img
+            <Image
               src={getImageForToken(asset)}
               alt={`${asset.symbol} logo`}
               width={42}
@@ -68,8 +69,8 @@ const AssetSelect = () => {
           <div className="flex gap-2 items-center">
             <div className="bg-loading rounded-full w-10 h-10 animate-pulse"></div>
             <div className="flex flex-col gap-2 w-20">
-              <div className="w-full h-4 rounded-3 bg-loading animate-pulse"></div>
-              <div className="w-full h-4 rounded-3 bg-loading animate-pulse"></div>
+              <div className="w-full h-4 !rounded-3 bg-loading animate-pulse"></div>
+              <div className="w-full h-4 !rounded-3 bg-loading animate-pulse"></div>
             </div>
           </div>
         )}

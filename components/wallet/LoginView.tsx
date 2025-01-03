@@ -28,7 +28,7 @@ const LoginView = ({ handleBackClick }: { handleBackClick: () => void }) => {
       <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
         <div className="flex w-full justify-start items-center">
           <div
-            className="flex items-center justify-center bg-input-grad border-2 border-cardborder rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer"
+            className="flex items-center justify-center bg-input-grad border-2 border-cardborder !rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer"
             onClick={handleBackClick}
           >
             <FaArrowLeft className="text-white" />

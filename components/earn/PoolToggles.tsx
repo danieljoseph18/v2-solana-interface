@@ -21,7 +21,7 @@ const PoolToggles = ({
   };
 
   return (
-    <div className="flex items-center bg-card-grad w-full rounded-full border-2 border-cardborder">
+    <div className="flex items-center bg-input-grad w-full rounded-full border-2 border-cardborder">
       {["deposit", "withdraw"].map((tab) => {
         const isActive = activeTab === tab;
         const styles = getTabStyles(isActive, tab === "deposit");

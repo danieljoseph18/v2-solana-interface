@@ -49,7 +49,7 @@ const CustomTooltip = ({
       containerPadding={containerPadding}
       placement={placement}
       classNames={{
-        base: "py-2 px-4 shadow-xl rounded-3",
+        base: "py-2 px-4 shadow-xl !rounded-3",
         content: `bg-card-grad border-cardborder border-2 text-white text-sm break-words ${
           maxWidth ? `max-w-[${maxWidth}px]` : "max-w-[350px]"
         }`,

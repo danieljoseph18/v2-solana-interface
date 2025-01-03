@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { getPriceDecimals, formatLiquidity } from "@/lib/web3/formatters";
 import { getImageForToken } from "@/lib/utils/getTokenImage";
+import Image from "next/image";
 
 interface MobileAssetTableProps {
   tokens: Asset[];
@@ -67,7 +68,7 @@ const MobileAssetTable: React.FC<MobileAssetTableProps> = ({
                             <FaStar className="text-[#71757A] text-2xl" />
                           )}
                         </button>
-                        <img
+                        <Image
                           src={getImageForToken(asset)}
                           alt={`${asset.symbol} logo`}
                           width={24}

@@ -91,8 +91,6 @@ const config: Config = {
       },
       colors: {
         "tour-divider": "#1A1B24",
-        p3: "#F05722",
-        "p3-border": "#F05722",
         loading: "#5D6588",
         secondary: "#2D2D2D",
         "table-header": "#2E3146",
@@ -122,6 +120,7 @@ const config: Config = {
         "dashboard-gray": "#8E9BAE",
         "sexy-gray": "#696969",
         "home-gray": "#E5E6ED",
+        "earn-gray": "#909090",
         cardborder: "#282F39",
         cardblack: "#07080A",
         menu: "#181C23",

@@ -89,7 +89,7 @@ const SubmitSwiper: React.FC<SubmitSwiperProps> = ({
     <div className="w-full bg-text-grad p-0.5 rounded-full">
       <div
         ref={trackRef}
-        className={`relative h-16 rounded-full bg-card-grad backdrop-blur-md overflow-hidden
+        className={`relative h-16 rounded-full bg-input-grad backdrop-blur-md overflow-hidden
         ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
       >
         {/* Progress fill - now positioned behind thumb */}
@@ -114,7 +114,7 @@ const SubmitSwiper: React.FC<SubmitSwiperProps> = ({
           }}
           className={`absolute left-0 h-full w-[100px] rounded-full 
           bg-button-grad
-          flex items-center justify-center cursor-grab active:cursor-grabbing
+          flex items-center justify-center cursor-grab active:cursor-grabbing border-2 border-printer-orange
           ${disabled ? "cursor-not-allowed" : ""}`}
         >
           <MdKeyboardDoubleArrowRight className="text-6xl text-white" />

@@ -24,7 +24,7 @@ const InitialView = ({
         {/* Empty Div to Push Close button Right */}
         <div></div>
         {/* Used to Hide Slide the Pop-up Back Right */}
-        <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
+        <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder !rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
           <FaArrowRight className="text-white" onClick={closeAccountOverlay} />
         </div>
       </div>

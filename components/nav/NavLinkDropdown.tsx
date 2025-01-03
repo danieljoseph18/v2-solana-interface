@@ -60,7 +60,7 @@ function NavLinkDropDown({ header }: NavProps) {
         isOpen={isOpen}
         classNames={{
           base: "bg-none",
-          content: "bg-card-grad rounded-3 border-2 border-cardborder",
+          content: "bg-card-grad !rounded-3 border-2 border-cardborder",
         }}
       >
         <DropdownTrigger

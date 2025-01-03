@@ -1,4 +1,5 @@
 import { getImageUrlFromTokenSymbol } from "@/lib/utils/getTokenImage";
+import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
@@ -79,7 +80,7 @@ const AssetDropdown: React.FC<AssetDropdownProps> = ({
         <ul
           className={`absolute z-50 ${
             positionAbove ? "bottom-full mb-1" : "top-full mt-1"
-          } right-0 w-[200px] bg-card-grad shadow-lg rounded-3 text-sm border-cardborder border-2 font-semibold`}
+          } right-0 w-[200px] bg-card-grad shadow-lg !rounded-3 text-sm border-cardborder border-2 font-semibold`}
         >
           {options.map((option: string) => (
             <li
@@ -88,7 +89,7 @@ const AssetDropdown: React.FC<AssetDropdownProps> = ({
               className="px-4 py-2 w-full rounded-md flex flex-row items-center gap-2 cursor-pointer hover:bg-button-grad border-transparent border-2 hover:border-printer-orange"
             >
               {showImages && (
-                <img
+                <Image
                   src={getImageUrlFromTokenSymbol(option)}
                   alt={`${option} Token`}
                   width={24}

@@ -37,7 +37,7 @@ const InputField = ({
   return (
     <div
       className={`flex justify-between text-printer-gray items-center p-3.5 ${
-        noBorder ? "" : "bg-input-grad border border-cardborder rounded-3"
+        noBorder ? "" : "bg-input-grad border border-cardborder !rounded-3"
       } ${className || ""}`}
     >
       <div className="flex flex-col w-1/2 gap-2">

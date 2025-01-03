@@ -10,7 +10,7 @@ const BottomDropdown: React.FC<BottomDropdownProps> = ({ options = [] }) => {
   return (
     <div
       className={
-        "fixed left-0 bottom-16 w-full bg-card-grad rounded-3 border-2 border-cardborder text-white py-2 shadow-lg z-50 pointer-events-auto flex flex-col"
+        "fixed left-0 bottom-16 w-full bg-card-grad !rounded-3 border-2 border-cardborder text-white py-2 shadow-lg z-50 pointer-events-auto flex flex-col"
       }
     >
       {options.map((option) => (

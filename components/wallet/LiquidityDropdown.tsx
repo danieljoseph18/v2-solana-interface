@@ -52,7 +52,7 @@ const LiquidityDropdown = ({
         <FaChevronDown className="text-black" />
       </div>
       {isOpen && (
-        <ul className="absolute z-50 mt-1 w-full bg-dropdown-grad shadow-lg rounded-3 text-sm border-[#282F39] border-2 font-semibold">
+        <ul className="absolute z-50 mt-1 w-full bg-dropdown-grad shadow-lg !rounded-3 text-sm border-[#282F39] border-2 font-semibold">
           {tokenOptions.map((option: TokenType) => (
             <li
               key={option}

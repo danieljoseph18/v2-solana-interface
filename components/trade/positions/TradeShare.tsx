@@ -148,7 +148,7 @@ Trade DAOS FUN memes at high speed on Solana 👇`;
       </div>
       {shareUrl ? (
         <div className="w-full">
-          <img
+          <Image
             src={shareUrl}
             alt="Trade Share"
             className="max-w-full h-auto rounded-lg shadow-lg"
@@ -159,7 +159,7 @@ Trade DAOS FUN memes at high speed on Solana 👇`;
           <div className={`${isLoading ? "absolute block" : "hidden"}`}>
             <SpinningLoader />
           </div>
-          <img
+          <Image
             src={previewImage}
             className="w-full min-h-[200px]"
             alt="Preview"

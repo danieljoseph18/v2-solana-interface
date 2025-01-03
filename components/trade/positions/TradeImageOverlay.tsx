@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 
 interface TradeImageOverlayProps {
@@ -22,7 +23,13 @@ const TradeImageOverlay: React.FC<TradeImageOverlayProps> = ({
   <div className="flex flex-col gap-2">
     <div className="flex flex-row items-center justify-between">
       <div className="flex gap-1">
-        <img src={assetLogo} alt={position} width={20} height={20} />
+        <Image
+          src={assetLogo}
+          alt={position}
+          width={20}
+          height={20}
+          className="rounded-full"
+        />
         <p className="text-white font-bold">{position}</p>
       </div>
       <p className={isLong ? "text-printer-green" : "text-printer-red"}>{`${

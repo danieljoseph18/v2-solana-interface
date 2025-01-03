@@ -101,7 +101,7 @@ const DashboardView = ({
           <h1 className="text-2xl font-medium text-nowrap">My Smart Wallet</h1>
           <div className="flex items-center gap-2">
             {/* Used to Hide Slide the Pop-up Back Right */}
-            <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="flex items-center justify-center bg-input-grad border-2 border-cardborder !rounded-3 p-3 hover:opacity-80 transition-opacity cursor-pointer">
               <FaArrowRight
                 className="text-white"
                 onClick={() => {

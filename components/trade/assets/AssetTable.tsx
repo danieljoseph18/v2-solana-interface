@@ -3,6 +3,7 @@ import { FaStar, FaSort } from "react-icons/fa";
 import { getPriceDecimals } from "@/lib/web3/formatters";
 import { formatLiquidity } from "@/lib/web3/formatters";
 import { getImageForToken } from "@/lib/utils/getTokenImage";
+import Image from "next/image";
 
 interface AssetTableProps {
   tokens: Asset[];
@@ -129,7 +130,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                             <FaStar className="text-[#71757A] text-2xl" />
                           )}
                         </button>
-                        <img
+                        <Image
                           src={getImageForToken(asset)}
                           alt={`${asset.symbol} logo`}
                           width={24}

@@ -81,7 +81,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <ul
           className={`absolute z-50 ${
             positionAbove ? "bottom-full mb-1" : "top-full mt-1"
-          } right-0 w-[200px] bg-dropdown-grad shadow-lg rounded-3 text-sm border-[#282F39] border-2 font-semibold`}
+          } right-0 w-[200px] bg-dropdown-grad shadow-lg !rounded-3 text-sm border-[#282F39] border-2 font-semibold`}
         >
           {options.map((option: string) => (
             <li
