@@ -48,6 +48,11 @@ const BLOCKED_COUNTRIES = [
 const middleware = async (req: NextRequest) => {
   const res = NextResponse.next();
 
+  // Skip check if already on blocked page
+  if (req.nextUrl.pathname === "/blocked") {
+    return res;
+  }
+
   const country =
     (req as any).geo?.country || req.headers.get("x-vercel-ip-country");
 
