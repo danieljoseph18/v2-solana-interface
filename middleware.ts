@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { geolocation } from "@vercel/functions";
 
@@ -32,7 +33,8 @@ export default function middleware(req: NextRequest) {
   const country = geolocation(req).country || "US";
 
   if (BLOCKED_COUNTRIES.includes(country)) {
-    return new Response("Blocked for legal reasons", { status: 451 });
+    return NextResponse.redirect(new URL("/blocked", req.url));
   }
-  return new Response(`Greetings from ${country}, where you are not blocked.`);
+
+  return NextResponse.next();
 }
